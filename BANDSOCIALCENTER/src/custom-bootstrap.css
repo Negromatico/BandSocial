@@ -1,0 +1,32 @@
+:root {
+  --bs-primary: #7c3aed;
+  --bs-primary-rgb: 124,58,237;
+  --bs-secondary: #a78bfa;
+  --bs-secondary-rgb: 167,139,250;
+  --bs-body-bg: #f3f0fa;
+  --bs-body-color: #2d1a4a;
+}
+
+body {
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+.btn-primary {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background-color: #6d28d9;
+  border-color: #6d28d9;
+}
+
+.form-label {
+  color: #6d28d9;
+}
+
+.card {
+  border-radius: 1rem;
+  box-shadow: 0 2px 12px rgba(124,58,237,0.08);
+}
