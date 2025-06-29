@@ -5,6 +5,9 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Spinner, Alert, Container, Modal, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
+import { uploadToCloudinary } from '../services/cloudinary';
+import { useRef } from 'react';
+
 const Profile = () => {
   const [user, setUser] = useState(auth.currentUser);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -23,6 +26,30 @@ const Profile = () => {
   const [status, setStatus] = useState('');
   const [initialValues, setInitialValues] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showFotoModal, setShowFotoModal] = useState(false);
+  const [showVerFoto, setShowVerFoto] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // Maneja el cambio de foto de perfil
+  const handleChangeFoto = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setStatus('Subiendo foto...');
+    try {
+      const url = await uploadToCloudinary(file);
+      await setDoc(doc(db, 'perfiles', user.uid), {
+        ...initialValues,
+        fotoPerfil: url,
+        uid: user.uid,
+        email: user.email,
+        updatedAt: new Date().toISOString(),
+      });
+      setInitialValues(prev => ({ ...prev, fotoPerfil: url }));
+      setStatus('Foto de perfil actualizada ✔️');
+    } catch (err) {
+      setStatus('Error subiendo foto: ' + (err.message || err.toString()));
+    }
+  };
 
   const fetchProfile = async () => {
     const user = auth.currentUser;
@@ -105,12 +132,35 @@ const Profile = () => {
           </div>
         </Modal.Body>
       </Modal>
+      {/* Modal para ver/cambiar foto de perfil */}
+      <Modal show={showFotoModal} onHide={() => setShowFotoModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Foto de perfil</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          <Button variant="outline-primary" className="mb-3 w-100" onClick={() => setShowVerFoto(true)}>Ver foto de perfil</Button>
+          <Button variant="outline-secondary" className="mb-3 w-100" onClick={() => fileInputRef.current.click()}>Cambiar foto de perfil</Button>
+          <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleChangeFoto} />
+        </Modal.Body>
+      </Modal>
+      {/* Modal para ver la foto en grande */}
+      <Modal show={showVerFoto} onHide={() => setShowVerFoto(false)} centered>
+        <Modal.Body className="text-center p-0" style={{ background: '#000' }}>
+          {initialValues?.fotoPerfil ? (
+            <img src={initialValues.fotoPerfil} alt="avatar" style={{ maxWidth: '100%', maxHeight: '80vh', display: 'block', margin: '0 auto' }} />
+          ) : (
+            <span style={{ fontSize: 80, color: '#fff', lineHeight: '90px' }}>🎵</span>
+          )}
+        </Modal.Body>
+      </Modal>
+
       {user && (
-        <Container fluid="sm" className="px-2 px-md-0" style={{ maxWidth: 500, margin: '0 auto', marginTop: 24 }}>
+        <Container fluid="sm" className="px-2 px-md-0" style={{ maxWidth: 900, margin: '0 auto', marginTop: 24 }}>
           <div className="d-flex justify-content-center">
             <div className="card shadow p-3 p-md-4 w-100" style={{ borderRadius: 18, border: '1px solid #ede9fe', background: '#fff' }}>
               <div className="d-flex flex-column align-items-center mb-3">
-                <div className="profile-avatar-responsive" style={{ background: '#a78bfa', borderRadius: '50%', width: 90, height: 90, maxWidth: '30vw', maxHeight: '30vw', minWidth: 64, minHeight: 64, boxShadow: '0 0 0 6px #ede9fe', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="profile-avatar-responsive" style={{ background: '#a78bfa', borderRadius: '50%', width: 90, height: 90, maxWidth: '30vw', maxHeight: '30vw', minWidth: 64, minHeight: 64, boxShadow: '0 0 0 6px #ede9fe', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                  onClick={() => setShowFotoModal(true)}>
                   {initialValues?.fotoPerfil ? (
                     <img src={initialValues.fotoPerfil} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   ) : (
@@ -119,6 +169,25 @@ const Profile = () => {
                 </div>
                 <div className="mt-3 mb-1 text-center w-100" style={{ fontSize: 20, fontWeight: 700, color: '#7c3aed', wordBreak: 'break-word' }}>
                   {initialValues?.nombre || initialValues?.email || 'Mi perfil'}
+                  <div className="mt-2">
+                    <Button
+                      variant={initialValues?.disponible ? 'success' : 'secondary'}
+                      size="sm"
+                      onClick={async () => {
+                        const newDisponible = !initialValues?.disponible;
+                        await setDoc(doc(db, 'perfiles', user.uid), {
+                          ...initialValues,
+                          disponible: newDisponible,
+                          uid: user.uid,
+                          email: user.email,
+                          updatedAt: new Date().toISOString(),
+                        });
+                        setInitialValues(prev => ({ ...prev, disponible: newDisponible }));
+                      }}
+                    >
+                      {initialValues?.disponible ? 'Disponible' : 'No disponible'}
+                    </Button>
+                  </div>
                 </div>
                 <span className="badge bg-secondary mb-2" style={{ fontSize: 15 }}>{initialValues?.type === 'banda' ? 'Banda' : 'Músico'}</span>
               </div>

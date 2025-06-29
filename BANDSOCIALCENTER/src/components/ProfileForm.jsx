@@ -89,24 +89,9 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
           </Card.Title>
           <Form
             onSubmit={handleSubmit((data) => {
-              // Limpiar fotoPerfil de la galería si está duplicada
-              const cleanFotos = fotos.filter(url => url && url !== fotoPerfil);
-              onSubmit && onSubmit({ ...data, type, videoUrl, fotos: cleanFotos, fotoPerfil });
+              onSubmit && onSubmit({ ...data, type, videoUrl, fotos });
             })}
           >
-            <Form.Group className="mb-3">
-              <Form.Label>Foto de perfil</Form.Label>
-              <UploadMedia
-                type="image"
-                value={fotoPerfil}
-                onUpload={url => {
-                  setFotoPerfil(url);
-                  setValue('fotoPerfil', url);
-                }}
-                previewSize={90}
-                folder="bandas/perfil"
-              />
-            </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Nombre {type === 'banda' ? 'de la banda' : 'del músico'}</Form.Label>
               <Form.Control

@@ -63,6 +63,7 @@ const Home = () => {
 
   // Filtros visuales
   const perfilesFiltrados = perfiles.filter(p => {
+    if (p.disponible === false) return false;
     if (ciudad && (!p.ciudad || p.ciudad.value !== ciudad.value)) return false;
     if (tipo && p.type !== tipo.value) return false;
     if (genero && (!p.generos || !p.generos.some(g => g.value === genero.value))) return false;

@@ -17,9 +17,11 @@ const PublicacionForm = ({ onCreated }) => {
   const [titulo, setTitulo] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [tipo, setTipo] = useState(tipos[0].value);
+  const [otroTipo, setOtroTipo] = useState('');
   const [ciudad, setCiudad] = useState(ciudades[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -28,13 +30,17 @@ const PublicacionForm = ({ onCreated }) => {
       setError('Título y descripción son obligatorios');
       return;
     }
+    if (tipo === 'otro' && !otroTipo.trim()) {
+      setError('Por favor especifica el tipo.');
+      return;
+    }
     setLoading(true);
     try {
       const user = auth.currentUser;
       await addDoc(collection(db, 'publicaciones'), {
         titulo: titulo.trim(),
         descripcion: descripcion.trim(),
-        tipo,
+        tipo: tipo === 'otro' ? otroTipo.trim() : tipo,
         ciudad,
         autorUid: user.uid,
         autorNombre: user.displayName || user.email,
@@ -43,7 +49,10 @@ const PublicacionForm = ({ onCreated }) => {
       setTitulo('');
       setDescripcion('');
       setTipo(tipos[0].value);
+      setOtroTipo('');
       setCiudad(ciudades[0]);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3500);
       if (onCreated) onCreated();
     } catch (err) {
       setError('Error al crear publicación');
@@ -67,6 +76,16 @@ const PublicacionForm = ({ onCreated }) => {
         <select className="form-select" value={tipo} onChange={e => setTipo(e.target.value)}>
           {tipos.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
+        {tipo === 'otro' && (
+          <input
+            className="form-control mt-2"
+            placeholder="Especifica el tipo"
+            value={otroTipo}
+            onChange={e => setOtroTipo(e.target.value)}
+            maxLength={30}
+            required
+          />
+        )}
       </div>
       <div className="mb-3">
         <label>Ciudad</label>
@@ -74,6 +93,7 @@ const PublicacionForm = ({ onCreated }) => {
           {ciudades.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
       </div>
+      {success && <div className="alert alert-success py-1">¡Publicación creada exitosamente!</div>}
       {error && <div className="alert alert-danger py-1">{error}</div>}
       <button type="submit" className="btn btn-primary" disabled={loading}>
         {loading ? 'Publicando...' : 'Publicar'}

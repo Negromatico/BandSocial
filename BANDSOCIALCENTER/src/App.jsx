@@ -9,6 +9,7 @@ import Publicaciones from './pages/Publicaciones';
 import Chat from './pages/Chat';
 import Posts from './pages/Posts';
 import AppNavbar from './components/Navbar';
+import Eventos from './pages/Eventos';
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:uid" element={<ProfileView />} />
       <Route path="/publicaciones" element={<Publicaciones />} />
+      <Route path="/eventos" element={<Eventos />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/posts" element={<Posts />} />
         <Route path="/" element={<Home />} />
