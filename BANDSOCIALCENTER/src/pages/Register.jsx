@@ -13,7 +13,30 @@ const Register = () => {
   const onSubmit = async (data) => {
     setError('');
     try {
-      await createUserWithEmailAndPassword(auth, data.email, data.password);
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      // Crear documento de perfil base en Firestore
+      const user = userCredential.user;
+      await import('../services/firebase').then(({ db }) =>
+        import('firebase/firestore').then(({ doc, setDoc }) =>
+          setDoc(doc(db, 'perfiles', user.uid), {
+            uid: user.uid,
+            email: user.email,
+            nombre: '',
+            type: 'musico',
+            fotoPerfil: '',
+            fotos: [],
+            videoUrl: '',
+            ciudad: null,
+            generos: [],
+            instrumentos: [],
+            buscan: [],
+            miembros: '',
+            dias: [],
+            horarios: [],
+            updatedAt: new Date().toISOString(),
+          })
+        )
+      );
       navigate('/profile');
     } catch (err) {
       setError('No se pudo registrar. ¿El correo ya existe?');

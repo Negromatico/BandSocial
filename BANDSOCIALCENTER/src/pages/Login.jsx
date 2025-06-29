@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Form, Alert } from 'react-bootstrap';
@@ -8,6 +8,10 @@ import { Card, Button, Form, Alert } from 'react-bootstrap';
 const Login = () => {
   const { register, handleSubmit } = useForm();
   const [error, setError] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetSent, setResetSent] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [showReset, setShowReset] = useState(false);
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
@@ -17,6 +21,18 @@ const Login = () => {
       navigate('/profile');
     } catch (err) {
       setError('Correo o contraseña incorrectos');
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setResetError('');
+    setResetSent(false);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setResetSent(true);
+    } catch (err) {
+      setResetError('No se pudo enviar el correo. ¿El correo está registrado?');
     }
   };
 
@@ -37,6 +53,33 @@ const Login = () => {
             <Button type="submit" variant="primary" className="w-100">Entrar</Button>
             {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
           </Form>
+          <div className="text-center mt-3">
+            <button className="btn btn-link p-0" style={{color: '#7c3aed'}} onClick={() => setShowReset(true)}>
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+          {showReset && (
+            <Form onSubmit={handleResetPassword} className="mt-3">
+              <Form.Group className="mb-2">
+                <Form.Label>Correo para recuperar contraseña</Form.Label>
+                <Form.Control
+                  type="email"
+                  value={resetEmail}
+                  onChange={e => setResetEmail(e.target.value)}
+                  placeholder="Ingresa tu correo"
+                  required
+                />
+              </Form.Group>
+              <Button type="submit" variant="secondary" className="w-100 mb-2">Enviar correo de recuperación</Button>
+              {resetSent && <Alert variant="success">Correo enviado. Revisa tu bandeja de entrada.</Alert>}
+              {resetError && <Alert variant="danger">{resetError}</Alert>}
+              <div className="text-center">
+                <button type="button" className="btn btn-link p-0" onClick={() => setShowReset(false)}>
+                  Cancelar
+                </button>
+              </div>
+            </Form>
+          )}
         </Card.Body>
       </Card>
     </div>

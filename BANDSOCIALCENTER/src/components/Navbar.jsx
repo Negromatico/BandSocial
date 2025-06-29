@@ -39,6 +39,7 @@ const AppNavbar = () => {
           <Nav className="me-auto gap-2">
             <Nav.Link as={Link} to="/">Inicio</Nav.Link>
             <Nav.Link as={Link} to="/publicaciones">Publicaciones</Nav.Link>
+            <Nav.Link as={Link} to="/eventos">Eventos</Nav.Link>
             <Nav.Link as={Link} to="/chat">Chat</Nav.Link>
           </Nav>
           {user ? (
