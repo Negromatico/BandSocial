@@ -2,23 +2,30 @@ import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import Select from 'react-select';
 import UploadMedia from './UploadMedia';
+import HorariosField from './HorariosField';
 import { Card, Button, Form, Row, Col, Alert, Badge } from 'react-bootstrap';
 
 // Opciones predefinidas
-const ciudades = [
-  { value: 'bogota', label: 'Bogotá' },
-  { value: 'medellin', label: 'Medellín' },
-  { value: 'cali', label: 'Cali' },
-  { value: 'barranquilla', label: 'Barranquilla' },
-  { value: 'otra', label: 'Otra' },
-];
+// Las ciudades se cargarán dinámicamente desde la API de Colombia
+// Declarar esta lógica DENTRO del componente ProfileForm, no aquí.
 const generos = [
   { value: 'rock', label: 'Rock' },
   { value: 'pop', label: 'Pop' },
   { value: 'jazz', label: 'Jazz' },
   { value: 'salsa', label: 'Salsa' },
   { value: 'urbano', label: 'Urbano' },
-  { value: 'otro', label: 'Otro' },
+  { value: 'vallenato', label: 'Vallenato' },
+  { value: 'cumbia', label: 'Cumbia' },
+  { value: 'reggaeton', label: 'Reggaetón' },
+  { value: 'electronica', label: 'Electrónica' },
+  { value: 'clasica', label: 'Clásica' },
+  { value: 'metal', label: 'Metal' },
+  { value: 'punk', label: 'Punk' },
+  { value: 'blues', label: 'Blues' },
+  { value: 'folclor', label: 'Folclor' },
+  { value: 'andina', label: 'Andina' },
+  { value: 'tropical', label: 'Tropical' },
+  { value: 'otro', label: 'Otro (especificar)' },
 ];
 const instrumentos = [
   { value: 'guitarra', label: 'Guitarra' },
@@ -26,19 +33,42 @@ const instrumentos = [
   { value: 'bateria', label: 'Batería' },
   { value: 'voz', label: 'Voz' },
   { value: 'teclado', label: 'Teclado' },
-  { value: 'otro', label: 'Otro' },
+  { value: 'saxofon', label: 'Saxofón' },
+  { value: 'trompeta', label: 'Trompeta' },
+  { value: 'trombon', label: 'Trombón' },
+  { value: 'clarinete', label: 'Clarinete' },
+  { value: 'flauta', label: 'Flauta' },
+  { value: 'violin', label: 'Violín' },
+  { value: 'violonchelo', label: 'Violonchelo' },
+  { value: 'contrabajo', label: 'Contrabajo' },
+  { value: 'arpa', label: 'Arpa' },
+  { value: 'marimba', label: 'Marimba' },
+  { value: 'acordeon', label: 'Acordeón' },
+  { value: 'percusion', label: 'Percusión' },
+  { value: 'gaita', label: 'Gaita' },
+  { value: 'tiple', label: 'Tiple' },
+  { value: 'requinto', label: 'Requinto' },
+  { value: 'bandola', label: 'Bandola' },
+  { value: 'charango', label: 'Charango' },
+  { value: 'cuatro', label: 'Cuatro' },
+  { value: 'ukelele', label: 'Ukelele' },
+  { value: 'armonica', label: 'Armónica' },
+  { value: 'otro', label: 'Otro (especificar)' },
 ];
-const dias = [
-  { value: 'lunes', label: 'Lunes' },
-  { value: 'martes', label: 'Martes' },
-  { value: 'miercoles', label: 'Miércoles' },
-  { value: 'jueves', label: 'Jueves' },
-  { value: 'viernes', label: 'Viernes' },
-  { value: 'sabado', label: 'Sábado' },
-  { value: 'domingo', label: 'Domingo' },
-];
+// El selector de días ahora está en HorariosField.jsx
 
 const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) => {
+  // Ciudades de Colombia (hook correcto)
+  const [ciudadesOptions, setCiudadesOptions] = React.useState([]);
+  React.useEffect(() => {
+    fetch('https://api-colombia.com/api/v1/City')
+      .then(res => res.json())
+      .then(data => {
+        const options = data.map(city => ({ value: city.name, label: city.name }));
+        setCiudadesOptions(options);
+      })
+      .catch(() => setCiudadesOptions([]));
+  }, []);
   // Inicialización robusta de todos los states
   const [type, setType] = useState(defaultValues.type || defaultType); // musico | banda
   const [fotoPerfil, setFotoPerfil] = useState(defaultValues.fotoPerfil || '');
@@ -120,7 +150,7 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
                   name="ciudad"
                   control={control}
                   render={({ field }) => (
-                    <Select {...field} options={ciudades} />
+                    <Select {...field} options={ciudadesOptions} isClearable isSearchable placeholder="Selecciona ciudad o municipio" />
                   )}
                 />
               </Col>
@@ -130,33 +160,53 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
                   name="generos"
                   control={control}
                   render={({ field }) => (
-                    <Select {...field} options={generos} isMulti />
+                    <>
+                      <Select {...field} options={generos} isMulti placeholder="Selecciona géneros" />
+                      {Array.isArray(field.value) && field.value.some(opt => opt.value === 'otro') && (
+                        <Form.Control className="mt-2" placeholder="Especifica el género musical" {...register('otroGenero', { required: false })} />
+                      )}
+                    </>
                   )}
                 />
               </Col>
             </Row>
             <Row>
-              <Col md={6} className="mb-3">
-                <Form.Label>Días disponibles</Form.Label>
-                <Controller
-                  name="dias"
-                  control={control}
-                  render={({ field }) => (
-                    <Select {...field} options={dias} isMulti />
-                  )}
-                />
-              </Col>
               {type === 'musico' && (
-                <Col md={6} className="mb-3">
-                  <Form.Label>Instrumentos</Form.Label>
-                  <Controller
-                    name="instrumentos"
-                    control={control}
-                    render={({ field }) => (
-                      <Select {...field} options={instrumentos} isMulti />
-                    )}
-                  />
-                </Col>
+                <>
+                  <Col md={6} className="mb-3">
+                    <Form.Label>Días disponibles</Form.Label>
+                    <Controller
+                      name="dias"
+                      control={control}
+                      render={({ field }) => (
+                        <Select {...field} options={[
+                          { value: 'lunes', label: 'Lunes' },
+                          { value: 'martes', label: 'Martes' },
+                          { value: 'miercoles', label: 'Miércoles' },
+                          { value: 'jueves', label: 'Jueves' },
+                          { value: 'viernes', label: 'Viernes' },
+                          { value: 'sabado', label: 'Sábado' },
+                          { value: 'domingo', label: 'Domingo' },
+                        ]} isMulti />
+                      )}
+                    />
+                  </Col>
+                  <Col md={6} className="mb-3">
+                    <Form.Label>Instrumentos</Form.Label>
+                    <Controller
+                      name="instrumentos"
+                      control={control}
+                      render={({ field }) => (
+                        <>
+                          <Select {...field} options={instrumentos} isMulti placeholder="Selecciona instrumentos" />
+                          {Array.isArray(field.value) && field.value.some(opt => opt.value === 'otro') && (
+                            <Form.Control className="mt-2" placeholder="Especifica el instrumento" {...register('otroInstrumento', { required: false })} />
+                          )}
+                        </>
+                      )}
+                    />
+                  </Col>
+                </>
               )}
             </Row>
             {type === 'banda' && (
@@ -178,13 +228,7 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
                   </Col>
                   <Col md={6} className="mb-3">
                     <Form.Label>Horarios requeridos</Form.Label>
-                    <Controller
-                      name="horarios"
-                      control={control}
-                      render={({ field }) => (
-                        <Select {...field} options={dias} isMulti />
-                      )}
-                    />
+                    <HorariosField control={control} register={register} setValue={setValue} watch={watch} />
                   </Col>
                 </Row>
               </>
@@ -197,7 +241,12 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
                 onUpload={setVideoUrl}
                 folder="videos"
               />
-              {videoUrl && <div className="text-success small">Video subido ✔️</div>}
+              {videoUrl && (
+                <div className="d-flex align-items-center gap-2 mt-2">
+                  <div className="text-success small">Video subido ✔️</div>
+                  <Button size="sm" variant="outline-danger" onClick={() => setVideoUrl('')}>Eliminar video</Button>
+                </div>
+              )}
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Fotos (máx 5)</Form.Label>

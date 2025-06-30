@@ -34,23 +34,39 @@ const Home = () => {
   const [user, setUser] = useState(auth.currentUser);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const unsub = auth.onAuthStateChanged(u => setUser(u));
-    return unsub;
-  }, []);
-
-  useEffect(() => {
-    if (!user) setShowAuthModal(true);
-    else setShowAuthModal(false);
-  }, [user]);
   const [perfiles, setPerfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ciudad, setCiudad] = useState(null);
   const [tipo, setTipo] = useState(null);
   const [genero, setGenero] = useState(null);
   const [instrumento, setInstrumento] = useState(null);
+  const [disponible, setDisponible] = useState({ value: 'todos', label: 'Todos' });
 
+  // Obtiene valores únicos para filtros dinámicos
+  const ciudadesOptions = React.useMemo(() => {
+    const setVals = new Set(perfiles.map(p => p.ciudad && p.ciudad.value).filter(Boolean));
+    return Array.from(setVals).map(v => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }));
+  }, [perfiles]);
+  const generosOptions = React.useMemo(() => {
+    const setVals = new Set();
+    perfiles.forEach(p => (p.generos||[]).forEach(g => setVals.add(g.value)));
+    return Array.from(setVals).map(v => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }));
+  }, [perfiles]);
+  const instrumentosOptions = React.useMemo(() => {
+    const setVals = new Set();
+    perfiles.forEach(p => (p.instrumentos||[]).forEach(i => setVals.add(i.value)));
+    perfiles.forEach(p => (p.buscan||[]).forEach(i => setVals.add(i.value)));
+    return Array.from(setVals).map(v => ({ value: v, label: v.charAt(0).toUpperCase() + v.slice(1) }));
+  }, [perfiles]);
+
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(u => setUser(u));
+    return unsub;
+  }, []);
+  useEffect(() => {
+    if (!user) setShowAuthModal(true);
+    else setShowAuthModal(false);
+  }, [user]);
   useEffect(() => {
     const fetchPerfiles = async () => {
       setLoading(true);
@@ -61,9 +77,11 @@ const Home = () => {
     fetchPerfiles();
   }, []);
 
-  // Filtros visuales
   const perfilesFiltrados = perfiles.filter(p => {
-    if (p.disponible === false) return false;
+    if (disponible.value !== 'todos') {
+      if (disponible.value === 'disponibles' && p.disponible === false) return false;
+      if (disponible.value === 'no_disponibles' && p.disponible !== false) return false;
+    }
     if (ciudad && (!p.ciudad || p.ciudad.value !== ciudad.value)) return false;
     if (tipo && p.type !== tipo.value) return false;
     if (genero && (!p.generos || !p.generos.some(g => g.value === genero.value))) return false;

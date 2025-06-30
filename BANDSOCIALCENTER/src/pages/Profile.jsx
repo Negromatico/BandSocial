@@ -55,14 +55,16 @@ const Profile = () => {
     const user = auth.currentUser;
     if (!user) {
       setLoading(false);
-      setStatus('Debes iniciar sesión para editar tu perfil.');
+      // No seteamos el status aquí, solo después de loading
       return;
     }
     try {
       const docRef = doc(db, 'perfiles', user.uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        setInitialValues(docSnap.data());
+        setInitialValues(cleanProfileData(docSnap.data()));
+      } else {
+        setInitialValues(cleanProfileData({})); // Para mostrar formulario de creación
       }
     } catch (err) {
       setStatus('Error cargando perfil');
@@ -192,7 +194,7 @@ const Profile = () => {
                 <span className="badge bg-secondary mb-2" style={{ fontSize: 15 }}>{initialValues?.type === 'banda' ? 'Banda' : 'Músico'}</span>
               </div>
               {initialValues && (
-                <ProfileForm onSubmit={handleProfileSubmit} defaultValues={initialValues} />
+                <ProfileForm key={JSON.stringify(initialValues)} onSubmit={handleProfileSubmit} defaultValues={initialValues} />
               )}
             </div>
           </div>
