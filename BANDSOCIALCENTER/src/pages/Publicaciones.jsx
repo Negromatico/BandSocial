@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { db, auth } from '../services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import PublicacionForm from '../components/PublicacionForm';
-import { Tabs, Tab, Container } from 'react-bootstrap';
+import { instrumentos } from '../data/opciones';
+import ComentariosPublicacion from '../components/ComentariosPublicacion';
+import ReaccionesPublicacion from '../components/ReaccionesPublicacion';
+import { Tabs, Tab, Container, Button } from 'react-bootstrap';
 import Eventos from './Eventos';
 
 const Publicaciones = () => {
@@ -48,6 +51,7 @@ const Publicaciones = () => {
     fetchPublicaciones();
   }, []);
 
+  console.log('Renderizando publicaciones', publicaciones.length, user);
   return (
     <Container fluid="sm" className="px-2 px-md-0" style={{ maxWidth: '900px', margin: '0 auto', marginTop: 24 }}>
       {user ? (
@@ -58,9 +62,8 @@ const Publicaciones = () => {
             ) : (
               <div>
                 {publicaciones.length === 0 && <div>No hay publicaciones aún.</div>}
-                {publicaciones.map(pub => {
-                  const isOwner = user && pub.autorUid && user.uid && pub.autorUid === user.uid;
-                  return (
+                <div>
+                  {publicaciones.map(pub => (
                     <div key={pub.id} style={{
                       background: '#fff',
                       borderRadius: 12,
@@ -70,44 +73,53 @@ const Publicaciones = () => {
                       border: '1px solid #ede9fe',
                       position: 'relative',
                     }}>
+                      {Array.isArray(pub.imagenesUrl) && pub.imagenesUrl.length > 0 && (
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 10, overflowX: 'auto' }}>
+                          {pub.imagenesUrl.map((img, i) => (
+                            <img key={i} src={img} alt={`img${i}`} style={{ maxHeight: 220, borderRadius: 10, objectFit: 'cover', boxShadow: '0 2px 8px #e0e7ff', minWidth: 120, maxWidth: 220 }} />
+                          ))}
+                        </div>
+                      )}
                       <div style={{ fontWeight: 700, fontSize: 20, color: '#7c3aed' }}>{pub.titulo}</div>
                       <div style={{ color: '#6b7280', fontSize: 15 }}>{pub.tipo} | {pub.ciudad}</div>
                       <div style={{ margin: '8px 0', whiteSpace: 'pre-line' }}>{pub.descripcion}</div>
                       <div style={{ fontSize: 13, color: '#a78bfa' }}>Por: {pub.autorNombre}</div>
                       <div style={{ fontSize: 12, color: '#b5b5b5' }}>{pub.createdAt && pub.createdAt.toDate && pub.createdAt.toDate().toLocaleString()}</div>
-                       {isOwner && (
-                        <button
+                      {user && pub.autorUid === user.uid && (
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          style={{ position: 'absolute', top: 14, right: 14, background: '#f87171', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 12px', fontSize: 13, cursor: 'pointer' }}
                           onClick={async () => {
-                            try {
-                              if (window.confirm('¿Seguro que quieres eliminar esta publicación?')) {
-                                const { deleteDoc, doc: docFirestore } = await import('firebase/firestore');
-                                const { db } = await import('../services/firebase');
-                                await deleteDoc(docFirestore(db, 'publicaciones', pub.id));
-                                fetchPublicaciones();
+                            if (window.confirm('¿Seguro que quieres eliminar esta publicación?')) {
+                              try {
+                                await import('firebase/firestore').then(async ({ deleteDoc, doc: docFirestore }) => {
+                                  try {
+                                    await deleteDoc(docFirestore(db, 'publicaciones', pub.id));
+                                    alert('Publicación eliminada correctamente.');
+                                  } catch (err2) {
+                                    console.error('Error interno de deleteDoc:', err2);
+                                    alert('Error interno de deleteDoc: ' + (err2 && err2.message ? err2.message : err2));
+                                  }
+                                });
+                                await fetchPublicaciones();
+                              } catch (err) {
+                                console.error('Error externo al intentar eliminar:', err);
+                                alert('No se pudo eliminar la publicación. ' + (err && err.message ? err.message : err));
                               }
-                            } catch (err) {
-                              alert('No se pudo eliminar la publicación. Intenta de nuevo.');
                             }
-                          }}
-                          style={{
-                            position: 'absolute',
-                            top: 14,
-                            right: 14,
-                            background: '#f87171',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 6,
-                            padding: '4px 12px',
-                            fontSize: 13,
-                            cursor: 'pointer',
                           }}
                         >
                           Eliminar
-                        </button>
+                        </Button>
                       )}
+                      <div style={{ borderTop: '1px solid #eee', marginTop: 12, paddingTop: 12 }}>
+                        <ReaccionesPublicacion publicacionId={pub.id} user={user} />
+                        <ComentariosPublicacion publicacionId={pub.id} user={user} />
+                      </div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
             )}
           </Tab>
@@ -116,7 +128,6 @@ const Publicaciones = () => {
               <PublicacionForm onCreated={fetchPublicaciones} />
             </div>
           </Tab>
-
         </Tabs>
       ) : (
         <>

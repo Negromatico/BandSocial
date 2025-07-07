@@ -53,6 +53,12 @@ const Login = () => {
             <Button type="submit" variant="primary" className="w-100">Entrar</Button>
             {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
           </Form>
+          <Button variant="secondary" className="w-100 mt-3" onClick={() => {
+            localStorage.setItem('guest', 'true');
+            navigate('/');
+          }}>
+            Entrar como invitado
+          </Button>
           <div className="text-center mt-3">
             <button className="btn btn-link p-0" style={{color: '#7c3aed'}} onClick={() => setShowReset(true)}>
               ¿Olvidaste tu contraseña?

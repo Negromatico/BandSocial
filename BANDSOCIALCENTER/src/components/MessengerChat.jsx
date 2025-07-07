@@ -19,6 +19,7 @@ function getChatId(uid1, uid2) {
 const MessengerChat = () => {
   const user = auth.currentUser;
   const [chats, setChats] = useState([]);
+  const [unreadChats, setUnreadChats] = useState({});
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
@@ -35,6 +36,14 @@ const MessengerChat = () => {
       // Order by lastAt desc
       data.sort((a, b) => (b.lastAt || '').localeCompare(a.lastAt || ''));
       setChats(data);
+      // Calcular chats no leídos
+      const unread = {};
+      data.forEach(chat => {
+        if (chat.lastMsg && chat.lastFrom && chat.lastFrom !== user.uid && !chat.lastRead) {
+          unread[chat.chatId] = true;
+        }
+      });
+      setUnreadChats(unread);
       setLoadingChats(false);
     });
     return unsub;
@@ -48,9 +57,15 @@ const MessengerChat = () => {
     const unsub = onSnapshot(q, (snap) => {
       setMessages(snap.docs.map(doc => doc.data()));
       setLoadingMsgs(false);
+      // Marcar como leído este chat
+      if (user && selectedChat) {
+        import('firebase/firestore').then(({ doc, updateDoc }) => {
+          updateDoc(doc(db, 'userChats', user.uid, 'chats', selectedChat.chatId), { lastRead: true });
+        });
+      }
     });
     return unsub;
-  }, [selectedChat]);
+  }, [selectedChat, user, db]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -59,13 +74,50 @@ const MessengerChat = () => {
   const handleSend = async (e) => {
     e.preventDefault();
     if (!newMsg.trim() || !selectedChat) return;
-    await addDoc(collection(db, 'chats', selectedChat.chatId, 'messages'), {
+    // Optimistic UI: agrega el mensaje localmente
+    setMessages(prev => ([...prev, {
       text: newMsg,
+      from: user.uid,
+      to: selectedChat.with,
+      createdAt: new Date(),
+      optimistic: true
+    }]));
+    const msgText = newMsg;
+    setNewMsg('');
+    // Firebase
+    await addDoc(collection(db, 'chats', selectedChat.chatId, 'messages'), {
+      text: msgText,
       from: user.uid,
       to: selectedChat.with,
       createdAt: serverTimestamp(),
     });
-    setNewMsg('');
+    // Actualiza metadatos para ambos usuarios
+    await Promise.all([
+      import('firebase/firestore').then(({ doc, setDoc }) =>
+        setDoc(doc(db, 'userChats', user.uid, 'chats', selectedChat.chatId), {
+          chatId: selectedChat.chatId,
+          with: selectedChat.with,
+          withEmail: selectedChat.withEmail,
+          withNombre: selectedChat.withNombre,
+          lastMsg: msgText,
+          lastAt: new Date().toISOString(),
+          lastFrom: user.uid,
+          lastRead: true
+        }, { merge: true })
+      ),
+      import('firebase/firestore').then(({ doc, setDoc }) =>
+        setDoc(doc(db, 'userChats', selectedChat.with, 'chats', selectedChat.chatId), {
+          chatId: selectedChat.chatId,
+          with: user.uid,
+          withEmail: user.email,
+          withNombre: user.displayName || user.email,
+          lastMsg: msgText,
+          lastAt: new Date().toISOString(),
+          lastFrom: user.uid,
+          lastRead: false
+        }, { merge: true })
+      )
+    ]);
   };
 
   return (
@@ -89,16 +141,19 @@ const MessengerChat = () => {
                 key={i}
                 active={selectedChat?.chatId === c.chatId}
                 onClick={() => setSelectedChat(c)}
-                style={{ cursor: 'pointer', border: 'none', background: selectedChat?.chatId === c.chatId ? '#e9d5ff' : 'inherit' }}
+                style={{ cursor: 'pointer', border: 'none', background: unreadChats[c.chatId] ? '#fef08a' : (selectedChat?.chatId === c.chatId ? '#e9d5ff' : 'inherit'), fontWeight: unreadChats[c.chatId] ? 700 : 400 }}
                 className="d-flex align-items-center gap-2"
               >
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18 }}>
-                  {c.withEmail ? c.withEmail[0].toUpperCase() : '👤'}
+                  {c.withNombre ? c.withNombre[0].toUpperCase() : '👤'}
                 </div>
                 <div className="flex-grow-1">
-                  <div style={{ fontWeight: 500, color: '#7c3aed' }}>{c.withNombre || c.withEmail}</div>
+                  <div style={{ fontWeight: 500, color: '#7c3aed' }}>{c.withNombre || 'Usuario'}</div>
                   <div style={{ fontSize: 13, color: '#6b7280' }}>{c.lastMsg?.slice(0, 30) || ''}</div>
                 </div>
+                {unreadChats[c.chatId] && (
+                  <span style={{ background: '#dc3545', color: '#fff', borderRadius: '50%', minWidth: 16, height: 16, fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, padding: '0 4px', marginLeft: 6 }}>●</span>
+                )}
                 {c.lastAt && <Badge bg="light" text="dark" style={{ fontSize: 11 }}>{new Date(c.lastAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Badge>}
               </ListGroup.Item>
             ))}

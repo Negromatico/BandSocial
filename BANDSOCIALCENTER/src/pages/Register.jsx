@@ -60,6 +60,12 @@ const Register = () => {
             <Button type="submit" variant="primary" className="w-100">Crear cuenta</Button>
             {error && <Alert variant="danger" className="mt-3">{error}</Alert>}
           </Form>
+          <Button variant="secondary" className="w-100 mt-3" onClick={() => {
+            localStorage.setItem('guest', 'true');
+            navigate('/');
+          }}>
+            Entrar como invitado
+          </Button>
         </Card.Body>
       </Card>
     </div>

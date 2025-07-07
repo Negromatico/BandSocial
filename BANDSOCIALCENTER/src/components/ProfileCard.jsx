@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Card, Badge, Button, Modal } from 'react-bootstrap';
 import ChatModal from './ChatModal';
+import { GuestContext } from '../App';
 import { useNavigate } from 'react-router-dom';
 
 const ProfileCard = ({ profile }) => {
   const [showChat, setShowChat] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const isGuest = useContext(GuestContext);
   const isMusico = profile.type === 'musico';
   const foto = profile.fotoPerfil || profile.fotos?.[0] || 'https://placehold.co/300x200/7c3aed/fff?text=Sin+foto';
 
@@ -104,13 +107,28 @@ const ProfileCard = ({ profile }) => {
             </>
           )}
           <div className="mt-auto" style={{ width: '100%', marginBottom: 10 }}>
-            <Button variant="primary" className="w-100 mt-2" onClick={() => setShowChat(true)}>
+            <Button variant="primary" className="w-100 mt-2" onClick={() => {
+              if (isGuest) setShowAuthPrompt(true);
+              else setShowChat(true);
+            }}>
               Contactar
             </Button>
           </div>
         </Card.Body>
       </Card>
       <ChatModal show={showChat} onHide={() => setShowChat(false)} otherUser={otherUser} />
+      <Modal show={showAuthPrompt} onHide={() => setShowAuthPrompt(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Acción solo para usuarios registrados</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          <p>Debes iniciar sesión o registrarte para contactar un perfil.</p>
+          <div className="d-flex gap-3 justify-content-center mt-3">
+            <Button variant="primary" onClick={() => window.location.href = '/login'}>Iniciar sesión</Button>
+            <Button variant="outline-primary" onClick={() => window.location.href = '/register'}>Registrarse</Button>
+          </div>
+        </Modal.Body>
+      </Modal>
       <Modal show={showGallery} onHide={() => setShowGallery(false)} centered size="lg">
         <Modal.Header closeButton>
           <Modal.Title>
