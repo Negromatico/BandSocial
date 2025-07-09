@@ -6,6 +6,7 @@ import { Button, Form, Modal, Container } from 'react-bootstrap';
 import { GuestContext } from '../App';
 import Select from 'react-select';
 import DateRangePicker from '../components/DateRangePicker';
+import ComentariosEvento from '../components/ComentariosEvento';
 import { enviarNotificacion } from '../services/notificaciones';
 import { finalizarEventosVencidos } from '../utils/eventoFinalizacionAutomatica';
 
@@ -18,7 +19,7 @@ const Eventos = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  const [nuevoEvento, setNuevoEvento] = useState({ titulo: '', lugar: '', otraCiudad: '', fecha: '', hora: '', descripcion: '' });
+  const [nuevoEvento, setNuevoEvento] = useState({ titulo: '', lugar: '', otraCiudad: '', fecha: '', hora: '', descripcion: '', precio: '', aforo: '' });
   const [imagenes, setImagenes] = useState([]);
   const [imagenesPreview, setImagenesPreview] = useState([]);
   const [user, setUser] = useState(auth.currentUser);
@@ -43,9 +44,16 @@ const Eventos = () => {
 
   const fetchEventos = async () => {
     setLoading(true);
-    const q = query(collection(db, 'eventos'), orderBy('fecha', 'asc'));
+    const q = query(collection(db, 'eventos'), orderBy('fecha', 'desc'));
     const snapshot = await getDocs(q);
     let eventosData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Ordena por fecha DESC y luego hora DESC localmente
+    eventosData.sort((a, b) => {
+      if ((a.fecha || '') === (b.fecha || '')) {
+        return (b.hora || '').localeCompare(a.hora || '');
+      }
+      return (b.fecha || '').localeCompare(a.fecha || '');
+    });
     // Solo eventos cuya fecha+hora es futura
     const now = new Date();
     eventosData = eventosData.filter(ev => ev.fecha && ev.hora); // Solo descarta eventos sin fecha/hora
@@ -90,15 +98,23 @@ const Eventos = () => {
     }
     setCreateError('');
     setCreateSuccess(false);
-    if (!nuevoEvento.titulo || !nuevoEvento.lugar || !nuevoEvento.fecha || !nuevoEvento.hora || !nuevoEvento.descripcion) {
+    if (!nuevoEvento.titulo || !nuevoEvento.lugar || !nuevoEvento.fecha || (!nuevoEvento.fechaRango && !nuevoEvento.hora) || !nuevoEvento.descripcion || !nuevoEvento.aforo) {
       setCreateError('Todos los campos son obligatorios.');
       return;
     }
     // Validar que la fecha/hora no sea pasada
-    const fechaHoraEvento = new Date(nuevoEvento.fecha + 'T' + (nuevoEvento.hora || '00:00'));
-    if (fechaHoraEvento < new Date()) {
-      setCreateError('La fecha y hora del evento no pueden ser anteriores al momento actual.');
-      return;
+    if (!nuevoEvento.fechaRango) {
+      const fechaHoraEvento = new Date(nuevoEvento.fecha + 'T' + (nuevoEvento.hora || '00:00'));
+      if (fechaHoraEvento < new Date()) {
+        setCreateError('La fecha y hora del evento no pueden ser anteriores al momento actual.');
+        return;
+      }
+    } else {
+      const fechaInicio = new Date(nuevoEvento.fecha + 'T00:00');
+      if (fechaInicio < new Date()) {
+        setCreateError('La fecha de inicio no puede ser anterior al momento actual.');
+        return;
+      }
     }
     if (nuevoEvento.descripcion.length > 250) {
       setCreateError('La descripción no puede superar los 250 caracteres.');
@@ -115,6 +131,8 @@ const Eventos = () => {
       }
       await addDoc(collection(db, 'eventos'), {
         ...nuevoEvento,
+        precio: nuevoEvento.precio ? Number(nuevoEvento.precio) : 0,
+        aforo: Number(nuevoEvento.aforo),
         asistentes: [],
         creador: user ? user.uid : null,
         createdAt: Timestamp.now(),
@@ -302,6 +320,7 @@ const [filtroRango, setFiltroRango] = useState(false);
                 ) : null} 
               </div>
               <div style={{ fontSize: 13, color: '#b5b5b5' }}>Creador: {ev.creadorNombre}</div>
+<ComentariosEvento eventoId={ev.id} user={user} />
               {user && ev.creador === user.uid && !ev.finalizado && !eventoPasado && (
                 <Button
                   size="sm"
@@ -425,6 +444,15 @@ const [filtroRango, setFiltroRango] = useState(false);
               <div className="text-end small" style={{color: nuevoEvento.descripcion.length > 240 ? '#d00' : '#888'}}>
                 {nuevoEvento.descripcion.length}/250
               </div>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Precio de la entrada (COP)</Form.Label>
+              <Form.Control type="number" min="0" placeholder="0 (gratis)" value={nuevoEvento.precio} onChange={e => setNuevoEvento({ ...nuevoEvento, precio: e.target.value })} />
+              <Form.Text className="text-muted">Deja en 0 si el evento es gratuito.</Form.Text>
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Aforo (capacidad máxima)</Form.Label>
+              <Form.Control type="number" min="1" required value={nuevoEvento.aforo} onChange={e => setNuevoEvento({ ...nuevoEvento, aforo: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Imágenes (opcional, puedes seleccionar varias)</Form.Label>

@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Eventos
+    match /eventos/{eventoId} {
+      allow read, write: if request.auth != null;
+
+      // Subcolección de comentarios en eventos
+      match /comentarios/{comentarioId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+    }
+
+    // Perfiles de usuario
+    match /perfiles/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Publicaciones y subcolección de comentarios
+    match /publicaciones/{pubId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+
+      // Subcolección de comentarios en publicaciones
+      match /comentarios/{comentarioId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+    }
+
+    // Metadatos de chats por usuario (userChats)
+    match /userChats/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+      match /chats/{chatId} {
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Chats y mensajes (estructura: /chats/{chatId}/messages/{messageId})
+    match /chats/{chatId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      match /messages/{messageId} {
+        allow read: if request.auth != null;
+        // Solo el autor puede crear su mensaje
+        allow write: if request.auth != null && request.auth.uid == request.resource.data.from;
+      }
+    }
+  }
+}
