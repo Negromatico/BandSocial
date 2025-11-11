@@ -2,119 +2,207 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Funciones helper
+    // ============================================
+    // FUNCIONES AUXILIARES
+    // ============================================
+    
+    // Verificar autenticación
     function isAuthenticated() {
       return request.auth != null;
     }
     
+    // Verificar si el usuario es el propietario
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isAuthenticated() && request.auth.uid == userId;
     }
     
-    function isValidString(text, minLen, maxLen) {
-      return text is string && text.size() >= minLen && text.size() <= maxLen;
+    // Validar que tenga campos requeridos
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
     }
-
-    // Perfiles de usuario
+    
+    // Validar string con longitud
+    function isValidString(value, minLen, maxLen) {
+      return value is string 
+        && value.size() >= minLen 
+        && value.size() <= maxLen;
+    }
+    
+    // ============================================
+    // PERFILES
+    // ============================================
     match /perfiles/{userId} {
-      allow read: if true; // Perfiles públicos
-      allow create: if isAuthenticated() && isOwner(userId);
-      allow update: if isAuthenticated() && isOwner(userId)
-        && request.resource.data.uid == userId; // No puede cambiar su UID
-      allow delete: if isAuthenticated() && isOwner(userId);
+      // Lectura: Todos los usuarios autenticados
+      allow read: if isAuthenticated();
+      
+      // Crear: Solo el usuario correspondiente
+      allow create: if isAuthenticated() 
+        && request.auth.uid == userId
+        && hasRequiredFields(['nombre', 'email', 'type', 'uid']);
+      
+      // Actualizar: El propietario O actualización de seguidores/siguiendo
+      allow update: if isOwner(userId) ||
+                      (isAuthenticated() && 
+                       request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['seguidores', 'siguiendo']));
+      
+      // Eliminar: Solo el propietario
+      allow delete: if isOwner(userId);
     }
-
-    // Publicaciones
-    match /publicaciones/{pubId} {
-      allow read: if true; // Publicaciones públicas
-      allow create: if isAuthenticated()
+    
+    // ============================================
+    // PUBLICACIONES
+    // ============================================
+    match /publicaciones/{postId} {
+      // Lectura: Todos los usuarios autenticados
+      allow read: if isAuthenticated();
+      
+      // Crear: Usuario autenticado, debe ser el autor
+      allow create: if isAuthenticated() 
         && request.resource.data.autorUid == request.auth.uid
-        && isValidString(request.resource.data.titulo, 1, 200);
-      allow update: if isAuthenticated() 
-        && (resource.data.autorUid == request.auth.uid // Autor puede editar
-        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reacciones', 'comentarios'])); // Otros solo reacciones
-      allow delete: if isAuthenticated() && resource.data.autorUid == request.auth.uid;
-
-      // Comentarios en publicaciones
-      match /comentarios/{comentarioId} {
-        allow read: if true;
+        && hasRequiredFields(['titulo', 'descripcion', 'autorUid', 'createdAt']);
+      
+      // Actualizar/Eliminar: Solo el autor
+      allow update, delete: if isAuthenticated() 
+        && resource.data.autorUid == request.auth.uid;
+      
+      // Subcolección: Comentarios
+      match /comentarios/{commentId} {
+        allow read: if isAuthenticated();
         allow create: if isAuthenticated()
           && request.resource.data.autorUid == request.auth.uid;
         allow update, delete: if isAuthenticated() 
           && resource.data.autorUid == request.auth.uid;
       }
-    }
-
-    // Eventos
-    match /eventos/{eventoId} {
-      allow read: if true; // Eventos públicos
-      allow create: if isAuthenticated()
-        && request.resource.data.creadorUid == request.auth.uid
-        && isValidString(request.resource.data.titulo, 1, 200)
-        && request.resource.data.fecha is timestamp;
-      allow update: if isAuthenticated() 
-        && (resource.data.creadorUid == request.auth.uid // Creador puede editar
-        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['asistentes'])); // Otros solo asistir
-      allow delete: if isAuthenticated() && resource.data.creadorUid == request.auth.uid;
-
-      // Comentarios en eventos
-      match /comentarios/{comentarioId} {
-        allow read: if true;
-        allow create: if isAuthenticated()
-          && request.resource.data.autorUid == request.auth.uid;
-        allow update, delete: if isAuthenticated() 
-          && resource.data.autorUid == request.auth.uid;
+      
+      // Subcolección: Reacciones/Likes
+      match /reacciones/{reactionId} {
+        allow read: if isAuthenticated();
+        allow create, delete: if isAuthenticated() 
+          && request.auth.uid == reactionId;
       }
     }
-
-    // Productos (Marketplace)
-    match /productos/{productoId} {
-      allow read: if true; // Productos públicos
-      allow create: if isAuthenticated()
+    
+    // ============================================
+    // PRODUCTOS (MusicMarket)
+    // ============================================
+    match /productos/{productId} {
+      // Lectura: Todos los usuarios autenticados
+      allow read: if isAuthenticated();
+      
+      // Crear: Usuario autenticado, debe ser el vendedor
+      allow create: if isAuthenticated() 
         && request.resource.data.vendedorUid == request.auth.uid
-        && isValidString(request.resource.data.nombre, 1, 200)
+        && hasRequiredFields(['nombre', 'precio', 'vendedorUid', 'createdAt'])
         && request.resource.data.precio is number
         && request.resource.data.precio > 0;
-      allow update: if isAuthenticated() 
-        && resource.data.vendedorUid == request.auth.uid;
-      allow delete: if isAuthenticated() 
+      
+      // Actualizar/Eliminar: Solo el vendedor
+      allow update, delete: if isAuthenticated() 
         && resource.data.vendedorUid == request.auth.uid;
     }
-
-    // Conversaciones
-    match /conversaciones/{conversacionId} {
-      allow read: if isAuthenticated() 
-        && request.auth.uid in resource.data.participantes;
-      allow create: if isAuthenticated()
-        && request.auth.uid in request.resource.data.participantes;
+    
+    // ============================================
+    // EVENTOS
+    // ============================================
+    match /eventos/{eventId} {
+      // Lectura: Todos los usuarios autenticados
+      allow read: if isAuthenticated();
+      
+      // Crear: Usuario autenticado, debe ser el creador
+      allow create: if isAuthenticated() 
+        && request.resource.data.creadorUid == request.auth.uid
+        && hasRequiredFields(['nombre', 'fecha', 'creadorUid', 'createdAt'])
+        && request.resource.data.fecha is timestamp;
+      
+      // Actualizar: Creador puede editar todo, otros solo asistentes
       allow update: if isAuthenticated() 
-        && request.auth.uid in resource.data.participantes;
-      allow delete: if false; // No se pueden eliminar conversaciones
-
-      // Mensajes en conversaciones
-      match /mensajes/{mensajeId} {
-        allow read: if isAuthenticated() 
-          && request.auth.uid in get(/databases/$(database)/documents/conversaciones/$(conversacionId)).data.participantes;
+        && (resource.data.creadorUid == request.auth.uid 
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['asistentes']));
+      
+      // Eliminar: Solo el creador
+      allow delete: if isAuthenticated() 
+        && resource.data.creadorUid == request.auth.uid;
+      
+      // Subcolección: Comentarios
+      match /comentarios/{commentId} {
+        allow read: if isAuthenticated();
         allow create: if isAuthenticated()
-          && request.resource.data.emisorUid == request.auth.uid
-          && request.auth.uid in get(/databases/$(database)/documents/conversaciones/$(conversacionId)).data.participantes;
-        allow update, delete: if false; // Los mensajes no se pueden editar ni eliminar
+          && request.resource.data.autorUid == request.auth.uid;
+        allow update, delete: if isAuthenticated() 
+          && resource.data.autorUid == request.auth.uid;
       }
     }
-
-    // Notificaciones
-    match /notificaciones/{notificacionId} {
+    
+    // ============================================
+    // CONVERSACIONES (Chat)
+    // ============================================
+    match /conversaciones/{conversationId} {
+      // Lectura: Solo participantes
       allow read: if isAuthenticated() 
-        && resource.data.usuarioUid == request.auth.uid;
-      allow create: if isAuthenticated(); // Cualquier usuario puede crear notificaciones
+        && request.auth.uid in resource.data.participantes;
+      
+      // Crear: Usuario debe estar en participantes
+      allow create: if isAuthenticated()
+        && request.auth.uid in request.resource.data.participantes;
+      
+      // Actualizar: Solo participantes
       allow update: if isAuthenticated() 
-        && resource.data.usuarioUid == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida']); // Solo puede marcar como leída
-      allow delete: if isAuthenticated() 
-        && resource.data.usuarioUid == request.auth.uid;
+        && request.auth.uid in resource.data.participantes;
+      
+      // Eliminar: No permitido
+      allow delete: if false;
+      
+      // Subcolección: Mensajes
+      match /mensajes/{messageId} {
+        allow read: if isAuthenticated() 
+          && request.auth.uid in get(/databases/$(database)/documents/conversaciones/$(conversationId)).data.participantes;
+        allow create: if isAuthenticated()
+          && request.resource.data.emisorUid == request.auth.uid
+          && request.auth.uid in get(/databases/$(database)/documents/conversaciones/$(conversationId)).data.participantes;
+        allow update, delete: if false; // Mensajes no se pueden editar
+      }
     }
-
-    // Metadatos de chats por usuario (userChats) - Legacy
+    
+    // ============================================
+    // NOTIFICACIONES
+    // ============================================
+    match /notificaciones/{notificationId} {
+      // Lectura: Solo el destinatario
+      allow read: if isAuthenticated() 
+        && resource.data.usuarioId == request.auth.uid;
+      
+      // Crear: Cualquier usuario autenticado puede crear notificaciones
+      allow create: if isAuthenticated()
+        && hasRequiredFields(['usuarioId', 'tipo', 'mensaje', 'origenUid', 'createdAt']);
+      
+      // Actualizar: Solo el destinatario, solo campo 'leida'
+      allow update: if isAuthenticated() 
+        && resource.data.usuarioId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida']);
+      
+      // Eliminar: Solo el destinatario
+      allow delete: if isAuthenticated() 
+        && resource.data.usuarioId == request.auth.uid;
+    }
+    
+    // ============================================
+    // GRUPOS (Opcional - para futuro)
+    // ============================================
+    match /grupos/{groupId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() 
+        && request.resource.data.creadorUid == request.auth.uid;
+      allow update: if isAuthenticated() 
+        && (resource.data.creadorUid == request.auth.uid
+        || request.auth.uid in resource.data.miembros);
+      allow delete: if isAuthenticated() 
+        && resource.data.creadorUid == request.auth.uid;
+    }
+    
+    // ============================================
+    // LEGACY: Chats antiguos (mantener compatibilidad)
+    // ============================================
     match /userChats/{userId} {
       allow read: if isAuthenticated() && isOwner(userId);
       allow write: if isAuthenticated() && isOwner(userId);
@@ -124,8 +212,7 @@ service cloud.firestore {
         allow write: if isAuthenticated() && isOwner(userId);
       }
     }
-
-    // Chats y mensajes - Legacy
+    
     match /chats/{chatId} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
@@ -136,8 +223,10 @@ service cloud.firestore {
           && request.resource.data.from == request.auth.uid;
       }
     }
-
-    // Denegar todo lo demás
+    
+    // ============================================
+    // DENEGAR TODO LO DEMÁS
+    // ============================================
     match /{document=**} {
       allow read, write: if false;
     }
