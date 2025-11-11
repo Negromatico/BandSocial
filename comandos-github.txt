@@ -1,0 +1,54 @@
+# ========================================
+# COMANDOS PARA SUBIR A GITHUB
+# ========================================
+
+# IMPORTANTE: Reemplaza TU_USUARIO con tu usuario de GitHub
+
+# 1. Agregar el remote
+git remote add origin https://github.com/TU_USUARIO/BandSocial.git
+
+# 2. Verificar que se agregó correctamente
+git remote -v
+
+# 3. Renombrar rama a main
+git branch -M main
+
+# 4. Subir el código
+git push -u origin main
+
+# ========================================
+# EJEMPLO CON USUARIO "juanperez"
+# ========================================
+
+git remote add origin https://github.com/juanperez/BandSocial.git
+git remote -v
+git branch -M main
+git push -u origin main
+
+# ========================================
+# COMANDOS PARA FUTUROS CAMBIOS
+# ========================================
+
+# Ver estado
+git status
+
+# Agregar cambios
+git add .
+
+# Hacer commit
+git commit -m "Descripción de los cambios"
+
+# Subir a GitHub
+git push
+
+# ========================================
+# SI NECESITAS AUTENTICACIÓN
+# ========================================
+
+# Configurar tu nombre y email
+git config --global user.name "Tu Nombre"
+git config --global user.email "tu@email.com"
+
+# GitHub te pedirá tu token personal si usas HTTPS
+# Créalo en: https://github.com/settings/tokens
+# Permisos necesarios: repo (todos los checkboxes)
