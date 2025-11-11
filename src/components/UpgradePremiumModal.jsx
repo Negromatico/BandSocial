@@ -64,7 +64,7 @@ const UpgradePremiumModal = ({ show, onHide, limitType = 'publicaciones' }) => {
         {/* Comparación de planes */}
         <div style={{ padding: '30px' }}>
           <div className="row g-3">
-            {/* Plan Estándar */}
+            {/* Plan Free */}
             <div className="col-md-6">
               <div style={{
                 border: '2px solid #e5e7eb',
@@ -75,7 +75,7 @@ const UpgradePremiumModal = ({ show, onHide, limitType = 'publicaciones' }) => {
               }}>
                 <div style={{ textAlign: 'center', marginBottom: '15px' }}>
                   <h4 style={{ color: '#6b7280', fontWeight: '600', marginBottom: '5px' }}>
-                    Plan Estándar
+                    Plan Free
                   </h4>
                   <div style={{ fontSize: '2rem', fontWeight: '700', color: '#9ca3af' }}>
                     GRATIS
@@ -83,20 +83,24 @@ const UpgradePremiumModal = ({ show, onHide, limitType = 'publicaciones' }) => {
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <FaTimes style={{ color: '#ef4444', fontSize: '1.2rem' }} />
-                    <span style={{ color: '#6b7280' }}>1 publicación máximo</span>
-                  </li>
-                  <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <FaTimes style={{ color: '#ef4444', fontSize: '1.2rem' }} />
-                    <span style={{ color: '#6b7280' }}>1 producto en MusicMarket</span>
-                  </li>
-                  <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <FaTimes style={{ color: '#ef4444', fontSize: '1.2rem' }} />
-                    <span style={{ color: '#6b7280' }}>1 evento máximo</span>
+                    <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
+                    <span style={{ color: '#6b7280' }}>5 mensajes por día</span>
                   </li>
                   <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
-                    <span style={{ color: '#6b7280' }}>Perfil básico</span>
+                    <span style={{ color: '#6b7280' }}>20 mensajes en chat/día</span>
+                  </li>
+                  <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
+                    <span style={{ color: '#6b7280' }}>1 publicación por día</span>
+                  </li>
+                  <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
+                    <span style={{ color: '#6b7280' }}>1 evento por día</span>
+                  </li>
+                  <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FaTimes style={{ color: '#ef4444', fontSize: '1.2rem' }} />
+                    <span style={{ color: '#6b7280' }}>Reacciones ilimitadas</span>
                   </li>
                 </ul>
               </div>
@@ -134,18 +138,22 @@ const UpgradePremiumModal = ({ show, onHide, limitType = 'publicaciones' }) => {
                     Plan Premium
                   </h4>
                   <div style={{ fontSize: '2rem', fontWeight: '700', color: '#667eea' }}>
-                    $15.000
+                    $29.990
                     <span style={{ fontSize: '1rem', fontWeight: '400', color: '#6b7280' }}> COP/mes</span>
                   </div>
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
-                    <span style={{ color: '#1f2937', fontWeight: '500' }}>Publicaciones ilimitadas</span>
+                    <span style={{ color: '#1f2937', fontWeight: '500' }}>Mensajes ilimitados</span>
                   </li>
                   <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
-                    <span style={{ color: '#1f2937', fontWeight: '500' }}>Productos ilimitados</span>
+                    <span style={{ color: '#1f2937', fontWeight: '500' }}>Chat ilimitado</span>
+                  </li>
+                  <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
+                    <span style={{ color: '#1f2937', fontWeight: '500' }}>Publicaciones ilimitadas</span>
                   </li>
                   <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
@@ -153,11 +161,11 @@ const UpgradePremiumModal = ({ show, onHide, limitType = 'publicaciones' }) => {
                   </li>
                   <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
-                    <span style={{ color: '#1f2937', fontWeight: '500' }}>Perfil destacado</span>
+                    <span style={{ color: '#1f2937', fontWeight: '500' }}>Comentarios ilimitados</span>
                   </li>
                   <li style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <FaCheck style={{ color: '#10b981', fontSize: '1.2rem' }} />
-                    <span style={{ color: '#1f2937', fontWeight: '500' }}>Soporte prioritario</span>
+                    <span style={{ color: '#1f2937', fontWeight: '500' }}>Reacciones ilimitadas</span>
                   </li>
                 </ul>
               </div>
