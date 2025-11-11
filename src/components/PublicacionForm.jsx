@@ -4,6 +4,7 @@ import { db, auth } from '../services/firebase';
 import { GuestContext } from '../App';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import { uploadToCloudinary } from '../services/cloudinary';
+import UpgradePremiumModal from './UpgradePremiumModal';
 
 
 const tipos = [
@@ -51,6 +52,7 @@ const PublicacionForm = ({ onCreated }) => {
   const [success, setSuccess] = useState(false);
   const [imagenes, setImagenes] = useState([]);
   const [imagenesPreview, setImagenesPreview] = useState([]);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const handleImagenChange = e => {
     const files = Array.from(e.target.files);
@@ -94,8 +96,8 @@ const PublicacionForm = ({ onCreated }) => {
         
         // Verificar límites según plan
         if (planActual === 'estandar' && cantidadPublicaciones >= 1) {
-          setError('Has alcanzado el límite de publicaciones de tu plan Estándar (1 publicación). Actualiza a Premium para publicar sin límites.');
           setLoading(false);
+          setShowUpgradeModal(true);
           return;
         }
       }
@@ -135,8 +137,15 @@ const PublicacionForm = ({ onCreated }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ background: '#f3f0fa', borderRadius: 12, padding: 20, boxShadow: '0 1px 4px #ede9fe' }}>
-      <Modal show={showAuthPrompt} onHide={() => setShowAuthPrompt(false)} centered>
+    <>
+      <UpgradePremiumModal 
+        show={showUpgradeModal} 
+        onHide={() => setShowUpgradeModal(false)}
+        limitType="publicaciones"
+      />
+      
+      <form onSubmit={handleSubmit} style={{ background: '#f3f0fa', borderRadius: 12, padding: 20, boxShadow: '0 1px 4px #ede9fe' }}>
+        <Modal show={showAuthPrompt} onHide={() => setShowAuthPrompt(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Acción solo para usuarios registrados</Modal.Title>
         </Modal.Header>
@@ -207,6 +216,7 @@ const PublicacionForm = ({ onCreated }) => {
         {loading ? 'Publicando...' : 'Publicar'}
       </button>
     </form>
+    </>
   );
 };
 

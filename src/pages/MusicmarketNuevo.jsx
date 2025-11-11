@@ -4,6 +4,7 @@ import { FaStar, FaMapMarkerAlt, FaFilter, FaPlus } from 'react-icons/fa';
 import { db, auth } from '../services/firebase';
 import { collection, getDocs, addDoc, query, orderBy, doc, getDoc, Timestamp, where } from 'firebase/firestore';
 import { uploadToCloudinary } from '../services/cloudinary';
+import UpgradePremiumModal from '../components/UpgradePremiumModal';
 import './Musicmarket.css';
 
 const MusicmarketNuevo = () => {
@@ -29,6 +30,7 @@ const MusicmarketNuevo = () => {
   const [imagen, setImagen] = useState(null);
   const [imagenPreview, setImagenPreview] = useState('');
   const [creating, setCreating] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => setUser(u));
@@ -105,8 +107,8 @@ const MusicmarketNuevo = () => {
         
         // Verificar límites según plan
         if (planActual === 'estandar' && cantidadProductos >= 1) {
-          alert('Has alcanzado el límite de productos de tu plan Estándar (1 producto). Actualiza a Premium para publicar sin límites.');
           setCreating(false);
+          setShowUpgradeModal(true);
           return;
         }
       }
@@ -186,9 +188,16 @@ const MusicmarketNuevo = () => {
   };
 
   return (
-    <Container fluid className="px-4 py-4">
-      {/* Header */}
-      <div className="market-header mb-4">
+    <>
+      <UpgradePremiumModal 
+        show={showUpgradeModal} 
+        onHide={() => setShowUpgradeModal(false)}
+        limitType="productos"
+      />
+      
+      <Container fluid className="px-4 py-4">
+        {/* Header */}
+        <div className="market-header mb-4">
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
           <div>
             <h2 className="market-title mb-1">Instrumentos Musicales</h2>
@@ -439,6 +448,7 @@ const MusicmarketNuevo = () => {
         </Modal.Body>
       </Modal>
     </Container>
+    </>
   );
 };
 
