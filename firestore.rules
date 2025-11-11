@@ -1,0 +1,145 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Funciones helper
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isValidString(text, minLen, maxLen) {
+      return text is string && text.size() >= minLen && text.size() <= maxLen;
+    }
+
+    // Perfiles de usuario
+    match /perfiles/{userId} {
+      allow read: if true; // Perfiles públicos
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && isOwner(userId)
+        && request.resource.data.uid == userId; // No puede cambiar su UID
+      allow delete: if isAuthenticated() && isOwner(userId);
+    }
+
+    // Publicaciones
+    match /publicaciones/{pubId} {
+      allow read: if true; // Publicaciones públicas
+      allow create: if isAuthenticated()
+        && request.resource.data.autorUid == request.auth.uid
+        && isValidString(request.resource.data.titulo, 1, 200);
+      allow update: if isAuthenticated() 
+        && (resource.data.autorUid == request.auth.uid // Autor puede editar
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reacciones', 'comentarios'])); // Otros solo reacciones
+      allow delete: if isAuthenticated() && resource.data.autorUid == request.auth.uid;
+
+      // Comentarios en publicaciones
+      match /comentarios/{comentarioId} {
+        allow read: if true;
+        allow create: if isAuthenticated()
+          && request.resource.data.autorUid == request.auth.uid;
+        allow update, delete: if isAuthenticated() 
+          && resource.data.autorUid == request.auth.uid;
+      }
+    }
+
+    // Eventos
+    match /eventos/{eventoId} {
+      allow read: if true; // Eventos públicos
+      allow create: if isAuthenticated()
+        && request.resource.data.creadorUid == request.auth.uid
+        && isValidString(request.resource.data.titulo, 1, 200)
+        && request.resource.data.fecha is timestamp;
+      allow update: if isAuthenticated() 
+        && (resource.data.creadorUid == request.auth.uid // Creador puede editar
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['asistentes'])); // Otros solo asistir
+      allow delete: if isAuthenticated() && resource.data.creadorUid == request.auth.uid;
+
+      // Comentarios en eventos
+      match /comentarios/{comentarioId} {
+        allow read: if true;
+        allow create: if isAuthenticated()
+          && request.resource.data.autorUid == request.auth.uid;
+        allow update, delete: if isAuthenticated() 
+          && resource.data.autorUid == request.auth.uid;
+      }
+    }
+
+    // Productos (Marketplace)
+    match /productos/{productoId} {
+      allow read: if true; // Productos públicos
+      allow create: if isAuthenticated()
+        && request.resource.data.vendedorUid == request.auth.uid
+        && isValidString(request.resource.data.nombre, 1, 200)
+        && request.resource.data.precio is number
+        && request.resource.data.precio > 0;
+      allow update: if isAuthenticated() 
+        && resource.data.vendedorUid == request.auth.uid;
+      allow delete: if isAuthenticated() 
+        && resource.data.vendedorUid == request.auth.uid;
+    }
+
+    // Conversaciones
+    match /conversaciones/{conversacionId} {
+      allow read: if isAuthenticated() 
+        && request.auth.uid in resource.data.participantes;
+      allow create: if isAuthenticated()
+        && request.auth.uid in request.resource.data.participantes;
+      allow update: if isAuthenticated() 
+        && request.auth.uid in resource.data.participantes;
+      allow delete: if false; // No se pueden eliminar conversaciones
+
+      // Mensajes en conversaciones
+      match /mensajes/{mensajeId} {
+        allow read: if isAuthenticated() 
+          && request.auth.uid in get(/databases/$(database)/documents/conversaciones/$(conversacionId)).data.participantes;
+        allow create: if isAuthenticated()
+          && request.resource.data.emisorUid == request.auth.uid
+          && request.auth.uid in get(/databases/$(database)/documents/conversaciones/$(conversacionId)).data.participantes;
+        allow update, delete: if false; // Los mensajes no se pueden editar ni eliminar
+      }
+    }
+
+    // Notificaciones
+    match /notificaciones/{notificacionId} {
+      allow read: if isAuthenticated() 
+        && resource.data.usuarioUid == request.auth.uid;
+      allow create: if isAuthenticated(); // Cualquier usuario puede crear notificaciones
+      allow update: if isAuthenticated() 
+        && resource.data.usuarioUid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leida']); // Solo puede marcar como leída
+      allow delete: if isAuthenticated() 
+        && resource.data.usuarioUid == request.auth.uid;
+    }
+
+    // Metadatos de chats por usuario (userChats) - Legacy
+    match /userChats/{userId} {
+      allow read: if isAuthenticated() && isOwner(userId);
+      allow write: if isAuthenticated() && isOwner(userId);
+      
+      match /chats/{chatId} {
+        allow read: if isAuthenticated() && isOwner(userId);
+        allow write: if isAuthenticated() && isOwner(userId);
+      }
+    }
+
+    // Chats y mensajes - Legacy
+    match /chats/{chatId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      
+      match /messages/{messageId} {
+        allow read: if isAuthenticated();
+        allow write: if isAuthenticated() 
+          && request.resource.data.from == request.auth.uid;
+      }
+    }
+
+    // Denegar todo lo demás
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

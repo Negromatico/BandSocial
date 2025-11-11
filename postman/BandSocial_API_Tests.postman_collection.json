@@ -1,0 +1,209 @@
+{
+  "info": {
+    "name": "BandSocial - API Tests",
+    "description": "Colección de pruebas para APIs externas de BandSocial",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "API Colombia - Ciudades",
+      "item": [
+        {
+          "name": "TC-API-001: Obtener todas las ciudades",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Respuesta es un array\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test(\"Cada ciudad tiene propiedad 'name'\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    jsonData.forEach(function(ciudad) {",
+                  "        pm.expect(ciudad).to.have.property('name');",
+                  "    });",
+                  "});",
+                  "",
+                  "pm.test(\"Tiempo de respuesta menor a 5000ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api-colombia.com/api/v1/City",
+              "protocol": "https",
+              "host": ["api-colombia", "com"],
+              "path": ["api", "v1", "City"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-API-002: Verificar ciudades principales",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code es 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Incluye Bogotá\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var bogota = jsonData.find(c => c.name === 'Bogotá');",
+                  "    pm.expect(bogota).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Incluye Medellín\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var medellin = jsonData.find(c => c.name === 'Medellín');",
+                  "    pm.expect(medellin).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Incluye Cali\", function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var cali = jsonData.find(c => c.name === 'Cali');",
+                  "    pm.expect(cali).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api-colombia.com/api/v1/City",
+              "protocol": "https",
+              "host": ["api-colombia", "com"],
+              "path": ["api", "v1", "City"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "TC-API-003: Rendimiento de API",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Tiempo de respuesta aceptable (<3s)\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+                  "});",
+                  "",
+                  "pm.test(\"Tamaño de respuesta razonable\", function () {",
+                  "    var responseSize = pm.response.size().body;",
+                  "    pm.expect(responseSize).to.be.below(1000000); // < 1MB",
+                  "});",
+                  "",
+                  "console.log(\"Tiempo de respuesta: \" + pm.response.responseTime + \"ms\");",
+                  "console.log(\"Tamaño de respuesta: \" + pm.response.size().body + \" bytes\");"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api-colombia.com/api/v1/City",
+              "protocol": "https",
+              "host": ["api-colombia", "com"],
+              "path": ["api", "v1", "City"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Firebase - Pruebas de Conectividad",
+      "item": [
+        {
+          "name": "TC-API-004: Verificar proyecto Firebase",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code es 200 o 403 (esperado sin auth)\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});",
+                  "",
+                  "pm.test(\"Respuesta contiene información del proyecto\", function () {",
+                  "    // Firebase puede devolver 403 sin autenticación, lo cual es correcto",
+                  "    pm.expect(pm.response.text()).to.not.be.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://bandas-f9c77.firebaseapp.com",
+              "protocol": "https",
+              "host": ["bandas-f9c77", "firebaseapp", "com"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Pruebas de Carga",
+      "item": [
+        {
+          "name": "TC-LOAD-001: Múltiples peticiones API Colombia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"API responde correctamente bajo carga\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Tiempo de respuesta consistente\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api-colombia.com/api/v1/City",
+              "protocol": "https",
+              "host": ["api-colombia", "com"],
+              "path": ["api", "v1", "City"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

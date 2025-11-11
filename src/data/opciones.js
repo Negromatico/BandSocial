@@ -1,0 +1,31 @@
+// Listas globales para selects y filtros
+export const instrumentos = [
+  { value: 'guitarra', label: 'Guitarra' },
+  { value: 'bajo', label: 'Bajo' },
+  { value: 'bateria', label: 'Batería' },
+  { value: 'voz', label: 'Voz' },
+  { value: 'teclado', label: 'Teclado' },
+  { value: 'saxofon', label: 'Saxofón' },
+  { value: 'trompeta', label: 'Trompeta' },
+  { value: 'trombon', label: 'Trombón' },
+  { value: 'clarinete', label: 'Clarinete' },
+  { value: 'flauta', label: 'Flauta' },
+  { value: 'violin', label: 'Violín' },
+  { value: 'violonchelo', label: 'Violonchelo' },
+  { value: 'contrabajo', label: 'Contrabajo' },
+  { value: 'arpa', label: 'Arpa' },
+  { value: 'marimba', label: 'Marimba' },
+  { value: 'acordeon', label: 'Acordeón' },
+  { value: 'percusion', label: 'Percusión' },
+  { value: 'gaita', label: 'Gaita' },
+  { value: 'tiple', label: 'Tiple' },
+  { value: 'requinto', label: 'Requinto' },
+  { value: 'bandola', label: 'Bandola' },
+  { value: 'charango', label: 'Charango' },
+  { value: 'cuatro', label: 'Cuatro' },
+  { value: 'ukelele', label: 'Ukelele' },
+  { value: 'armonica', label: 'Armónica' },
+  { value: 'otro', label: 'Otro (especificar)' },
+];
+
+
