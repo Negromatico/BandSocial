@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge, Modal } from 'react-bootstrap';
 import { FaStar, FaMapMarkerAlt, FaFilter, FaPlus } from 'react-icons/fa';
 import { db, auth } from '../services/firebase';
-import { collection, getDocs, addDoc, query, orderBy, doc, getDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, orderBy, doc, getDoc, Timestamp, where } from 'firebase/firestore';
 import { uploadToCloudinary } from '../services/cloudinary';
 import './Musicmarket.css';
 
@@ -85,16 +85,36 @@ const MusicmarketNuevo = () => {
 
     setCreating(true);
     try {
-      let imagenUrl = '';
-      if (imagen) {
-        imagenUrl = await uploadToCloudinary(imagen, 'Productos', 'productos/instrumentos');
-      }
-
-      // Obtener nombre del vendedor
+      // Obtener perfil y verificar plan
       const perfilSnap = await getDoc(doc(db, 'perfiles', user.uid));
       const vendedorNombre = perfilSnap.exists() 
         ? (perfilSnap.data().nombre || perfilSnap.data().email || 'Vendedor')
         : 'Vendedor';
+      
+      if (perfilSnap.exists()) {
+        const perfil = perfilSnap.data();
+        const planActual = perfil.planActual || 'estandar';
+        
+        // Contar productos del usuario
+        const productosQuery = query(
+          collection(db, 'productos'),
+          where('vendedorUid', '==', user.uid)
+        );
+        const productosSnap = await getDocs(productosQuery);
+        const cantidadProductos = productosSnap.size;
+        
+        // Verificar límites según plan
+        if (planActual === 'estandar' && cantidadProductos >= 1) {
+          alert('Has alcanzado el límite de productos de tu plan Estándar (1 producto). Actualiza a Premium para publicar sin límites.');
+          setCreating(false);
+          return;
+        }
+      }
+
+      let imagenUrl = '';
+      if (imagen) {
+        imagenUrl = await uploadToCloudinary(imagen, 'Productos', 'productos/instrumentos');
+      }
 
       await addDoc(collection(db, 'productos'), {
         ...nuevoProducto,

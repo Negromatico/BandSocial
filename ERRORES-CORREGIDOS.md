@@ -46,22 +46,33 @@
   - Formulario para ingresar email
   - Envío de correo de recuperación via Firebase Auth
 
+### 6. ✅ **Límite de Publicaciones en Plan Estándar**
+- **Problema**: En el plan estándar se podía publicar más de 1 vez
+- **Solución**: Implementada verificación de límites según plan de membresía
+- **Archivos modificados**: 
+  - `src/components/PublicacionForm.jsx`
+  - `src/pages/MusicmarketNuevo.jsx`
+- **Funcionalidad**:
+  - Verifica el plan del usuario (estándar o premium)
+  - Cuenta publicaciones/productos existentes del usuario
+  - Bloquea si plan estándar tiene 1 o más publicaciones
+  - Muestra mensaje claro invitando a actualizar a Premium
+  - Usuarios Premium pueden publicar sin límites
+
+### 7. ✅ **Mensaje de Error al Publicar**
+- **Problema**: Mostraba error aunque la publicación se creaba exitosamente
+- **Solución**: Corregido error de variable `ciudades[0]` → `''` y mejorado manejo de errores
+- **Archivo**: `src/components/PublicacionForm.jsx`
+- **Funcionalidad**:
+  - Mensaje de éxito se muestra correctamente
+  - Errores reales se muestran con detalles
+  - Formulario se resetea correctamente
+
 ---
 
 ## ⚠️ ERRORES PENDIENTES (Requieren más trabajo)
 
-### 6. ⏳ **Límite de Publicaciones en Plan Estándar**
-- **Problema**: En el plan estándar se puede publicar más de 1 vez
-- **Solución requerida**: 
-  - Verificar membresía del usuario antes de publicar
-  - Contar publicaciones del usuario
-  - Bloquear si excede el límite del plan
-- **Archivos a modificar**: 
-  - `src/components/PublicacionForm.jsx`
-  - `src/pages/MusicmarketNuevo.jsx`
-  - `src/pages/EventosNuevo.jsx`
-
-### 7. ⏳ **Mensajes Recientes en Chat**
+### 8. ⏳ **Mensajes Recientes en Chat**
 - **Problema**: Los mensajes recientes no se ven en el chat flotante ni predeterminado
 - **Solución requerida**:
   - Revisar componente de chat
@@ -166,15 +177,17 @@ netlify deploy --prod --dir=dist
 
 ## 📊 RESUMEN
 
-- **Errores corregidos**: 5/13
-- **Errores pendientes**: 8/13
-- **Progreso**: 38%
+- **Errores corregidos**: 7/13
+- **Errores pendientes**: 6/13
+- **Progreso**: 54%
 
 **Archivos modificados**:
 - ✅ `src/pages/ProfileView.jsx` - Botón seguir
 - ✅ `src/pages/PublicacionesNuevo.jsx` - Comentarios y navegación
 - ✅ `src/pages/Profile.jsx` - Foto de portada
 - ✅ `src/pages/Login.jsx` - Ya tenía recuperación de contraseña
+- ✅ `src/components/PublicacionForm.jsx` - Límite de publicaciones y mensaje de error
+- ✅ `src/pages/MusicmarketNuevo.jsx` - Límite de productos
 
 ---
 

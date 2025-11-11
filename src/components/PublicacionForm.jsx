@@ -2,7 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Modal } from 'react-bootstrap';
 import { db, auth } from '../services/firebase';
 import { GuestContext } from '../App';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import { uploadToCloudinary } from '../services/cloudinary';
 
 
@@ -77,6 +77,28 @@ const PublicacionForm = ({ onCreated }) => {
     setLoading(true);
     try {
       const user = auth.currentUser;
+      
+      // Verificar plan de membresía y límite de publicaciones
+      const perfilSnap = await getDoc(doc(db, 'perfiles', user.uid));
+      if (perfilSnap.exists()) {
+        const perfil = perfilSnap.data();
+        const planActual = perfil.planActual || 'estandar';
+        
+        // Contar publicaciones del usuario
+        const publicacionesQuery = query(
+          collection(db, 'publicaciones'),
+          where('autorUid', '==', user.uid)
+        );
+        const publicacionesSnap = await getDocs(publicacionesQuery);
+        const cantidadPublicaciones = publicacionesSnap.size;
+        
+        // Verificar límites según plan
+        if (planActual === 'estandar' && cantidadPublicaciones >= 1) {
+          setError('Has alcanzado el límite de publicaciones de tu plan Estándar (1 publicación). Actualiza a Premium para publicar sin límites.');
+          setLoading(false);
+          return;
+        }
+      }
       let imagenesUrl = [];
       if (imagenes.length > 0) {
         for (const file of imagenes) {
@@ -98,14 +120,15 @@ const PublicacionForm = ({ onCreated }) => {
       setDescripcion('');
       setTipo(tipos[0].value);
       setOtroTipo('');
-      setCiudad(ciudades[0]);
+      setCiudad('');
       setImagenes([]);
       setImagenesPreview([]);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3500);
       if (onCreated) onCreated();
     } catch (err) {
-      setError('Error al crear publicación');
+      console.error('Error al crear publicación:', err);
+      setError('Error al crear publicación: ' + (err.message || 'Intenta de nuevo'));
     } finally {
       setLoading(false);
     }
