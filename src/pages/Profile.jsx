@@ -457,11 +457,8 @@ const handleEditAllSave = (e) => {
                 setStatus('Subiendo portada...');
                 try {
                   const url = await uploadToCloudinary(file, 'Bandas', 'portadas');
-                  await setDoc(doc(db, 'perfiles', user.uid), {
-                    ...initialValues,
+                  await updateDoc(doc(db, 'perfiles', user.uid), {
                     fotoPortada: url,
-                    uid: user.uid,
-                    email: user.email,
                     updatedAt: new Date().toISOString(),
                   });
                   setInitialValues(prev => ({ ...prev, fotoPortada: url }));

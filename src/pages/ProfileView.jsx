@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { db } from '../services/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../services/firebase';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { Card, Row, Col, Badge, Button, Spinner } from 'react-bootstrap';
+import { FaUserPlus, FaUserMinus } from 'react-icons/fa';
 import ChatModal from '../components/ChatModal';
 
 const ProfileView = () => {
@@ -10,16 +11,69 @@ const ProfileView = () => {
   const [perfil, setPerfil] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
+  const [siguiendo, setSiguiendo] = useState(false);
+  const [loadingFollow, setLoadingFollow] = useState(false);
+  const currentUser = auth.currentUser;
 
   useEffect(() => {
     const fetchPerfil = async () => {
       setLoading(true);
       const docSnap = await getDoc(doc(db, 'perfiles', uid));
-      if (docSnap.exists()) setPerfil(docSnap.data());
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setPerfil({ ...data, uid: uid });
+        
+        // Verificar si el usuario actual sigue a este perfil
+        if (currentUser) {
+          const currentUserSnap = await getDoc(doc(db, 'perfiles', currentUser.uid));
+          if (currentUserSnap.exists()) {
+            const siguiendoList = currentUserSnap.data().siguiendo || [];
+            setSiguiendo(siguiendoList.includes(uid));
+          }
+        }
+      }
       setLoading(false);
     };
     fetchPerfil();
-  }, [uid]);
+  }, [uid, currentUser]);
+
+  const handleSeguir = async () => {
+    if (!currentUser) {
+      alert('Debes iniciar sesión para seguir a otros usuarios');
+      return;
+    }
+
+    setLoadingFollow(true);
+    try {
+      const currentUserRef = doc(db, 'perfiles', currentUser.uid);
+      const otherUserRef = doc(db, 'perfiles', uid);
+
+      if (siguiendo) {
+        // Dejar de seguir
+        await updateDoc(currentUserRef, {
+          siguiendo: arrayRemove(uid)
+        });
+        await updateDoc(otherUserRef, {
+          seguidores: arrayRemove(currentUser.uid)
+        });
+        setSiguiendo(false);
+      } else {
+        // Seguir
+        await updateDoc(currentUserRef, {
+          siguiendo: arrayUnion(uid)
+        });
+        await updateDoc(otherUserRef, {
+          seguidores: arrayUnion(currentUser.uid)
+        });
+        setSiguiendo(true);
+      }
+    } catch (error) {
+      console.error('Error al seguir/dejar de seguir:', error);
+      alert('Error al actualizar. Intenta de nuevo.');
+    } finally {
+      setLoadingFollow(false);
+    }
+  };
 
   if (loading) return <div className="text-center my-5"><Spinner animation="border" /></div>;
   if (!perfil) return <div className="text-center my-5 text-danger">Perfil no encontrado.</div>;
@@ -77,10 +131,28 @@ const ProfileView = () => {
               </div>
             </Col>
           </Row>
-          <div className="d-flex justify-content-end mt-4">
-            <Button variant="primary" size="lg" onClick={() => setShowChat(true)}>
-              Contactar
-            </Button>
+          <div className="d-flex justify-content-end gap-2 mt-4">
+            {currentUser && currentUser.uid !== uid && (
+              <Button 
+                variant={siguiendo ? "outline-secondary" : "success"}
+                size="lg"
+                onClick={handleSeguir}
+                disabled={loadingFollow}
+              >
+                {loadingFollow ? (
+                  <Spinner animation="border" size="sm" />
+                ) : siguiendo ? (
+                  <><FaUserMinus className="me-2" />Dejar de seguir</>
+                ) : (
+                  <><FaUserPlus className="me-2" />Seguir</>
+                )}
+              </Button>
+            )}
+            {currentUser && currentUser.uid !== uid && (
+              <Button variant="primary" size="lg" onClick={() => setShowChat(true)}>
+                Contactar
+              </Button>
+            )}
           </div>
         </Card.Body>
       </Card>

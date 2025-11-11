@@ -134,10 +134,10 @@ const PublicacionesNuevo = () => {
     const snapshot = await getDocs(q);
     let pubs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
-    // Buscar nombres de autor
-    const missingNames = pubs.filter(p => !p.autorNombre && p.autorUid);
-    if (missingNames.length > 0) {
-      await Promise.all(missingNames.map(async pub => {
+    // Buscar nombres de autor y contar comentarios
+    await Promise.all(pubs.map(async pub => {
+      // Obtener nombre del autor
+      if (!pub.autorNombre && pub.autorUid) {
         try {
           const perfilSnap = await getDoc(doc(db, 'perfiles', pub.autorUid));
           if (perfilSnap.exists()) {
@@ -149,8 +149,17 @@ const PublicacionesNuevo = () => {
         } catch {
           pub.autorNombre = pub.autorUid;
         }
-      }));
-    }
+      }
+      
+      // Contar comentarios
+      try {
+        const comentariosSnap = await getDocs(collection(db, 'publicaciones', pub.id, 'comentarios'));
+        pub.comentariosCount = comentariosSnap.size;
+      } catch {
+        pub.comentariosCount = 0;
+      }
+    }));
+    
     setPublicaciones(pubs);
     setLoading(false);
   };
@@ -267,15 +276,17 @@ const PublicacionesNuevo = () => {
           publicaciones.map(pub => (
             <div key={pub.id} className="post-card">
               <div className="post-header">
-                <div className="post-avatar">
+                <Link to={`/profile/${pub.autorUid}`} className="post-avatar" style={{ textDecoration: 'none' }}>
                   {pub.autorFoto ? (
                     <img src={pub.autorFoto} alt={pub.autorNombre} />
                   ) : (
                     getInitials(pub.autorNombre)
                   )}
-                </div>
+                </Link>
                 <div className="post-author-info">
-                  <div className="post-author-name">{pub.autorNombre}</div>
+                  <Link to={`/profile/${pub.autorUid}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <div className="post-author-name">{pub.autorNombre}</div>
+                  </Link>
                   <div className="post-meta">
                     {pub.tipo} • {pub.ciudad} • {formatDate(pub.createdAt)}
                   </div>
@@ -293,11 +304,15 @@ const PublicacionesNuevo = () => {
                 <ReaccionesPublicacion publicacionId={pub.id} user={user} />
                 <div className="post-action">
                   <FaComment className="post-action-icon" />
-                  <span>40</span>
+                  <span>{pub.comentariosCount || 0}</span>
                 </div>
               </div>
 
-              <ComentariosPublicacion publicacionId={pub.id} user={user} />
+              <ComentariosPublicacion 
+                publicacionId={pub.id} 
+                user={user}
+                onCommentAdded={() => fetchPublicaciones()}
+              />
             </div>
           ))
         )}
