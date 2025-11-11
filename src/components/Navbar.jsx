@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Form, InputGroup, NavDropdown } from 'react-bootstrap';
-import NotificationBell from './NotificationBell';
+import NotificationCenter from './NotificationCenter';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -107,7 +107,7 @@ const AppNavbar = () => {
           <div className="navbar-actions d-flex align-items-center gap-3">
             {user && !isGuest && (
               <>
-                <NotificationBell />
+                <NotificationCenter />
                 <NavDropdown
                   title={
                     <div className="user-avatar">

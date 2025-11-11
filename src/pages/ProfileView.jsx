@@ -5,6 +5,7 @@ import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firest
 import { Card, Row, Col, Badge, Button, Spinner } from 'react-bootstrap';
 import { FaUserPlus, FaUserMinus } from 'react-icons/fa';
 import ChatModal from '../components/ChatModal';
+import { notificarNuevoSeguidor } from '../services/notificationService';
 
 const ProfileView = () => {
   const { uid } = useParams();
@@ -66,6 +67,9 @@ const ProfileView = () => {
           seguidores: arrayUnion(currentUser.uid)
         });
         setSiguiendo(true);
+        
+        // Enviar notificación
+        await notificarNuevoSeguidor(currentUser.uid, uid);
       }
     } catch (error) {
       console.error('Error al seguir/dejar de seguir:', error);
