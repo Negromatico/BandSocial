@@ -183,8 +183,6 @@ const Register = () => {
         descripcion: data.descripcion || '',
         telefono: data.telefono || '',
         redesSociales: {
-          instagram: data.instagram || '',
-          youtube: data.youtube || '',
           spotify: data.spotify || '',
           soundcloud: data.soundcloud || '',
         },
@@ -516,28 +514,6 @@ const Register = () => {
                   </Form.Label>
                   
                   <Row>
-                    <Col md={6} className="mb-2">
-                      <div className="social-input-wrapper">
-                        <FaInstagram className="social-icon instagram" />
-                        <Form.Control
-                          type="text"
-                          placeholder="Usuario de Instagram"
-                          {...register('instagram')}
-                          className="input-with-social-icon"
-                        />
-                      </div>
-                    </Col>
-                    <Col md={6} className="mb-2">
-                      <div className="social-input-wrapper">
-                        <FaYoutube className="social-icon youtube" />
-                        <Form.Control
-                          type="text"
-                          placeholder="Canal de YouTube"
-                          {...register('youtube')}
-                          className="input-with-social-icon"
-                        />
-                      </div>
-                    </Col>
                     <Col md={6} className="mb-2">
                       <div className="social-input-wrapper">
                         <FaSpotify className="social-icon spotify" />
