@@ -38,10 +38,7 @@ const Login = () => {
     }
     
     try {
-      await sendPasswordResetEmail(auth, resetEmail, {
-        url: window.location.origin + '/login',
-        handleCodeInApp: false
-      });
+      await sendPasswordResetEmail(auth, resetEmail);
       setResetSent(true);
       console.log('Correo de recuperación enviado exitosamente a:', resetEmail);
     } catch (err) {
