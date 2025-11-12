@@ -124,6 +124,7 @@ const AppNavbar = () => {
                 >
                   <NavDropdown.Item as={Link} to="/profile">Mi Perfil</NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/publicaciones">Mis Publicaciones</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/followers">Seguidores y Siguiendo</NavDropdown.Item>
                   {!isGuest && (
                     <NavDropdown.Item as={Link} to="/chat">
                       Chat {unreadCount > 0 && <span className="badge bg-danger ms-2">{unreadCount}</span>}

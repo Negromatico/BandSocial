@@ -20,6 +20,7 @@ const MusicmarketNuevo = lazy(() => import('./pages/MusicmarketNuevo'));
 const Membership = lazy(() => import('./pages/Membership'));
 const Payment = lazy(() => import('./pages/Payment'));
 const Notifications = lazy(() => import('./pages/Notifications'));
+const Followers = lazy(() => import('./pages/Followers'));
 
 // Componente de loading
 const LoadingSpinner = () => (
@@ -67,6 +68,7 @@ function MainLayout() {
         <Route path="/prelanding" element={<PreLanding />} />
         <Route path="/musicos" element={<Home />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/followers" element={<Followers />} />
       </Routes>
     </Suspense>
   );
