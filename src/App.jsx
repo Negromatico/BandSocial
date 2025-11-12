@@ -8,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 const Login = lazy(() => import('./pages/Login'));
 const PreLanding = lazy(() => import('./pages/PreLanding'));
 const Register = lazy(() => import('./pages/Register'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Home = lazy(() => import('./pages/Home'));
 const Profile = lazy(() => import('./pages/Profile'));
 const ProfileView = lazy(() => import('./pages/ProfileView'));
@@ -46,7 +47,7 @@ const LoadingSpinner = () => (
 
 function MainLayout() {
   const location = useLocation();
-  const hideNavbarPaths = ['/', '/login', '/register', '/membership', '/payment'];
+  const hideNavbarPaths = ['/', '/login', '/register', '/reset-password', '/membership', '/payment'];
   const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
   
   return (
@@ -56,6 +57,7 @@ function MainLayout() {
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/membership" element={<Membership />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/profile" element={<Profile />} />
