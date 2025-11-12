@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import PublicacionForm from '../components/PublicacionForm';
 import ComentariosPublicacion from '../components/ComentariosPublicacion';
 import ReaccionesPublicacion from '../components/ReaccionesPublicacion';
+import ContadorComentarios from '../components/ContadorComentarios';
 import { notificarNuevoSeguidor } from '../services/notificationService';
 import './Publicaciones.css';
 
@@ -199,14 +200,6 @@ const PublicacionesNuevo = () => {
           pub.autorNombre = pub.autorUid;
         }
       }
-      
-      // Contar comentarios
-      try {
-        const comentariosSnap = await getDocs(collection(db, 'publicaciones', pub.id, 'comentarios'));
-        pub.comentariosCount = comentariosSnap.size;
-      } catch {
-        pub.comentariosCount = 0;
-      }
     }));
     
     setPublicaciones(pubs);
@@ -351,16 +344,12 @@ const PublicacionesNuevo = () => {
 
               <div className="post-actions">
                 <ReaccionesPublicacion publicacionId={pub.id} user={user} />
-                <div className="post-action">
-                  <FaComment className="post-action-icon" />
-                  <span>{pub.comentariosCount || 0}</span>
-                </div>
+                <ContadorComentarios publicacionId={pub.id} />
               </div>
 
               <ComentariosPublicacion 
                 publicacionId={pub.id} 
                 user={user}
-                onCommentAdded={() => fetchPublicaciones()}
               />
             </div>
           ))
