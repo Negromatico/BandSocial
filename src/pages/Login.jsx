@@ -157,7 +157,16 @@ const Login = () => {
                 Enviar correo de recuperación
               </Button>
               
-              {resetSent && <Alert variant="success">Correo enviado. Revisa tu bandeja de entrada.</Alert>}
+              {resetSent && (
+                <Alert variant="success">
+                  <strong>✅ Correo enviado exitosamente</strong>
+                  <p className="mb-0 mt-2" style={{ fontSize: '0.9rem' }}>
+                    📧 Revisa tu bandeja de entrada<br/>
+                    ⚠️ <strong>Si no lo ves, revisa tu carpeta de SPAM</strong><br/>
+                    <small>El correo puede tardar hasta 5 minutos en llegar</small>
+                  </p>
+                </Alert>
+              )}
               {resetError && <Alert variant="danger">{resetError}</Alert>}
               
               <button
