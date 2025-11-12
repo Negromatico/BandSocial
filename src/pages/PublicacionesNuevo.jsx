@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { db, auth } from '../services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, query, orderBy, doc, getDoc, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, getDoc, where, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { FaImage, FaVideo, FaHeart, FaComment, FaShare, FaUser, FaTag, FaUsers, FaCalendarAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import PublicacionForm from '../components/PublicacionForm';
 import ComentariosPublicacion from '../components/ComentariosPublicacion';
 import ReaccionesPublicacion from '../components/ReaccionesPublicacion';
+import { notificarNuevoSeguidor } from '../services/notificationService';
 import './Publicaciones.css';
 
 const PublicacionesNuevo = () => {
@@ -20,6 +21,8 @@ const PublicacionesNuevo = () => {
   const [sugerencias, setSugerencias] = useState([]);
   const [seguidores, setSeguidores] = useState(0);
   const [siguiendo, setSiguiendo] = useState(0);
+  const [siguiendoList, setSiguiendoList] = useState([]);
+  const [loadingFollow, setLoadingFollow] = useState({});
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
@@ -121,9 +124,56 @@ const PublicacionesNuevo = () => {
         const perfil = perfilSnap.data();
         setSeguidores(perfil.seguidores?.length || 0);
         setSiguiendo(perfil.siguiendo?.length || 0);
+        setSiguiendoList(perfil.siguiendo || []);
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const handleSeguir = async (userId) => {
+    if (!user) {
+      alert('Debes iniciar sesión para seguir a otros usuarios');
+      return;
+    }
+
+    setLoadingFollow(prev => ({ ...prev, [userId]: true }));
+    
+    try {
+      const currentUserRef = doc(db, 'perfiles', user.uid);
+      const otherUserRef = doc(db, 'perfiles', userId);
+      
+      const estaSiguiendo = siguiendoList.includes(userId);
+
+      if (estaSiguiendo) {
+        // Dejar de seguir
+        await updateDoc(currentUserRef, {
+          siguiendo: arrayRemove(userId)
+        });
+        await updateDoc(otherUserRef, {
+          seguidores: arrayRemove(user.uid)
+        });
+        setSiguiendoList(prev => prev.filter(id => id !== userId));
+        setSiguiendo(prev => prev - 1);
+      } else {
+        // Seguir
+        await updateDoc(currentUserRef, {
+          siguiendo: arrayUnion(userId)
+        });
+        await updateDoc(otherUserRef, {
+          seguidores: arrayUnion(user.uid)
+        });
+        setSiguiendoList(prev => [...prev, userId]);
+        setSiguiendo(prev => prev + 1);
+        
+        // Enviar notificación
+        await notificarNuevoSeguidor(user.uid, userId);
+      }
+    } catch (error) {
+      console.error('Error al seguir/dejar de seguir:', error);
+      alert('Error al actualizar. Intenta de nuevo.');
+    } finally {
+      setLoadingFollow(prev => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -369,7 +419,17 @@ const PublicacionesNuevo = () => {
                     <div className="sugerencia-type">{sug.tipo}</div>
                   </div>
                 </Link>
-                <button className="seguir-btn">Seguir</button>
+                <button 
+                  className="seguir-btn"
+                  onClick={() => handleSeguir(sug.id)}
+                  disabled={loadingFollow[sug.id]}
+                  style={{
+                    background: siguiendoList.includes(sug.id) ? '#e5e7eb' : '#667eea',
+                    color: siguiendoList.includes(sug.id) ? '#6b7280' : 'white'
+                  }}
+                >
+                  {loadingFollow[sug.id] ? '...' : (siguiendoList.includes(sug.id) ? 'Siguiendo' : 'Seguir')}
+                </button>
               </div>
             ))
           )}
