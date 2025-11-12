@@ -31,11 +31,42 @@ const Login = () => {
     e.preventDefault();
     setResetError('');
     setResetSent(false);
+    
+    if (!resetEmail || !resetEmail.includes('@')) {
+      setResetError('Por favor ingresa un correo electrónico válido');
+      return;
+    }
+    
     try {
-      await sendPasswordResetEmail(auth, resetEmail);
+      await sendPasswordResetEmail(auth, resetEmail, {
+        url: window.location.origin + '/login',
+        handleCodeInApp: false
+      });
       setResetSent(true);
+      console.log('Correo de recuperación enviado exitosamente a:', resetEmail);
     } catch (err) {
-      setResetError('No se pudo enviar el correo. ¿El correo está registrado?');
+      console.error('Error al enviar correo de recuperación:', err);
+      
+      let errorMessage = 'No se pudo enviar el correo. ';
+      
+      switch (err.code) {
+        case 'auth/user-not-found':
+          errorMessage += 'Este correo no está registrado.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage += 'El formato del correo es inválido.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage += 'Demasiados intentos. Intenta más tarde.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage += 'Error de conexión. Verifica tu internet.';
+          break;
+        default:
+          errorMessage += err.message || 'Intenta de nuevo.';
+      }
+      
+      setResetError(errorMessage);
     }
   };
 
