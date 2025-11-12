@@ -54,11 +54,13 @@ const ComentariosPublicacion = ({ publicacionId, user }) => {
           });
         }
       }
+      setNuevoComentario('');
+      setLoading(false);
     } catch (err) {
       console.error('Error al comentar:', err);
       alert('Error al comentar: ' + (err && err.message ? err.message : err));
+      setLoading(false);
     }
-    setNuevoComentario('');
   };
 
   return (

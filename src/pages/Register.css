@@ -1,14 +1,69 @@
 /* Estilos específicos para el registro */
 
-/* Tarjeta de registro más ancha */
+/* Tarjeta de registro más ancha para desktop */
 .login-container .login-background .login-card:has(.register-form) {
-  max-width: 540px; /* 450px + 20% = 540px */
+  max-width: 900px; /* Mucho más ancho para layout horizontal */
+  width: 95%;
 }
 
-.register-form {
-  max-height: 70vh;
-  overflow-y: auto;
-  padding-right: 10px;
+/* Layout horizontal para desktop */
+@media (min-width: 992px) {
+  .register-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-height: none;
+    overflow-y: visible;
+    padding-right: 0;
+  }
+
+  .register-form > .mb-4:first-child,
+  .register-form > .mb-4:nth-child(2),
+  .register-form > .mb-3:first-of-type {
+    grid-column: 1 / -1; /* Barra de progreso y foto ocupan todo el ancho */
+  }
+
+  .redes-sociales-section {
+    grid-column: 1 / -1; /* Redes sociales ocupan todo el ancho */
+  }
+
+  .register-form .row:last-child {
+    grid-column: 1 / -1; /* Botones ocupan todo el ancho */
+  }
+
+  .register-form .alert {
+    grid-column: 1 / -1; /* Alertas ocupan todo el ancho */
+  }
+}
+
+/* Ajustar tarjeta en desktop */
+@media (min-width: 992px) {
+  .login-container .login-background .login-card:has(.register-form) {
+    padding: 25px 35px;
+    margin: 20px 0;
+  }
+  
+  .login-header {
+    margin-bottom: 15px !important;
+  }
+  
+  .login-logo-outside {
+    font-size: 2rem !important;
+    margin-bottom: 10px !important;
+  }
+}
+
+/* Layout vertical para tablet y móvil */
+@media (max-width: 991px) {
+  .login-container .login-background .login-card:has(.register-form) {
+    max-width: 540px;
+  }
+
+  .register-form {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+  }
 }
 
 /* Iconos de validación */
