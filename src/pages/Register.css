@@ -1,5 +1,10 @@
 /* Estilos específicos para el registro */
 
+/* Tarjeta de registro más ancha */
+.login-container .login-background .login-card:has(.register-form) {
+  max-width: 540px; /* 450px + 20% = 540px */
+}
+
 .register-form {
   max-height: 70vh;
   overflow-y: auto;
