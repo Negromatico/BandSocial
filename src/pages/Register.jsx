@@ -4,10 +4,11 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { Button, Form, Alert, Row, Col } from 'react-bootstrap';
-import { FaUser, FaLock, FaEye, FaEyeSlash, FaGuitar, FaMapMarkerAlt, FaMusic } from 'react-icons/fa';
+import { Button, Form, Alert, Row, Col, ProgressBar, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { FaUser, FaLock, FaEye, FaEyeSlash, FaGuitar, FaMapMarkerAlt, FaMusic, FaCamera, FaInstagram, FaYoutube, FaSpotify, FaSoundcloud, FaInfoCircle, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import Select from 'react-select';
 import { instrumentos } from '../data/opciones';
+import { uploadToCloudinary } from '../services/cloudinary';
 import './Login.css';
 import './Register.css';
 
@@ -32,14 +33,28 @@ const generos = [
 ];
 
 const Register = () => {
-  const { register, handleSubmit, control } = useForm();
+  const { register, handleSubmit, control, watch } = useForm();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState(1);
   const [type, setType] = useState('musico');
   const [ciudadesOptions, setCiudadesOptions] = useState([]);
+  const [fotoPerfil, setFotoPerfil] = useState('');
+  const [fotoPreview, setFotoPreview] = useState('');
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+  const [emailValid, setEmailValid] = useState(null);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
+
+  // Watch para validaciones en tiempo real
+  const emailValue = watch('email');
+  const passwordValue = watch('password');
+  const nombreValue = watch('nombre');
+  const ciudadValue = watch('ciudad');
+  const generosValue = watch('generos');
+  const instrumentosValue = watch('instrumentos');
 
   useEffect(() => {
     fetch('https://api-colombia.com/api/v1/City')
@@ -62,6 +77,87 @@ const Register = () => {
       .catch(() => setCiudadesOptions([]));
   }, []);
 
+  // Validación de email en tiempo real
+  useEffect(() => {
+    if (emailValue) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      setEmailValid(emailRegex.test(emailValue));
+    } else {
+      setEmailValid(null);
+    }
+  }, [emailValue]);
+
+  // Calcular fuerza de contraseña
+  useEffect(() => {
+    if (passwordValue) {
+      let strength = 0;
+      if (passwordValue.length >= 6) strength += 25;
+      if (passwordValue.length >= 8) strength += 25;
+      if (/[A-Z]/.test(passwordValue)) strength += 25;
+      if (/[0-9]/.test(passwordValue)) strength += 25;
+      setPasswordStrength(strength);
+    } else {
+      setPasswordStrength(0);
+    }
+  }, [passwordValue]);
+
+  // Calcular progreso del formulario
+  useEffect(() => {
+    if (step === 2) {
+      let completed = 0;
+      let total = type === 'musico' ? 5 : 6;
+      
+      if (nombreValue) completed++;
+      if (ciudadValue) completed++;
+      if (generosValue && generosValue.length > 0) completed++;
+      if (type === 'musico' && instrumentosValue && instrumentosValue.length > 0) completed++;
+      if (type === 'banda') {
+        completed++; // buscan es opcional
+        total--;
+      }
+      if (fotoPerfil) completed++;
+      
+      setProgress((completed / total) * 100);
+    }
+  }, [step, nombreValue, ciudadValue, generosValue, instrumentosValue, fotoPerfil, type]);
+
+  // Subir foto de perfil
+  const handleFotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFotoPreview(reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload
+    setUploadingFoto(true);
+    try {
+      const url = await uploadToCloudinary(file, 'Bandas', 'perfiles');
+      setFotoPerfil(url);
+    } catch (err) {
+      console.error('Error subiendo foto:', err);
+      setError('Error al subir la foto. Intenta de nuevo.');
+    } finally {
+      setUploadingFoto(false);
+    }
+  };
+
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength < 50) return 'danger';
+    if (passwordStrength < 75) return 'warning';
+    return 'success';
+  };
+
+  const getPasswordStrengthText = () => {
+    if (passwordStrength < 50) return 'Débil';
+    if (passwordStrength < 75) return 'Media';
+    return 'Fuerte';
+  };
+
   const onSubmit = async (data) => {
     setError('');
     setLoading(true);
@@ -76,7 +172,7 @@ const Register = () => {
         email: user.email,
         nombre: data.nombre || '',
         type: type,
-        fotoPerfil: '',
+        fotoPerfil: fotoPerfil || '',
         fotos: [],
         videoUrl: '',
         ciudad: data.ciudad || null,
@@ -86,6 +182,12 @@ const Register = () => {
         miembros: data.miembros || '',
         descripcion: data.descripcion || '',
         telefono: data.telefono || '',
+        redesSociales: {
+          instagram: data.instagram || '',
+          youtube: data.youtube || '',
+          spotify: data.spotify || '',
+          soundcloud: data.soundcloud || '',
+        },
         seguidores: [],
         siguiendo: [],
         dias: [],
@@ -139,9 +241,14 @@ const Register = () => {
                       type="email"
                       placeholder="Correo Electrónico"
                       {...register('email', { required: true })}
-                      className="input-with-icon"
+                      className={`input-with-icon ${emailValid === true ? 'is-valid' : emailValid === false ? 'is-invalid' : ''}`}
                     />
+                    {emailValid === true && <FaCheckCircle className="validation-icon valid" />}
+                    {emailValid === false && <FaTimesCircle className="validation-icon invalid" />}
                   </div>
+                  {emailValid === false && (
+                    <small className="text-danger">Ingresa un correo válido</small>
+                  )}
                 </Form.Group>
 
                 <Form.Group className="mb-3 input-group-custom">
@@ -161,12 +268,28 @@ const Register = () => {
                       {showPassword ? <FaEyeSlash /> : <FaEye />}
                     </button>
                   </div>
+                  {passwordValue && (
+                    <div className="mt-2">
+                      <div className="d-flex justify-content-between align-items-center mb-1">
+                        <small className="text-white">Seguridad:</small>
+                        <small className={`text-${getPasswordStrengthColor()}`}>
+                          {getPasswordStrengthText()}
+                        </small>
+                      </div>
+                      <ProgressBar 
+                        now={passwordStrength} 
+                        variant={getPasswordStrengthColor()}
+                        style={{ height: '5px' }}
+                      />
+                    </div>
+                  )}
                 </Form.Group>
 
                 <Button 
                   type="button" 
                   className="btn-login mb-2"
                   onClick={() => setStep(2)}
+                  disabled={!emailValid || passwordStrength < 25}
                 >
                   Continuar
                 </Button>
@@ -175,6 +298,70 @@ const Register = () => {
 
             {step === 2 && (
               <>
+                {/* Barra de progreso */}
+                <div className="mb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <small className="text-white fw-bold">Progreso del perfil</small>
+                    <small className="text-white">{Math.round(progress)}%</small>
+                  </div>
+                  <ProgressBar 
+                    now={progress} 
+                    variant="success"
+                    style={{ height: '8px', borderRadius: '10px' }}
+                  />
+                </div>
+
+                {/* Foto de perfil */}
+                <Form.Group className="mb-4 text-center">
+                  <Form.Label className="text-white d-flex align-items-center justify-content-center gap-2">
+                    Foto de Perfil (Recomendado)
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={<Tooltip>Una foto ayuda a que otros músicos te reconozcan</Tooltip>}
+                    >
+                      <FaInfoCircle style={{ cursor: 'pointer', fontSize: '14px' }} />
+                    </OverlayTrigger>
+                  </Form.Label>
+                  <div className="foto-upload-container">
+                    {fotoPreview || fotoPerfil ? (
+                      <div className="foto-preview">
+                        <img src={fotoPreview || fotoPerfil} alt="Preview" />
+                        <button
+                          type="button"
+                          className="foto-remove"
+                          onClick={() => {
+                            setFotoPerfil('');
+                            setFotoPreview('');
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="foto-upload-label">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFotoUpload}
+                          style={{ display: 'none' }}
+                        />
+                        <div className="foto-upload-placeholder">
+                          {uploadingFoto ? (
+                            <div className="spinner-border text-light" role="status">
+                              <span className="visually-hidden">Subiendo...</span>
+                            </div>
+                          ) : (
+                            <>
+                              <FaCamera size={30} />
+                              <small>Click para subir foto</small>
+                            </>
+                          )}
+                        </div>
+                      </label>
+                    )}
+                  </div>
+                </Form.Group>
+
                 <Form.Group className="mb-3">
                   <Form.Label className="text-white">Tipo de Perfil</Form.Label>
                   <div className="type-selector">
@@ -315,6 +502,66 @@ const Register = () => {
                     className="input-with-icon"
                   />
                 </Form.Group>
+
+                {/* Redes Sociales */}
+                <div className="redes-sociales-section mb-3">
+                  <Form.Label className="text-white d-flex align-items-center gap-2 mb-3">
+                    <FaMusic /> Redes Sociales (Opcional)
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={<Tooltip>Comparte tus redes para que otros puedan escuchar tu música</Tooltip>}
+                    >
+                      <FaInfoCircle style={{ cursor: 'pointer', fontSize: '14px' }} />
+                    </OverlayTrigger>
+                  </Form.Label>
+                  
+                  <Row>
+                    <Col md={6} className="mb-2">
+                      <div className="social-input-wrapper">
+                        <FaInstagram className="social-icon instagram" />
+                        <Form.Control
+                          type="text"
+                          placeholder="Usuario de Instagram"
+                          {...register('instagram')}
+                          className="input-with-social-icon"
+                        />
+                      </div>
+                    </Col>
+                    <Col md={6} className="mb-2">
+                      <div className="social-input-wrapper">
+                        <FaYoutube className="social-icon youtube" />
+                        <Form.Control
+                          type="text"
+                          placeholder="Canal de YouTube"
+                          {...register('youtube')}
+                          className="input-with-social-icon"
+                        />
+                      </div>
+                    </Col>
+                    <Col md={6} className="mb-2">
+                      <div className="social-input-wrapper">
+                        <FaSpotify className="social-icon spotify" />
+                        <Form.Control
+                          type="text"
+                          placeholder="Artista en Spotify"
+                          {...register('spotify')}
+                          className="input-with-social-icon"
+                        />
+                      </div>
+                    </Col>
+                    <Col md={6} className="mb-2">
+                      <div className="social-input-wrapper">
+                        <FaSoundcloud className="social-icon soundcloud" />
+                        <Form.Control
+                          type="text"
+                          placeholder="Usuario de SoundCloud"
+                          {...register('soundcloud')}
+                          className="input-with-social-icon"
+                        />
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
 
                 {error && <Alert variant="danger" className="custom-alert">{error}</Alert>}
 
