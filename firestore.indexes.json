@@ -52,8 +52,7 @@
       "collectionGroup": "notificaciones",
       "queryScope": "COLLECTION",
       "fields": [
-        { "fieldPath": "usuarioUid", "order": "ASCENDING" },
-        { "fieldPath": "leida", "order": "ASCENDING" },
+        { "fieldPath": "usuarioId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },

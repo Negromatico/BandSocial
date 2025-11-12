@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { db, auth } from '../services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, getDoc, where } from 'firebase/firestore';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { FaImage, FaVideo, FaHeart, FaComment, FaShare, FaUser, FaTag, FaUsers, FaCalendarAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
@@ -50,9 +50,10 @@ const PublicacionesNuevo = () => {
   const fetchChatsActivos = async () => {
     if (!user) return;
     try {
-      // Obtener conversaciones del usuario
+      // Obtener conversaciones del usuario con filtro where
       const chatsQuery = query(
         collection(db, 'conversaciones'),
+        where('participantes', 'array-contains', user.uid),
         orderBy('ultimoMensaje', 'desc')
       );
       const chatsSnap = await getDocs(chatsQuery);
@@ -60,20 +61,18 @@ const PublicacionesNuevo = () => {
       
       for (const chatDoc of chatsSnap.docs) {
         const chat = chatDoc.data();
-        if (chat.participantes && chat.participantes.includes(user.uid)) {
-          const otroUsuarioId = chat.participantes.find(id => id !== user.uid);
-          if (otroUsuarioId) {
-            const perfilSnap = await getDoc(doc(db, 'perfiles', otroUsuarioId));
-            if (perfilSnap.exists()) {
-              const perfil = perfilSnap.data();
-              chatsData.push({
-                id: chatDoc.id,
-                nombre: perfil.nombre || perfil.email || 'Usuario',
-                mensaje: chat.ultimoMensajeTexto || 'Mensaje',
-                online: false, // Puedes implementar lógica de presencia
-                foto: perfil.fotoPerfil
-              });
-            }
+        const otroUsuarioId = chat.participantes.find(id => id !== user.uid);
+        if (otroUsuarioId) {
+          const perfilSnap = await getDoc(doc(db, 'perfiles', otroUsuarioId));
+          if (perfilSnap.exists()) {
+            const perfil = perfilSnap.data();
+            chatsData.push({
+              id: chatDoc.id,
+              nombre: perfil.nombre || perfil.email || 'Usuario',
+              mensaje: chat.ultimoMensajeTexto || 'Mensaje',
+              online: false, // Puedes implementar lógica de presencia
+              foto: perfil.fotoPerfil
+            });
           }
         }
         if (chatsData.length >= 5) break;
