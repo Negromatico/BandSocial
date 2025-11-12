@@ -1,0 +1,273 @@
+/* Estilos específicos para el registro */
+
+.register-form {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.register-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.register-form::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.register-form::-webkit-scrollbar-thumb {
+  background: rgba(102, 126, 234, 0.6);
+  border-radius: 10px;
+}
+
+.register-form::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 126, 234, 0.8);
+}
+
+/* Indicador de pasos */
+.register-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.register-steps span {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.register-steps span.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+  transform: scale(1.1);
+}
+
+.register-steps span.completed {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.register-steps .step-line {
+  width: 60px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+/* Selector de tipo de perfil */
+.type-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.type-btn {
+  flex: 1;
+  padding: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-radius: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.type-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.type-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.type-btn svg {
+  font-size: 20px;
+}
+
+/* React Select personalizado para el registro */
+.register-form .react-select-container {
+  margin-bottom: 0;
+}
+
+.register-form .react-select__control {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  min-height: 45px;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.register-form .react-select__control:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.register-form .react-select__control--is-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 1px #667eea;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.register-form .react-select__placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.register-form .react-select__single-value {
+  color: white;
+}
+
+.register-form .react-select__input-container {
+  color: white;
+}
+
+.register-form .react-select__menu {
+  background: #2c3e50;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.register-form .react-select__option {
+  background: transparent;
+  color: white;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.register-form .react-select__option:hover {
+  background: rgba(102, 126, 234, 0.3);
+}
+
+.register-form .react-select__option--is-selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.register-form .react-select__option--is-focused {
+  background: rgba(102, 126, 234, 0.2);
+}
+
+.register-form .react-select__multi-value {
+  background: rgba(102, 126, 234, 0.3);
+  border-radius: 5px;
+}
+
+.register-form .react-select__multi-value__label {
+  color: white;
+  padding: 3px 6px;
+}
+
+.register-form .react-select__multi-value__remove {
+  color: white;
+  cursor: pointer;
+  border-radius: 0 5px 5px 0;
+  transition: all 0.2s ease;
+}
+
+.register-form .react-select__multi-value__remove:hover {
+  background: rgba(255, 59, 48, 0.8);
+  color: white;
+}
+
+.register-form .react-select__indicator-separator {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.register-form .react-select__dropdown-indicator {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.register-form .react-select__clear-indicator {
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+}
+
+.register-form .react-select__clear-indicator:hover {
+  color: white;
+}
+
+/* Textarea personalizado */
+.register-form textarea.input-with-icon {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Labels */
+.register-form .form-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .register-form {
+    max-height: 60vh;
+  }
+
+  .type-selector {
+    flex-direction: column;
+  }
+
+  .type-btn {
+    width: 100%;
+  }
+
+  .register-steps span {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+
+  .register-steps .step-line {
+    width: 40px;
+  }
+}
+
+@media (max-width: 576px) {
+  .register-form {
+    max-height: 55vh;
+    padding-right: 5px;
+  }
+
+  .login-card {
+    padding: 20px !important;
+  }
+
+  .register-steps span {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  .register-steps .step-line {
+    width: 30px;
+  }
+}
