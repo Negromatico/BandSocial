@@ -42,8 +42,9 @@ const PublicacionForm = ({ onCreated }) => {
     fetch('https://api-colombia.com/api/v1/City')
       .then(res => res.json())
       .then(data => {
-        const options = data.map(city => city.name).sort();
-        setCiudadesOptions(options);
+        // Eliminar duplicados usando Set y ordenar
+        const uniqueCities = [...new Set(data.map(city => city.name))].sort();
+        setCiudadesOptions(uniqueCities);
       })
       .catch(() => setCiudadesOptions([]));
   }, []);

@@ -37,11 +37,19 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
     fetch('https://api-colombia.com/api/v1/City')
       .then(res => res.json())
       .then(data => {
-        const options = data.map(city => ({ 
-          value: city.name, 
-          label: `${city.name}${city.department ? ` (${city.department})` : ''}`,
-          key: city.id || `${city.name}-${city.department}`
-        }));
+        // Eliminar duplicados usando Map con ID único
+        const uniqueCitiesMap = new Map();
+        data.forEach(city => {
+          const key = `${city.name}-${city.department || ''}`;
+          if (!uniqueCitiesMap.has(key)) {
+            uniqueCitiesMap.set(key, {
+              value: city.name,
+              label: `${city.name}${city.department ? ` (${city.department})` : ''}`,
+              key: city.id || key
+            });
+          }
+        });
+        const options = Array.from(uniqueCitiesMap.values());
         setCiudadesOptions(options);
       })
       .catch(() => setCiudadesOptions([]));

@@ -46,7 +46,15 @@ const Home = () => {
     fetch('https://api-colombia.com/api/v1/City')
       .then(res => res.json())
       .then(data => {
-        const options = data.map(city => ({ value: city.name.toLowerCase(), label: city.name })).sort((a, b) => a.label.localeCompare(b.label));
+        // Eliminar duplicados usando Map
+        const uniqueCitiesMap = new Map();
+        data.forEach(city => {
+          const key = city.name.toLowerCase();
+          if (!uniqueCitiesMap.has(key)) {
+            uniqueCitiesMap.set(key, { value: key, label: city.name });
+          }
+        });
+        const options = Array.from(uniqueCitiesMap.values()).sort((a, b) => a.label.localeCompare(b.label));
         setCiudadesOptions(options);
       })
       .catch(() => setCiudadesOptions([]));
