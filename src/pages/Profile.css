@@ -1,0 +1,118 @@
+/* Estilos para el modal de autenticación en Profile */
+.auth-modal-profile .modal-content {
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.auth-modal-profile .modal-header .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+.auth-modal-profile .btn:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.auth-modal-profile .btn-outline-primary:hover {
+  background-color: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.auth-modal-profile .btn-primary:hover {
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Estilos para el modal de crear publicación */
+.create-post-modal .modal-content {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.create-post-modal .modal-header {
+  border-bottom: 1px solid #e4e6eb;
+}
+
+.create-post-modal .modal-header .btn-close {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.create-post-modal .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.create-post-modal textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.create-post-modal .btn-primary:not(:disabled):hover {
+  background-color: #166fe5 !important;
+  transform: scale(1.01);
+  transition: all 0.2s;
+}
+
+.create-post-modal .btn-primary:disabled {
+  cursor: not-allowed;
+}
+
+/* Estilos para el modal de editar perfil */
+.edit-profile-modal .modal-content {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.edit-profile-modal .modal-header {
+  border-bottom: 1px solid #e4e6eb;
+}
+
+.edit-profile-modal .modal-header .btn-close {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.edit-profile-modal .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+.edit-profile-modal .form-control:focus {
+  border-color: #1877f2 !important;
+  box-shadow: 0 0 0 0.2rem rgba(24, 119, 242, 0.1) !important;
+}
+
+.edit-profile-modal .modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.edit-profile-modal .modal-body::-webkit-scrollbar-track {
+  background: #f0f2f5;
+  border-radius: 4px;
+}
+
+.edit-profile-modal .modal-body::-webkit-scrollbar-thumb {
+  background: #bcc0c4;
+  border-radius: 4px;
+}
+
+.edit-profile-modal .modal-body::-webkit-scrollbar-thumb:hover {
+  background: #8e9196;
+}
+
+/* Responsive para móviles */
+@media (max-width: 576px) {
+  .auth-modal-profile .d-flex {
+    flex-direction: column;
+  }
+  
+  .auth-modal-profile .btn {
+    width: 100%;
+  }
+}

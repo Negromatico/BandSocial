@@ -5,6 +5,7 @@ import { GuestContext } from '../App';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import { uploadToCloudinary } from '../services/cloudinary';
 import UpgradePremiumModal from './UpgradePremiumModal';
+import '../styles/ModernModal.css';
 
 
 const tipos = [
@@ -146,7 +147,7 @@ const PublicacionForm = ({ onCreated }) => {
       />
       
       <form onSubmit={handleSubmit} style={{ background: '#f3f0fa', borderRadius: 12, padding: 20, boxShadow: '0 1px 4px #ede9fe' }}>
-        <Modal show={showAuthPrompt} onHide={() => setShowAuthPrompt(false)} centered>
+        <Modal show={showAuthPrompt} onHide={() => setShowAuthPrompt(false)} className="modern-modal">
         <Modal.Header closeButton>
           <Modal.Title>Acción solo para usuarios registrados</Modal.Title>
         </Modal.Header>
@@ -158,16 +159,16 @@ const PublicacionForm = ({ onCreated }) => {
           </div>
         </Modal.Body>
       </Modal>
-      <div className="mb-2">
-        <label>Título *</label>
+      <div className="mb-3">
+        <label className="form-label">Título *</label>
         <input className="form-control" value={titulo} onChange={e => setTitulo(e.target.value)} maxLength={60} required />
       </div>
-      <div className="mb-2">
-        <label>Descripción *</label>
+      <div className="mb-3">
+        <label className="form-label">Descripción *</label>
         <textarea className="form-control" value={descripcion} onChange={e => setDescripcion(e.target.value)} rows={3} maxLength={300} required />
       </div>
-      <div className="mb-2">
-        <label>Tipo</label>
+      <div className="mb-3">
+        <label className="form-label">Tipo</label>
         <select className="form-select" value={tipo} onChange={e => setTipo(e.target.value)}>
           {tipos.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
         </select>
@@ -183,7 +184,7 @@ const PublicacionForm = ({ onCreated }) => {
         )}
       </div>
       <div className="mb-3">
-        <label>Ciudad</label>
+        <label className="form-label">Ciudad</label>
         <select className="form-select" value={ciudad} onChange={e => setCiudad(e.target.value)}>
           <option value="">Selecciona ciudad</option>
           {ciudadesOptions.map(c => <option key={c} value={c}>{c}</option>)}
@@ -201,7 +202,7 @@ const PublicacionForm = ({ onCreated }) => {
         )}
       </div>
       <div className="mb-3">
-        <label>Imágenes (opcional, puedes seleccionar varias)</label>
+        <label className="form-label">Imágenes (opcional, puedes seleccionar varias)</label>
         <input type="file" accept="image/*" className="form-control" onChange={handleImagenChange} multiple />
         {imagenesPreview.length > 0 && (
           <div className="mt-2 d-flex flex-wrap gap-2">

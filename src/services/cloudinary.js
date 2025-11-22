@@ -8,17 +8,28 @@
  * @returns {Promise<string>} - URL pública del archivo subido.
  */
 export async function uploadToCloudinary(file, preset = 'Bandas', folder = 'bandas') {
-  const url = `https://api.cloudinary.com/v1_1/ddijtaal1/${file.type.startsWith('video') ? 'video' : 'image'}/upload`;
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', preset);
-  if (folder) formData.append('folder', folder);
+  try {
+    const url = `https://api.cloudinary.com/v1_1/ddijtaal1/${file.type.startsWith('video') ? 'video' : 'image'}/upload`;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', preset);
+    if (folder) formData.append('folder', folder);
 
-  const res = await fetch(url, {
-    method: 'POST',
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Error subiendo archivo a Cloudinary');
-  const data = await res.json();
-  return data.secure_url;
+    const res = await fetch(url, {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      console.error('Cloudinary error:', errorData);
+      throw new Error(`Error subiendo archivo a Cloudinary: ${errorData.error?.message || res.statusText}`);
+    }
+    
+    const data = await res.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error('Error en uploadToCloudinary:', error);
+    throw error;
+  }
 }

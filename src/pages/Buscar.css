@@ -1,0 +1,87 @@
+.search-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.search-header h2 {
+  color: #1f2937;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.no-results {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 3rem 2rem;
+}
+
+.no-results h4 {
+  color: #374151;
+  font-weight: 600;
+}
+
+.search-tabs .nav-link {
+  color: #6b7280;
+  font-weight: 500;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 0.75rem 1.5rem;
+}
+
+.search-tabs .nav-link:hover {
+  color: #6366f1;
+  border-bottom-color: #e5e7eb;
+}
+
+.search-tabs .nav-link.active {
+  color: #6366f1;
+  background: transparent;
+  border-bottom-color: #6366f1;
+}
+
+.search-result-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.search-result-card:hover {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+  border-color: #6366f1;
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  overflow: hidden;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #1f2937;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.user-name:hover {
+  color: #6366f1;
+}
+
+.user-type {
+  font-size: 0.875rem;
+  color: #6b7280;
+}

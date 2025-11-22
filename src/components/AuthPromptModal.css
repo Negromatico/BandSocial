@@ -1,0 +1,119 @@
+.auth-prompt-modal .modal-content {
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.auth-prompt-modal .modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  border-bottom: none;
+  padding: 1.5rem;
+}
+
+.auth-prompt-modal .modal-title {
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.auth-prompt-modal .modal-header .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+.auth-prompt-content {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.auth-prompt-content h5 {
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.benefits-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  text-align: left;
+}
+
+.benefits-list li {
+  padding: 0.75rem 0;
+  font-size: 1rem;
+  color: #555;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.benefits-list li:last-child {
+  border-bottom: none;
+}
+
+.auth-prompt-subtitle {
+  color: #666;
+  font-size: 0.95rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+.auth-prompt-footer {
+  border-top: 1px solid #e9ecef;
+  padding: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-continue-guest {
+  border-radius: 10px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-continue-guest:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-2px);
+}
+
+.btn-login-modal {
+  border-radius: 10px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 2px solid #667eea;
+  color: #667eea;
+}
+
+.btn-login-modal:hover {
+  background-color: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-register-modal {
+  border-radius: 10px;
+  padding: 0.6rem 1.5rem;
+  font-weight: 500;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-register-modal:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+@media (max-width: 576px) {
+  .auth-prompt-footer {
+    flex-direction: column;
+  }
+  
+  .auth-prompt-footer button {
+    width: 100%;
+  }
+}

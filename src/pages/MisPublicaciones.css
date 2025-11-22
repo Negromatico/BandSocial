@@ -1,0 +1,66 @@
+.mis-publicaciones-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header h2 {
+  color: #1f2937;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.no-publicaciones {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 3rem 2rem;
+}
+
+.no-publicaciones h4 {
+  color: #374151;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.publicacion-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.publicacion-card:hover {
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+  border-color: #6366f1;
+}
+
+.publicacion-descripcion {
+  color: #6b7280;
+  font-size: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.publicacion-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.publicacion-footer {
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.publicaciones-stats {
+  border: 2px solid #e5e7eb;
+}
+
+.publicaciones-stats h5 {
+  color: #1f2937;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}

@@ -165,11 +165,11 @@ const Followers = () => {
           {userData.nombre || userData.email || 'Usuario'}
         </div>
         <div className="follower-type">
-          {userData.type === 'musico' ? '🎸 Músico' : '🎵 Banda'}
+          {userData.type === 'musico' ? 'Músico' : 'Banda'}
         </div>
         {userData.ciudad && (
           <div className="follower-location">
-            📍 {userData.ciudad.label || userData.ciudad}
+            {userData.ciudad.label || userData.ciudad}
           </div>
         )}
       </div>

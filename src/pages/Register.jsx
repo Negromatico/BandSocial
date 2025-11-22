@@ -9,6 +9,7 @@ import { FaUser, FaLock, FaEye, FaEyeSlash, FaGuitar, FaMapMarkerAlt, FaMusic, F
 import Select from 'react-select';
 import { instrumentos } from '../data/opciones';
 import { uploadToCloudinary } from '../services/cloudinary';
+import logo from '../assets/logo.png';
 import './Login.css';
 import './Register.css';
 
@@ -218,6 +219,7 @@ const Register = () => {
         </h1>
         <div className="login-card">
           <div className="login-header">
+            <img src={logo} alt="BandSocial" className="login-logo" />
             <h2 className="login-title">¡Únete a la banda!</h2>
             <p className="login-subtitle">
               {step === 1 ? 'Paso 1: Datos de acceso' : 'Paso 2: Completa tu perfil'}
@@ -282,15 +284,6 @@ const Register = () => {
                     </div>
                   )}
                 </Form.Group>
-
-                <Button 
-                  type="button" 
-                  className="btn-login mb-2"
-                  onClick={() => setStep(2)}
-                  disabled={!emailValid || passwordStrength < 25}
-                >
-                  Continuar
-                </Button>
               </>
             )}
 
@@ -565,13 +558,23 @@ const Register = () => {
             )}
 
             {step === 1 && (
-              <Button
-                type="button"
-                className="btn-register"
-                onClick={() => navigate('/login')}
-              >
-                Ya tengo cuenta
-              </Button>
+              <div className="d-flex gap-3">
+                <Button 
+                  type="button" 
+                  className="btn-login flex-fill"
+                  onClick={() => setStep(2)}
+                  disabled={!emailValid || passwordStrength < 25}
+                >
+                  Continuar
+                </Button>
+                <Button
+                  type="button"
+                  className="btn-register flex-fill"
+                  onClick={() => navigate('/login')}
+                >
+                  Ya tengo cuenta
+                </Button>
+              </div>
             )}
           </Form>
         </div>

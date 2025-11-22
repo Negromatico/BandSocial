@@ -74,6 +74,14 @@
   margin-bottom: 20px;
 }
 
+.login-logo {
+  width: 180px;
+  height: auto;
+  margin: 0 auto 20px;
+  display: block;
+  object-fit: contain;
+}
+
 .login-logo-outside {
   font-size: 2.5rem;
   font-weight: 900;

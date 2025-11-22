@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { db, auth } from '../services/firebase';
-import { collection, getDocs, query, orderBy, doc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { Button, Modal } from 'react-bootstrap';
+import { collection, getDocs, query, orderBy, doc, getDoc, updateDoc, arrayUnion, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Button, Modal, Form } from 'react-bootstrap';
 import { GuestContext } from '../App';
 import { FaFilter, FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaClock, FaThLarge, FaList } from 'react-icons/fa';
+import AdBanner from '../components/AdBanner';
 import './Eventos.css';
+import '../styles/ModernModal.css';
 
 const EventosNuevo = () => {
   const guestContext = useContext(GuestContext);
@@ -12,10 +14,27 @@ const EventosNuevo = () => {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
+  const [userProfile, setUserProfile] = useState(null);
   const [asistiendo, setAsistiendo] = useState({});
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' o 'list'
   const [sortBy, setSortBy] = useState('recent');
+  
+  // Modal crear evento
+  const [showCrearEvento, setShowCrearEvento] = useState(false);
+  const [nuevoEvento, setNuevoEvento] = useState({
+    titulo: '',
+    descripcion: '',
+    fecha: '',
+    hora: '',
+    lugar: '',
+    ciudad: '',
+    precio: '',
+    tipo: '',
+    generos: [],
+    imagen: ''
+  });
+  const [creandoEvento, setCreandoEvento] = useState(false);
 
   // Filtros
   const [filtroGenero, setFiltroGenero] = useState([]);
@@ -29,6 +48,22 @@ const EventosNuevo = () => {
     const unsub = auth.onAuthStateChanged(u => setUser(u));
     return unsub;
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      const fetchUserProfile = async () => {
+        try {
+          const docSnap = await getDoc(doc(db, 'perfiles', user.uid));
+          if (docSnap.exists()) {
+            setUserProfile(docSnap.data());
+          }
+        } catch (error) {
+          console.error('Error cargando perfil:', error);
+        }
+      };
+      fetchUserProfile();
+    }
+  }, [user]);
 
   const fetchEventos = async () => {
     setLoading(true);
@@ -141,6 +176,62 @@ const EventosNuevo = () => {
     return { dia, mes };
   };
 
+  const handleCrearEvento = async (e) => {
+    e.preventDefault();
+    
+    if (!user) {
+      alert('Debes iniciar sesión para crear un evento');
+      return;
+    }
+
+    // Validaciones
+    if (!nuevoEvento.titulo || !nuevoEvento.fecha || !nuevoEvento.hora || !nuevoEvento.lugar) {
+      alert('Por favor completa todos los campos obligatorios');
+      return;
+    }
+
+    setCreandoEvento(true);
+
+    try {
+      const eventoData = {
+        ...nuevoEvento,
+        precio: nuevoEvento.precio ? parseFloat(nuevoEvento.precio) : 0,
+        creadorUid: user.uid,
+        creadorNombre: userProfile?.nombre || 'Usuario',
+        asistentes: [],
+        createdAt: serverTimestamp(),
+        estado: 'activo'
+      };
+
+      await addDoc(collection(db, 'eventos'), eventoData);
+      
+      alert('¡Evento creado exitosamente!');
+      setShowCrearEvento(false);
+      
+      // Resetear formulario
+      setNuevoEvento({
+        titulo: '',
+        descripcion: '',
+        fecha: '',
+        hora: '',
+        lugar: '',
+        ciudad: '',
+        precio: '',
+        tipo: '',
+        generos: [],
+        imagen: ''
+      });
+
+      // Recargar eventos
+      fetchEventos();
+    } catch (error) {
+      console.error('Error al crear evento:', error);
+      alert('Error al crear el evento. Intenta de nuevo.');
+    } finally {
+      setCreandoEvento(false);
+    }
+  };
+
   return (
     <div className="eventos-container">
       {/* Sidebar de filtros */}
@@ -222,7 +313,16 @@ const EventosNuevo = () => {
             <h1 className="eventos-title">Eventos Destacados</h1>
             <p className="eventos-subtitle">Descubre los mejores eventos de música en tu ciudad</p>
           </div>
-          <div className="view-controls">
+          <div className="header-actions">
+            {user && !isGuest && (
+              <Button 
+                className="btn-crear-evento-main"
+                onClick={() => setShowCrearEvento(true)}
+              >
+                + Crear Evento
+              </Button>
+            )}
+            <div className="view-controls">
             <select
               className="sort-select"
               value={sortBy}
@@ -244,6 +344,7 @@ const EventosNuevo = () => {
             >
               <FaList />
             </button>
+            </div>
           </div>
         </div>
 
@@ -253,12 +354,13 @@ const EventosNuevo = () => {
           <div className="text-center">No hay eventos disponibles.</div>
         ) : (
           <div className="eventos-grid">
-            {eventosOrdenados.map(ev => {
+            {eventosOrdenados.map((ev, index) => {
               const { dia, mes } = formatFecha(ev.fecha);
               const numAsistentes = ev.asistentes?.length || 0;
               
               return (
-                <div key={ev.id} className="evento-card">
+                <React.Fragment key={ev.id}>
+                  <div className="evento-card">
                   <div className={`evento-badge ${getTipoBadgeClass(ev.tipo)}`}>
                     {ev.tipo || 'CONCIERTO'}
                   </div>
@@ -322,6 +424,16 @@ const EventosNuevo = () => {
                     </button>
                   </div>
                 </div>
+
+                {/* Anuncio cada 4 eventos - Solo para usuarios gratuitos */}
+                {(index + 1) % 4 === 0 && (
+                  <AdBanner 
+                    format="banner" 
+                    position="events"
+                    isPremium={userProfile?.planActual === 'premium' || userProfile?.membershipPlan === 'premium'}
+                  />
+                )}
+              </React.Fragment>
               );
             })}
           </div>
@@ -343,6 +455,261 @@ const EventosNuevo = () => {
               Registrarse
             </Button>
           </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal Crear Evento */}
+      <Modal show={showCrearEvento} onHide={() => setShowCrearEvento(false)} size="lg" className="modern-modal">
+        <Modal.Header closeButton>
+          <Modal.Title>Crear Nuevo Evento</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleCrearEvento}>
+            <Form.Group className="mb-3">
+              <Form.Label>Título del Evento *</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Ej: Concierto de Rock en vivo"
+                value={nuevoEvento.titulo}
+                onChange={(e) => setNuevoEvento({...nuevoEvento, titulo: e.target.value})}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Descripción</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                placeholder="Describe tu evento..."
+                value={nuevoEvento.descripcion}
+                onChange={(e) => setNuevoEvento({...nuevoEvento, descripcion: e.target.value})}
+              />
+            </Form.Group>
+
+            <div className="row">
+              <div className="col-md-6">
+                <Form.Group className="mb-3">
+                  <Form.Label>Fecha del Evento *</Form.Label>
+                  <div className="date-picker-container">
+                    <div className="date-picker">
+                      {/* Selector de Día */}
+                      <div className="date-column">
+                        <label className="date-label">DÍA</label>
+                        <select 
+                          className="date-select"
+                          value={nuevoEvento.fecha.split('-')[2] || '01'}
+                          onChange={(e) => {
+                            const [year, month] = nuevoEvento.fecha.split('-');
+                            setNuevoEvento({...nuevoEvento, fecha: `${year || '2025'}-${month || '01'}-${e.target.value}`});
+                          }}
+                          required
+                        >
+                          {Array.from({length: 31}, (_, i) => i + 1).map(d => (
+                            <option key={d} value={d.toString().padStart(2, '0')}>
+                              {d.toString().padStart(2, '0')}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="date-separator">/</div>
+
+                      {/* Selector de Mes */}
+                      <div className="date-column">
+                        <label className="date-label">MES</label>
+                        <select 
+                          className="date-select"
+                          value={nuevoEvento.fecha.split('-')[1] || '01'}
+                          onChange={(e) => {
+                            const [year, , day] = nuevoEvento.fecha.split('-');
+                            setNuevoEvento({...nuevoEvento, fecha: `${year || '2025'}-${e.target.value}-${day || '01'}`});
+                          }}
+                          required
+                        >
+                          {[
+                            {value: '01', label: 'ENE'},
+                            {value: '02', label: 'FEB'},
+                            {value: '03', label: 'MAR'},
+                            {value: '04', label: 'ABR'},
+                            {value: '05', label: 'MAY'},
+                            {value: '06', label: 'JUN'},
+                            {value: '07', label: 'JUL'},
+                            {value: '08', label: 'AGO'},
+                            {value: '09', label: 'SEP'},
+                            {value: '10', label: 'OCT'},
+                            {value: '11', label: 'NOV'},
+                            {value: '12', label: 'DIC'}
+                          ].map(m => (
+                            <option key={m.value} value={m.value}>{m.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="date-separator">/</div>
+
+                      {/* Selector de Año */}
+                      <div className="date-column">
+                        <label className="date-label">AÑO</label>
+                        <select 
+                          className="date-select"
+                          value={nuevoEvento.fecha.split('-')[0] || '2025'}
+                          onChange={(e) => {
+                            const [, month, day] = nuevoEvento.fecha.split('-');
+                            setNuevoEvento({...nuevoEvento, fecha: `${e.target.value}-${month || '01'}-${day || '01'}`});
+                          }}
+                          required
+                        >
+                          {Array.from({length: 5}, (_, i) => 2025 + i).map(y => (
+                            <option key={y} value={y}>{y}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group className="mb-3">
+                  <Form.Label>Hora del Evento *</Form.Label>
+                  <div className="time-picker-container">
+                    <div className="time-picker">
+                      {/* Selector de Hora */}
+                      <div className="time-column">
+                        <label className="time-label">HORA</label>
+                        <select 
+                          className="time-select"
+                          value={nuevoEvento.hora.split(':')[0] || '20'}
+                          onChange={(e) => {
+                            const minutos = nuevoEvento.hora.split(':')[1] || '00';
+                            setNuevoEvento({...nuevoEvento, hora: `${e.target.value}:${minutos}`});
+                          }}
+                          required
+                        >
+                          {Array.from({length: 24}, (_, i) => i).map(h => (
+                            <option key={h} value={h.toString().padStart(2, '0')}>
+                              {h.toString().padStart(2, '0')}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="time-separator">:</div>
+
+                      {/* Selector de Minutos */}
+                      <div className="time-column">
+                        <label className="time-label">MINUTOS</label>
+                        <select 
+                          className="time-select"
+                          value={nuevoEvento.hora.split(':')[1] || '00'}
+                          onChange={(e) => {
+                            const hora = nuevoEvento.hora.split(':')[0] || '20';
+                            setNuevoEvento({...nuevoEvento, hora: `${hora}:${e.target.value}`});
+                          }}
+                          required
+                        >
+                          {['00', '15', '30', '45'].map(m => (
+                            <option key={m} value={m}>{m}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </Form.Group>
+              </div>
+            </div>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Lugar *</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Ej: Teatro Nacional"
+                value={nuevoEvento.lugar}
+                onChange={(e) => setNuevoEvento({...nuevoEvento, lugar: e.target.value})}
+                required
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Ciudad *</Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Ej: Bogotá"
+                value={nuevoEvento.ciudad}
+                onChange={(e) => setNuevoEvento({...nuevoEvento, ciudad: e.target.value})}
+                required
+              />
+            </Form.Group>
+
+            <div className="row">
+              <div className="col-md-6">
+                <Form.Group className="mb-3">
+                  <Form.Label>Precio (COP)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    placeholder="0 para evento gratuito"
+                    value={nuevoEvento.precio}
+                    onChange={(e) => setNuevoEvento({...nuevoEvento, precio: e.target.value})}
+                  />
+                </Form.Group>
+              </div>
+              <div className="col-md-6">
+                <Form.Group className="mb-3">
+                  <Form.Label>Tipo de Evento</Form.Label>
+                  <Form.Select
+                    value={nuevoEvento.tipo}
+                    onChange={(e) => setNuevoEvento({...nuevoEvento, tipo: e.target.value})}
+                  >
+                    <option value="">Selecciona un tipo</option>
+                    {tiposEvento.map(tipo => (
+                      <option key={tipo} value={tipo}>{tipo}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </div>
+            </div>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Géneros Musicales</Form.Label>
+              <div className="d-flex flex-wrap gap-2">
+                {generos.map(genero => (
+                  <Form.Check
+                    key={genero}
+                    type="checkbox"
+                    id={`genero-${genero}`}
+                    label={genero}
+                    checked={nuevoEvento.generos.includes(genero)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setNuevoEvento({...nuevoEvento, generos: [...nuevoEvento.generos, genero]});
+                      } else {
+                        setNuevoEvento({...nuevoEvento, generos: nuevoEvento.generos.filter(g => g !== genero)});
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>URL de Imagen (opcional)</Form.Label>
+              <Form.Control
+                type="url"
+                placeholder="https://ejemplo.com/imagen.jpg"
+                value={nuevoEvento.imagen}
+                onChange={(e) => setNuevoEvento({...nuevoEvento, imagen: e.target.value})}
+              />
+            </Form.Group>
+
+            <div className="d-flex justify-content-end gap-2">
+              <Button variant="secondary" onClick={() => setShowCrearEvento(false)}>
+                Cancelar
+              </Button>
+              <Button variant="primary" type="submit" disabled={creandoEvento}>
+                {creandoEvento ? 'Creando...' : 'Crear Evento'}
+              </Button>
+            </div>
+          </Form>
         </Modal.Body>
       </Modal>
     </div>

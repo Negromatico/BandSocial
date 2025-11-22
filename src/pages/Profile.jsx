@@ -1,859 +1,1451 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db, auth } from '../services/firebase';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { Container, Modal, Button } from 'react-bootstrap';
-import Select from 'react-select';
+import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { Container, Modal, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { uploadToCloudinary } from '../services/cloudinary';
+import Select from 'react-select';
 import { instrumentos } from '../data/opciones';
+import { useToast } from '../components/Toast';
+import './Profile.css';
 
 const Profile = () => {
-  const [showEditAllModal, setShowEditAllModal] = useState(false);
-  const [editAllDraft, setEditAllDraft] = useState({});
-  const [editAllStatus, setEditAllStatus] = useState('');
   const [user, setUser] = useState(auth.currentUser);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [status, setStatus] = useState('');
   const [initialValues, setInitialValues] = useState({});
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showFotoModal, setShowFotoModal] = useState(false);
-  const [showVerFoto, setShowVerFoto] = useState(false);
-  const [editField, setEditField] = useState(null);
-  const [fieldDraft, setFieldDraft] = useState('');
-  const [editBio, setEditBio] = useState(false);
-  const [bioDraft, setBioDraft] = useState('');
-  const [showGaleriaModal, setShowGaleriaModal] = useState(false);
-  const [galeriaFiles, setGaleriaFiles] = useState([]);
-  const [galeriaUploading, setGaleriaUploading] = useState(false);
-  const [galeriaStatus, setGaleriaStatus] = useState('');
-  const fileInputRef = useRef(null);
+  const [editDraft, setEditDraft] = useState({});
+  const [editStatus, setEditStatus] = useState('');
+  const [stats, setStats] = useState({ publicaciones: 0, eventos: 0 });
+  const [activeTab, setActiveTab] = useState('publicaciones');
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [postContent, setPostContent] = useState('');
+  const [postImage, setPostImage] = useState(null);
+  const [postImagePreview, setPostImagePreview] = useState('');
+  const [postLoading, setPostLoading] = useState(false);
+  const [postStatus, setPostStatus] = useState('');
   const navigate = useNavigate();
+  const { showToast, ToastContainer } = useToast();
 
   useEffect(() => {
-    if (showEditAllModal) setEditAllDraft({
-      nombre: initialValues?.nombre || '',
-      ciudad: initialValues?.ciudad || '',
-      bio: initialValues?.bio || '',
-      videoUrl: initialValues?.videoUrl || '',
-      generos: Array.isArray(initialValues?.generos) ? initialValues.generos : [],
-      instrumentos: Array.isArray(initialValues?.instrumentos) ? initialValues.instrumentos : [],
-      miembros: initialValues?.miembros || '',
-      dias: (initialValues?.dias || []).join(', '),
-      horarios: (initialValues?.horarios || []).join(', '),
-      buscan: (initialValues?.buscan || []).join(', '),
+    const unsub = auth.onAuthStateChanged(u => {
+      setUser(u);
+      if (!u) setShowAuthModal(true);
     });
-    setEditAllStatus('');
-  }, [showEditAllModal, initialValues]);
-
-  // Guardar todos los campos del modal de edición general
-const handleEditAllSave = (e) => {
-  e.preventDefault();
-  setEditAllStatus('Actualizando...');
-  const camposArray = [
-    'generos', 'instrumentos', 'dias', 'horarios', 'buscan'
-  ];
-  const data = { ...editAllDraft };
-  for (const campo of camposArray) {
-    if (campo === 'instrumentos' && Array.isArray(data[campo])) {
-      data[campo] = data[campo].map(s => (typeof s === 'string' ? s.trim() : s)).filter(Boolean);
-    } else {
-      data[campo] = (data[campo] || '').split(',').map(s => s.trim()).filter(Boolean);
-    }
-  }
-  if (!data.nombre.trim()) {
-    setEditAllStatus('⚠️ El nombre no puede estar vacío.');
-    return;
-  }
-  if (!data.bio.trim()) {
-    setEditAllStatus('⚠️ La biografía no puede estar vacía.');
-    return;
-  }
-  setDoc(doc(db, 'perfiles', user.uid), {
-    ...initialValues,
-    ...data,
-    uid: user.uid,
-    email: user.email,
-    updatedAt: new Date().toISOString(),
-  })
-    .then(() => {
-      setInitialValues(prev => ({ ...prev, ...data }));
-      setShowEditAllModal(false);
-      setEditAllStatus('');
-      setStatus('✅ Perfil actualizado correctamente.');
-    })
-    .catch(err => {
-      setEditAllStatus('❌ Error actualizando perfil: ' + (err.message || err.toString()));
-    });
-}
-
-// Manejar selección de archivos para galería
-  const handleGaleriaUpload = (e) => {
-    setGaleriaStatus('');
-    setGaleriaFiles(Array.from(e.target.files || []));
-  };
-
-  // Subir archivos a Cloudinary y guardar en Firestore
-  const handleGuardarGaleria = async () => {
-    if (!galeriaFiles.length) {
-      setGaleriaStatus('⚠️ Debes seleccionar al menos un archivo.');
-      return;
-    }
-    setGaleriaUploading(true);
-    setGaleriaStatus('Subiendo archivos...');
-    try {
-      const urls = [];
-      for (const file of galeriaFiles) {
-        const url = await uploadToCloudinary(file);
-        urls.push(url);
-      }
-      const nuevasFotos = [...(initialValues.fotos || []), ...urls];
-      await setDoc(doc(db, 'perfiles', user.uid), {
-        ...initialValues,
-        fotos: nuevasFotos,
-        uid: user.uid,
-        email: user.email,
-        updatedAt: new Date().toISOString(),
-      });
-      setInitialValues(prev => ({ ...prev, fotos: nuevasFotos }));
-      setGaleriaFiles([]);
-      setGaleriaStatus('✅ Archivos subidos y guardados en tu galería.');
-    } catch (err) {
-      setGaleriaStatus('❌ Error subiendo archivos: ' + (err.message || err.toString()));
-    } finally {
-      setGaleriaUploading(false);
-    }
-  };
-
-
-  useEffect(() => {
-    const unsub = auth.onAuthStateChanged(u => setUser(u));
     return unsub;
   }, []);
 
   useEffect(() => {
-    if (!user) setShowAuthModal(true);
-    else setShowAuthModal(false);
+    if (user) {
+      fetchProfile();
+      fetchStats();
+    }
   }, [user]);
 
-  const cleanProfileData = (data) => {
-    const cleaned = { ...data };
-    const arrayFields = ['generos', 'dias', 'instrumentos', 'buscan', 'horarios', 'fotos'];
-    arrayFields.forEach(f => {
-      if (cleaned[f] === undefined) cleaned[f] = [];
-    });
-    if (cleaned.ciudad === undefined) cleaned.ciudad = '';
-    if (cleaned.videoUrl === undefined) cleaned.videoUrl = '';
-    if (cleaned.miembros === undefined) cleaned.miembros = '';
-    return cleaned;
-  };
+  useEffect(() => {
+    if (showEditModal) {
+      setEditDraft({
+        nombre: initialValues?.nombre || '',
+        ciudad: initialValues?.ciudad || '',
+        bio: initialValues?.bio || '',
+        generos: Array.isArray(initialValues?.generos) ? initialValues.generos : [],
+        instrumentos: Array.isArray(initialValues?.instrumentos) ? initialValues.instrumentos : [],
+        miembros: initialValues?.miembros || '',
+        spotify: initialValues?.spotify || '',
+        youtube: initialValues?.youtube || '',
+        instagram: initialValues?.instagram || '',
+      });
+      setEditStatus('');
+    }
+  }, [showEditModal, initialValues]);
 
   const fetchProfile = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    if (!user) return;
+    setLoading(true);
     try {
-      const docRef = doc(db, 'perfiles', user.uid);
-      const docSnap = await getDoc(docRef);
+      const docSnap = await getDoc(doc(db, 'perfiles', user.uid));
       if (docSnap.exists()) {
-        setInitialValues(cleanProfileData(docSnap.data()));
-      } else {
-        setInitialValues(cleanProfileData({}));
+        setInitialValues(docSnap.data());
       }
     } catch (err) {
-      setStatus('❌ Error cargando perfil. Intenta recargar la página o revisar tu conexión.');
+      console.error('Error cargando perfil:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-    // eslint-disable-next-line
-  }, [user]);
-
-  const saveField = async (field) => {
+  const fetchStats = async () => {
     if (!user) return;
-    // Validación básica de campos vacíos
-    if ((typeof fieldDraft === 'string' && fieldDraft.trim() === '') || (Array.isArray(fieldDraft) && fieldDraft.length === 0)) {
-      setStatus('⚠️ El campo no puede estar vacío.');
+    try {
+      // Contar publicaciones
+      const pubQuery = query(collection(db, 'publicaciones'), where('autorUid', '==', user.uid));
+      const pubSnap = await getDocs(pubQuery);
+      
+      // Contar eventos
+      const eventQuery = query(collection(db, 'eventos'), where('creadorUid', '==', user.uid));
+      const eventSnap = await getDocs(eventQuery);
+      
+      setStats({
+        publicaciones: pubSnap.size,
+        eventos: eventSnap.size
+      });
+    } catch (err) {
+      console.error('Error cargando estadísticas:', err);
+    }
+  };
+
+  const handleSaveEdit = async (e) => {
+    e.preventDefault();
+    setEditStatus('Actualizando...');
+    
+    if (!editDraft.nombre?.trim()) {
+      setEditStatus('El nombre no puede estar vacío.');
       return;
     }
-    setStatus('Actualizando...');
-    let value = fieldDraft;
-    if (["generos", "instrumentos", "buscan", "horarios", "dias", "fotos"].includes(field)) {
-      value = fieldDraft.split(',').map(s => s.trim()).filter(Boolean);
-      if (value.length === 0) {
-        setStatus('⚠️ Debes ingresar al menos un elemento.');
-        return;
-      }
-    }
+    
     try {
-      await setDoc(doc(db, 'perfiles', user.uid), {
+      const dataToSave = {
         ...initialValues,
-        [field]: value,
+        nombre: editDraft.nombre.trim(),
+        ciudad: editDraft.ciudad,
+        bio: editDraft.bio?.trim() || '',
+        generos: Array.isArray(editDraft.generos) ? editDraft.generos : [],
+        instrumentos: Array.isArray(editDraft.instrumentos) ? editDraft.instrumentos : [],
+        miembros: editDraft.miembros || '',
+        spotify: editDraft.spotify || '',
+        youtube: editDraft.youtube || '',
+        instagram: editDraft.instagram || '',
         uid: user.uid,
         email: user.email,
         updatedAt: new Date().toISOString(),
-      });
-      setInitialValues(prev => ({ ...prev, [field]: value }));
-      setEditField(null);
-      setStatus('✅ Campo actualizado correctamente.');
+      };
+      
+      await setDoc(doc(db, 'perfiles', user.uid), dataToSave);
+      setInitialValues(dataToSave);
+      setShowEditModal(false);
+      setEditStatus('');
     } catch (err) {
-      if (err.code === 'permission-denied') {
-        setStatus('❌ No tienes permisos para editar este campo.');
-      } else if (err.message && err.message.includes('network')) {
-        setStatus('❌ Error de red. Revisa tu conexión a internet.');
-      } else {
-        setStatus('❌ Error actualizando campo: ' + (err.message || err.toString()));
-      }
+      setEditStatus('Error actualizando perfil: ' + err.message);
     }
   };
 
-  const cancelField = () => {
-    setEditField(null);
-    setFieldDraft('');
-  };
-
-  const saveBio = async () => {
-    if (!user) return;
-    if (!bioDraft || bioDraft.trim() === '') {
-      setStatus('⚠️ La biografía no puede estar vacía.');
-      return;
-    }
-    setStatus('Actualizando...');
+  const handleChangeBanner = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
     try {
-      await setDoc(doc(db, 'perfiles', user.uid), {
-        ...initialValues,
-        bio: bioDraft,
-        uid: user.uid,
-        email: user.email,
-        updatedAt: new Date().toISOString(),
-      });
-      setInitialValues(prev => ({ ...prev, bio: bioDraft }));
-      setEditBio(false);
-      setStatus('✅ Biografía actualizada correctamente.');
+      const url = await uploadToCloudinary(file, 'Bandas', 'portadas');
+      await updateDoc(doc(db, 'perfiles', user.uid), { fotoPortada: url });
+      setInitialValues(prev => ({ ...prev, fotoPortada: url }));
     } catch (err) {
-      if (err.code === 'permission-denied') {
-        setStatus('❌ No tienes permisos para editar la biografía.');
-      } else if (err.message && err.message.includes('network')) {
-        setStatus('❌ Error de red. Revisa tu conexión a internet.');
-      } else {
-        setStatus('❌ Error actualizando biografía: ' + (err.message || err.toString()));
-      }
+      console.error('Error subiendo portada:', err);
     }
-  };
-
-  const cancelBio = () => {
-    setEditBio(false);
-    setBioDraft(initialValues?.bio || '');
   };
 
   const handleChangeFoto = async (e) => {
     const file = e.target.files[0];
-    if (!file || !user) return;
-    setStatus('Subiendo foto...');
+    if (!file) return;
     try {
-      const url = await uploadToCloudinary(file);
-      await setDoc(doc(db, 'perfiles', user.uid), {
-        ...initialValues,
-        fotoPerfil: url,
-        uid: user.uid,
-        email: user.email,
-        updatedAt: new Date().toISOString(),
-      });
+      const url = await uploadToCloudinary(file, 'Bandas', 'perfiles');
+      await updateDoc(doc(db, 'perfiles', user.uid), { fotoPerfil: url });
       setInitialValues(prev => ({ ...prev, fotoPerfil: url }));
-      fetchProfile();
-      setStatus('✅ Foto de perfil actualizada correctamente.');
     } catch (err) {
-      if (err.code === 'permission-denied') {
-        setStatus('❌ No tienes permisos para subir la foto.');
-      } else if (err.message && err.message.includes('network')) {
-        setStatus('❌ Error de red. Revisa tu conexión a internet.');
-      } else {
-        setStatus('❌ Error subiendo foto: ' + (err.message || err.toString()));
-      }
+      console.error('Error subiendo foto:', err);
     }
   };
 
-  if (loading) return (
-    <Container fluid style={{ padding: '32px 0', background: 'linear-gradient(120deg, #f3f0fa 60%, #ede9fe 100%)', minHeight: '100vh' }}>
-      <div className="text-center">Cargando...</div>
-    </Container>
-  );
+  const handlePostImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPostImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPostImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreatePost = async () => {
+    if (!postContent.trim() && !postImage) {
+      setPostStatus('Escribe algo o agrega una imagen');
+      return;
+    }
+
+    setPostLoading(true);
+    setPostStatus('Publicando...');
+
+    try {
+      let imageUrl = '';
+      if (postImage) {
+        imageUrl = await uploadToCloudinary(postImage, 'Bandas', 'publicaciones');
+      }
+
+      const newPost = {
+        contenido: postContent.trim(),
+        imagen: imageUrl,
+        autorUid: user.uid,
+        autorNombre: initialValues?.nombre || 'Usuario',
+        autorFoto: initialValues?.fotoPerfil || '',
+        createdAt: serverTimestamp(),
+        likes: [],
+        comentarios: 0
+      };
+
+      await addDoc(collection(db, 'publicaciones'), newPost);
+
+      // Limpiar y cerrar
+      setPostContent('');
+      setPostImage(null);
+      setPostImagePreview('');
+      setShowCreatePost(false);
+      setPostStatus('');
+      
+      // Recargar estadísticas
+      fetchStats();
+      
+      showToast('¡Publicación creada exitosamente!', 'success');
+    } catch (err) {
+      console.error('Error creando publicación:', err);
+      setPostStatus('Error al publicar: ' + err.message);
+      showToast('Error al crear la publicación', 'error');
+    } finally {
+      setPostLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f0f2f5' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      <Modal show={showAuthModal} centered backdrop="static" keyboard={false}>
-        <Modal.Body className="text-center p-5">
-          <h4 className="mb-3" style={{ color: '#7c3aed' }}>¡Bienvenido a BandSocial!</h4>
-          <p>Debes iniciar sesión o registrarte para editar tu perfil.</p>
-          <div className="d-flex gap-3 justify-content-center mt-4">
-            <Button variant="primary" size="lg" onClick={() => navigate('/login')}>Iniciar sesión</Button>
-            <Button variant="outline-primary" size="lg" onClick={() => navigate('/register')}>Registrarse</Button>
+      <ToastContainer />
+      
+      {/* Modal de autenticación */}
+      <Modal show={showAuthModal} centered backdrop="static" keyboard={false} className="auth-modal-profile">
+        <Modal.Header style={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          border: 'none',
+          borderTopLeftRadius: '20px',
+          borderTopRightRadius: '20px',
+          padding: '1.5rem'
+        }}>
+          <Modal.Title style={{ fontWeight: 700, fontSize: '1.5rem' }}>
+            ¡Únete a BandSocial!
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center" style={{ padding: '2rem' }}>
+          <h5 style={{ color: '#333', fontWeight: 600, marginBottom: '1rem' }}>
+            Accede a tu perfil musical
+          </h5>
+          <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+            Debes iniciar sesión o registrarte para editar tu perfil y disfrutar de todas las funcionalidades.
+          </p>
+          <div className="d-flex gap-3 justify-content-center flex-wrap">
+            <Button 
+              variant="outline-primary" 
+              size="lg" 
+              onClick={() => navigate('/login')}
+              style={{
+                borderRadius: '10px',
+                padding: '0.75rem 2rem',
+                fontWeight: 500,
+                border: '2px solid #667eea',
+                color: '#667eea'
+              }}
+            >
+              Iniciar sesión
+            </Button>
+            <Button 
+              variant="primary" 
+              size="lg" 
+              onClick={() => navigate('/register')}
+              style={{
+                borderRadius: '10px',
+                padding: '0.75rem 2rem',
+                fontWeight: 500,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none'
+              }}
+            >
+              Registrarse Gratis
+            </Button>
           </div>
         </Modal.Body>
       </Modal>
 
-      {/* Modal para edición general de perfil */}
-      <Modal show={showEditAllModal} onHide={() => setShowEditAllModal(false)} centered size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Editar perfil completo</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <form onSubmit={handleEditAllSave}>
-            <div className="mb-3">
-              <label className="form-label">Nombre</label>
-              <input className="form-control" value={editAllDraft.nombre || ''} onChange={e => setEditAllDraft(d => ({...d, nombre: e.target.value}))} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Ciudad</label>
-              <input className="form-control" value={editAllDraft.ciudad || ''} onChange={e => setEditAllDraft(d => ({...d, ciudad: e.target.value}))} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Biografía</label>
-              <textarea className="form-control" value={editAllDraft.bio || ''} onChange={e => setEditAllDraft(d => ({...d, bio: e.target.value}))} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Video (URL o archivo)</label>
-              <div className="d-flex gap-2 align-items-center">
-                <input className="form-control" style={{ flex: 1 }} value={editAllDraft.videoUrl || ''} onChange={e => setEditAllDraft(d => ({...d, videoUrl: e.target.value}))} placeholder="Pega la URL de tu video o súbelo" />
-                <input type="file" accept="video/*" style={{ maxWidth: 180 }} onChange={async e => {
-                  const file = e.target.files[0];
-                  if (!file) return;
-                  setEditAllStatus('Subiendo video...');
-                  try {
-                    const url = await uploadToCloudinary(file);
-                    setEditAllDraft(d => ({...d, videoUrl: url}));
-                    setEditAllStatus('✅ Video subido');
-                  } catch (err) {
-                    setEditAllStatus('❌ Error subiendo video: ' + (err.message || err.toString()));
-                  }
-                }} />
-              </div>
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Géneros</label>
-              <Select
-                isMulti
-                options={[
-                  { value: 'rock', label: 'Rock' },
-                  { value: 'pop', label: 'Pop' },
-                  { value: 'jazz', label: 'Jazz' },
-                  { value: 'blues', label: 'Blues' },
-                  { value: 'reggae', label: 'Reggae' },
-                  { value: 'salsa', label: 'Salsa' },
-                  { value: 'cumbia', label: 'Cumbia' },
-                  { value: 'norteño', label: 'Norteño' },
-                  { value: 'banda', label: 'Banda' },
-                  { value: 'tropical', label: 'Tropical' },
-                  { value: 'otro', label: 'Otro (especificar)' }
-                ]}
-                value={Array.isArray(editAllDraft.generos)
-                  ? [
-                      { value: 'rock', label: 'Rock' },
-                      { value: 'pop', label: 'Pop' },
-                      { value: 'jazz', label: 'Jazz' },
-                      { value: 'blues', label: 'Blues' },
-                      { value: 'reggae', label: 'Reggae' },
-                      { value: 'salsa', label: 'Salsa' },
-                      { value: 'cumbia', label: 'Cumbia' },
-                      { value: 'norteño', label: 'Norteño' },
-                      { value: 'banda', label: 'Banda' },
-                      { value: 'tropical', label: 'Tropical' },
-                      { value: 'otro', label: 'Otro (especificar)' }
-                    ].filter(opt => editAllDraft.generos.includes(opt.value))
-                  : []}
-                onChange={opts => setEditAllDraft(d => ({
-                  ...d,
-                  generos: opts.map(opt => opt.value)
-                }))}
-                placeholder="Selecciona géneros musicales"
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Instrumentos</label>
-              <Select
-                isMulti
-                options={instrumentos}
-                value={Array.isArray(editAllDraft.instrumentos)
-                  ? instrumentos.filter(opt => editAllDraft.instrumentos.includes(opt.value))
-                  : []}
-                onChange={opts => setEditAllDraft(d => ({
-                  ...d,
-                  instrumentos: opts.map(opt => opt.value)
-                }))}
-                placeholder="Selecciona instrumentos"
-              />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Miembros</label>
-              <input className="form-control" value={editAllDraft.miembros || ''} onChange={e => setEditAllDraft(d => ({...d, miembros: e.target.value}))} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Días (separados por coma)</label>
-              <input className="form-control" value={editAllDraft.dias || ''} onChange={e => setEditAllDraft(d => ({...d, dias: e.target.value}))} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Horarios (separados por coma)</label>
-              <input className="form-control" value={editAllDraft.horarios || ''} onChange={e => setEditAllDraft(d => ({...d, horarios: e.target.value}))} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label">Buscan (separados por coma)</label>
-              <input className="form-control" value={editAllDraft.buscan || ''} onChange={e => setEditAllDraft(d => ({...d, buscan: e.target.value}))} />
-            </div>
-            <div className="d-flex justify-content-end gap-2">
-              <Button variant="secondary" onClick={() => setShowEditAllModal(false)}>Cancelar</Button>
-              <Button type="submit" variant="success">Guardar cambios</Button>
-            </div>
-            <div className="mt-2" style={{ minHeight: 24 }}>{editAllStatus}</div>
-          </form>
-        </Modal.Body>
-      </Modal>
-
-      {/* Modal para ver/cambiar foto de perfil */}
-      <Modal show={showFotoModal} onHide={() => setShowFotoModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Foto de perfil</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="text-center">
-          <Button variant="outline-primary" className="mb-3 w-100" onClick={() => setShowVerFoto(true)}>Ver foto de perfil</Button>
-          <Button variant="outline-secondary" className="mb-3 w-100" onClick={() => fileInputRef.current.click()}>Cambiar foto de perfil</Button>
-          <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleChangeFoto} />
-        </Modal.Body>
-      </Modal>
-
-      {/* Modal para ver la foto en grande */}
-      <Modal show={showVerFoto} onHide={() => setShowVerFoto(false)} centered>
+      {/* Modal para ver foto */}
+      <Modal show={showFotoModal} onHide={() => setShowFotoModal(false)} centered size="lg">
         <Modal.Body className="text-center p-0" style={{ background: '#000' }}>
           {initialValues?.fotoPerfil ? (
             <img src={initialValues.fotoPerfil} alt="avatar" style={{ maxWidth: '100%', maxHeight: '80vh', display: 'block', margin: '0 auto' }} />
           ) : (
-            <span style={{ fontSize: 80, color: '#fff', lineHeight: '90px' }}>🎵</span>
+            <div style={{ fontSize: 80, color: '#fff', padding: '40px' }}>Sin foto</div>
           )}
         </Modal.Body>
       </Modal>
 
-      {user && (
-        <Container fluid className="p-0" style={{ maxWidth: 900, margin: '0 auto', marginTop: 24, background: '#fff', borderRadius: 18, boxShadow: '0 4px 24px #0001', border: '1px solid #ede9fe', overflow: 'hidden' }}>
-          {/* Portada estilo Facebook */}
-          <div style={{ position: 'relative', width: '100%', height: 220, background: '#ede9fe', overflow: 'hidden' }}>
+      {/* Modal de edición de perfil */}
+      <Modal 
+        show={showEditModal} 
+        onHide={() => setShowEditModal(false)} 
+        centered 
+        size="lg"
+        className="edit-profile-modal"
+      >
+        <Modal.Header 
+          closeButton 
+          style={{ 
+            background: '#fff', 
+            borderBottom: '1px solid #e4e6eb',
+            padding: '16px 20px'
+          }}
+        >
+          <Modal.Title style={{ fontSize: 20, fontWeight: 700, color: '#050505' }}>
+            Editar Perfil
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '20px', background: '#fff', maxHeight: '70vh', overflowY: 'auto' }}>
+          <Form onSubmit={handleSaveEdit}>
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                Nombre
+              </Form.Label>
+              <Form.Control
+                type="text"
+                value={editDraft.nombre || ''}
+                onChange={(e) => setEditDraft({ ...editDraft, nombre: e.target.value })}
+                placeholder="Nombre de la banda o músico"
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  fontSize: 15,
+                  border: '1px solid #e4e6eb',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
+                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                Ciudad
+              </Form.Label>
+              <Form.Control
+                type="text"
+                value={typeof editDraft.ciudad === 'object' ? editDraft.ciudad?.label : editDraft.ciudad || ''}
+                onChange={(e) => setEditDraft({ ...editDraft, ciudad: e.target.value })}
+                placeholder="Ej: Medellín, Bogotá, Cali..."
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  fontSize: 15,
+                  border: '1px solid #e4e6eb',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
+                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                Biografía
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                value={editDraft.bio || ''}
+                onChange={(e) => setEditDraft({ ...editDraft, bio: e.target.value })}
+                placeholder="Cuéntanos sobre ti o tu banda..."
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  fontSize: 15,
+                  border: '1px solid #e4e6eb',
+                  transition: 'border-color 0.2s',
+                  resize: 'vertical'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
+                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                Géneros Musicales
+              </Form.Label>
+              <Select
+                isMulti
+                value={(editDraft.generos || []).map(g => {
+                  // Si g ya es un objeto, retornarlo; si es string, convertirlo
+                  if (typeof g === 'object' && g.value && g.label) {
+                    return g;
+                  }
+                  return { value: g, label: g };
+                })}
+                onChange={(selected) => setEditDraft({ ...editDraft, generos: (selected || []).map(s => s.value) })}
+                options={[
+                  { value: 'Rock', label: 'Rock' },
+                  { value: 'Pop', label: 'Pop' },
+                  { value: 'Jazz', label: 'Jazz' },
+                  { value: 'Blues', label: 'Blues' },
+                  { value: 'Metal', label: 'Metal' },
+                  { value: 'Punk', label: 'Punk' },
+                  { value: 'Indie', label: 'Indie' },
+                  { value: 'Alternativo', label: 'Alternativo' },
+                  { value: 'Electrónica', label: 'Electrónica' },
+                  { value: 'Reggae', label: 'Reggae' },
+                ]}
+                placeholder="Selecciona géneros..."
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                Instrumentos
+              </Form.Label>
+              <Select
+                isMulti
+                value={(editDraft.instrumentos || []).map(i => {
+                  // Si i ya es un objeto, retornarlo; si es string, convertirlo
+                  if (typeof i === 'object' && i.value && i.label) {
+                    return i;
+                  }
+                  return { value: i, label: i };
+                })}
+                onChange={(selected) => setEditDraft({ ...editDraft, instrumentos: (selected || []).map(s => s.value) })}
+                options={instrumentos.map(i => ({ value: i, label: i }))}
+                placeholder="Selecciona instrumentos..."
+              />
+            </Form.Group>
+
+            {initialValues?.type === 'banda' && (
+              <Form.Group className="mb-4">
+                <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                  Número de Miembros
+                </Form.Label>
+                <Form.Control
+                  type="text"
+                  value={editDraft.miembros || ''}
+                  onChange={(e) => setEditDraft({ ...editDraft, miembros: e.target.value })}
+                  placeholder="Ej: 4"
+                  style={{ 
+                    borderRadius: '8px', 
+                    padding: '12px', 
+                    fontSize: 15,
+                    border: '1px solid #e4e6eb',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#1877f2'}
+                  onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                />
+              </Form.Group>
+            )}
+
+            {/* Separador visual */}
+            <div style={{ 
+              borderTop: '1px solid #e4e6eb', 
+              margin: '24px 0',
+              paddingTop: 24
+            }}>
+              <h5 style={{ 
+                fontWeight: 700, 
+                fontSize: 17, 
+                marginBottom: 16, 
+                color: '#050505',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                🌐 Redes Sociales
+              </h5>
+            </div>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                🎵 Spotify
+              </Form.Label>
+              <Form.Control
+                type="url"
+                value={editDraft.spotify || ''}
+                onChange={(e) => setEditDraft({ ...editDraft, spotify: e.target.value })}
+                placeholder="https://open.spotify.com/artist/..."
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  fontSize: 15,
+                  border: '1px solid #e4e6eb',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#1DB954'}
+                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                📺 YouTube
+              </Form.Label>
+              <Form.Control
+                type="url"
+                value={editDraft.youtube || ''}
+                onChange={(e) => setEditDraft({ ...editDraft, youtube: e.target.value })}
+                placeholder="https://youtube.com/@..."
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  fontSize: 15,
+                  border: '1px solid #e4e6eb',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#FF0000'}
+                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                📸 Instagram
+              </Form.Label>
+              <Form.Control
+                type="url"
+                value={editDraft.instagram || ''}
+                onChange={(e) => setEditDraft({ ...editDraft, instagram: e.target.value })}
+                placeholder="https://instagram.com/..."
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  fontSize: 15,
+                  border: '1px solid #e4e6eb',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#E1306C'}
+                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+              />
+            </Form.Group>
+
+            {editStatus && (
+              <div 
+                className={`alert ${editStatus.includes('Error') ? 'alert-danger' : 'alert-info'} mb-4`} 
+                style={{ fontSize: 14, borderRadius: '8px' }}
+              >
+                {editStatus}
+              </div>
+            )}
+
+            {/* Separador antes de botones */}
+            <div style={{ borderTop: '1px solid #e4e6eb', margin: '20px -20px 20px -20px' }}></div>
+
+            <div className="d-flex gap-3 justify-content-end" style={{ padding: '0 0 0 0' }}>
+              <Button 
+                variant="light" 
+                onClick={() => setShowEditModal(false)}
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '10px 24px', 
+                  fontWeight: 600,
+                  background: '#e4e6eb',
+                  border: 'none',
+                  color: '#050505',
+                  fontSize: 15,
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#d8dadf'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#e4e6eb'}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                variant="primary"
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '10px 24px', 
+                  fontWeight: 600,
+                  background: '#1877f2',
+                  border: 'none',
+                  fontSize: 15,
+                  transition: 'background 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#166fe5'}
+                onMouseLeave={(e) => e.currentTarget.style.background = '#1877f2'}
+              >
+                Guardar Cambios
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal de crear publicación */}
+      <Modal 
+        show={showCreatePost} 
+        onHide={() => {
+          setShowCreatePost(false);
+          setPostContent('');
+          setPostImage(null);
+          setPostImagePreview('');
+          setPostStatus('');
+        }} 
+        centered 
+        size="lg"
+        className="create-post-modal"
+      >
+        <Modal.Header 
+          closeButton 
+          style={{ 
+            background: '#fff', 
+            borderBottom: '1px solid #e4e6eb',
+            padding: '16px 20px'
+          }}
+        >
+          <Modal.Title style={{ fontSize: 20, fontWeight: 700, color: '#050505' }}>
+            Crear Publicación
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '0', background: '#fff' }}>
+          {/* Información del usuario */}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e4e6eb' }}>
+            <div className="d-flex align-items-center gap-3">
+              <div style={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: '50%', 
+                background: initialValues?.fotoPerfil ? 'transparent' : '#1877f2',
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                overflow: 'hidden'
+              }}>
+                {initialValues?.fotoPerfil ? (
+                  <img 
+                    src={initialValues.fotoPerfil} 
+                    alt="Avatar" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <span style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>
+                    {initialValues?.nombre?.charAt(0)?.toUpperCase() || '?'}
+                  </span>
+                )}
+              </div>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#050505', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                  {initialValues?.nombre || 'Usuario'}
+                  {(initialValues?.planActual === 'premium' || initialValues?.membershipPlan === 'premium') && (
+                    <span style={{
+                      background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                      color: '#000',
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      letterSpacing: '0.3px'
+                    }}>
+                      PRO
+                    </span>
+                  )}
+                </div>
+                <div style={{ 
+                  fontSize: 12, 
+                  color: '#65676b',
+                  background: '#e4e6eb',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  display: 'inline-block',
+                  marginTop: 2
+                }}>
+                  🌍 Público
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Área de contenido */}
+          <div style={{ padding: '16px 20px' }}>
+            <Form.Control
+              as="textarea"
+              rows={5}
+              value={postContent}
+              onChange={(e) => setPostContent(e.target.value)}
+              placeholder="¿Qué estás pensando?"
+              style={{ 
+                border: 'none', 
+                fontSize: 24, 
+                resize: 'none',
+                outline: 'none',
+                boxShadow: 'none',
+                padding: 0,
+                color: '#050505'
+              }}
+              autoFocus
+            />
+          </div>
+
+          {/* Preview de imagen */}
+          {postImagePreview && (
+            <div style={{ padding: '0 20px 16px 20px' }}>
+              <div style={{ 
+                position: 'relative', 
+                border: '1px solid #e4e6eb',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}>
+                <img 
+                  src={postImagePreview} 
+                  alt="Preview" 
+                  style={{ width: '100%', display: 'block' }}
+                />
+                <Button
+                  variant="light"
+                  size="sm"
+                  onClick={() => {
+                    setPostImage(null);
+                    setPostImagePreview('');
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    borderRadius: '50%',
+                    width: 36,
+                    height: 36,
+                    padding: 0,
+                    background: 'rgba(255,255,255,0.95)',
+                    border: 'none',
+                    fontSize: 18,
+                    fontWeight: 600,
+                    color: '#65676b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Agregar a tu publicación */}
+          <div style={{ padding: '0 20px 16px 20px' }}>
+            <div style={{ 
+              border: '1px solid #e4e6eb', 
+              borderRadius: '8px', 
+              padding: '10px 16px'
+            }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <span style={{ fontSize: 15, fontWeight: 600, color: '#050505' }}>
+                  Agregar a tu publicación
+                </span>
+                <div className="d-flex gap-1">
+                  <input
+                    type="file"
+                    id="post-image-input"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handlePostImageChange}
+                  />
+                  <Button
+                    variant="light"
+                    size="sm"
+                    onClick={() => document.getElementById('post-image-input').click()}
+                    style={{ 
+                      borderRadius: '50%', 
+                      width: 36, 
+                      height: 36, 
+                      padding: 0,
+                      border: 'none',
+                      background: 'transparent',
+                      fontSize: 20,
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    📷
+                  </Button>
+                  <Button
+                    variant="light"
+                    size="sm"
+                    onClick={() => {
+                      setShowCreatePost(false);
+                      navigate('/eventos');
+                    }}
+                    style={{ 
+                      borderRadius: '50%', 
+                      width: 36, 
+                      height: 36, 
+                      padding: 0,
+                      border: 'none',
+                      background: 'transparent',
+                      fontSize: 20,
+                      transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                  >
+                    📅
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mensaje de estado */}
+          {postStatus && (
+            <div style={{ padding: '0 20px 16px 20px' }}>
+              <div className={`alert ${postStatus.includes('Error') ? 'alert-danger' : 'alert-info'} mb-0`} style={{ fontSize: 14 }}>
+                {postStatus}
+              </div>
+            </div>
+          )}
+
+          {/* Botón publicar */}
+          <div style={{ padding: '0 20px 16px 20px' }}>
             <Button
-              size="sm"
-              variant="light"
-              style={{ position: 'absolute', top: 12, right: 12, zIndex: 2, fontWeight: 500, border: '1px solid #ddd' }}
-              onClick={() => document.getElementById('input-portada').click()}
+              variant="primary"
+              onClick={handleCreatePost}
+              disabled={postLoading || (!postContent.trim() && !postImage)}
+              style={{
+                width: '100%',
+                borderRadius: '8px',
+                padding: '10px',
+                fontWeight: 600,
+                fontSize: 15,
+                background: postLoading || (!postContent.trim() && !postImage) ? '#e4e6eb' : '#1877f2',
+                border: 'none',
+                color: postLoading || (!postContent.trim() && !postImage) ? '#bcc0c4' : '#fff',
+                cursor: postLoading || (!postContent.trim() && !postImage) ? 'not-allowed' : 'pointer'
+              }}
             >
-              Cambiar portada
+              {postLoading ? (
+                <span>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                  Publicando...
+                </span>
+              ) : (
+                'Publicar'
+              )}
             </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {user && (
+        <Container fluid className="p-0" style={{ maxWidth: '100%', margin: '0 auto', marginTop: 0, background: '#f0f2f5', minHeight: '100vh' }}>
+          {/* Banner/Portada */}
+          <div style={{ position: 'relative', width: '100%', height: 350, background: '#000', overflow: 'hidden' }}>
+            {initialValues?.fotoPortada && (
+              <img 
+                src={initialValues.fotoPortada} 
+                alt="Portada" 
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            )}
             <input
               type="file"
               id="input-portada"
               accept="image/*"
               style={{ display: 'none' }}
-              onChange={async (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                setStatus('Subiendo portada...');
-                try {
-                  const url = await uploadToCloudinary(file, 'Bandas', 'portadas');
-                  await updateDoc(doc(db, 'perfiles', user.uid), {
-                    fotoPortada: url,
-                    updatedAt: new Date().toISOString(),
-                  });
-                  setInitialValues(prev => ({ ...prev, fotoPortada: url }));
-                  setStatus('Portada actualizada ✔️');
-                } catch (err) {
-                  setStatus('Error subiendo portada: ' + (err.message || err.toString()));
-                }
-              }}
+              onChange={handleChangeBanner}
             />
-            {/* Avatar superpuesto */}
-            <div
-              style={{
-                position: 'absolute',
-                left: 32,
-                bottom: -48,
-                width: 110,
-                height: 110,
-                borderRadius: '50%',
-                boxShadow: '0 0 0 6px #fff',
-                background: '#a78bfa',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden',
-                border: '2px solid #ede9fe',
-                cursor: 'pointer',
-                zIndex: 3
+            <Button
+              size="sm"
+              variant="light"
+              style={{ 
+                position: 'absolute', 
+                bottom: 20, 
+                right: 20, 
+                zIndex: 2, 
+                fontWeight: 600, 
+                borderRadius: '6px',
+                padding: '8px 16px',
+                background: 'rgba(255,255,255,0.9)',
+                border: 'none',
+                fontSize: '15px'
               }}
-              onClick={() => setShowFotoModal(true)}
+              onClick={() => document.getElementById('input-portada').click()}
             >
-              {initialValues?.fotoPerfil ? (
-                <img
-                  src={initialValues.fotoPerfil}
-                  alt="Avatar"
-                  style={{
-                    width: 124,
-                    height: 124,
-                    borderRadius: '50%',
-                    border: '5px solid #fff',
-                    boxShadow: '0 2px 12px #7c3aed33',
-                    objectFit: 'contain',
-                    background: '#fff',
-                    position: 'relative',
-                    zIndex: 2,
-                    overflow: 'hidden',
-                    display: 'block',
-                  }}
-                  onClick={() => setShowFotoModal(true)}
-                />
-              ) : (
-                <span style={{ fontSize: 48, color: '#fff', lineHeight: '110px' }}>🎵</span>
-              )}
-            </div>
+              Cambiar Banner
+            </Button>
           </div>
-          {/* Info principal y botones */}
-          <div style={{ padding: '64px 24px 16px 24px', position: 'relative', minHeight: 120 }}>
-            <div className="d-flex align-items-center justify-content-between flex-wrap">
-              <div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: '#7c3aed', lineHeight: 1 }}>{initialValues?.nombre ? initialValues.nombre : 'Mi perfil'}</div>
-                {/* Biografía editable inline */}
-                <div style={{ fontSize: 16, color: '#444', marginTop: 2, fontWeight: 400, minHeight: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  {editBio ? (
-                    <>
-                      <input
-                        type="text"
-                        value={bioDraft}
-                        maxLength={120}
-                        autoFocus
-                        style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 240 }}
-                        onChange={e => setBioDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveBio(); if (e.key === 'Escape') cancelBio(); }}
-                      />
-                      <Button size="sm" variant="success" onClick={saveBio}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelBio}>Cancelar</Button>
-                    </>
-                  ) : (
-                    <>
-                      <span>{initialValues?.bio || '¡Personaliza tu biografía!'}</span>
-                      <Button size="sm" variant="link" style={{ color: '#7c3aed', textDecoration: 'underline', fontWeight: 500 }} onClick={() => { setEditBio(true); setBioDraft(initialValues?.bio || ''); }}>Editar</Button>
-                    </>
-                  )}
+          
+          {/* Contenedor blanco centrado */}
+          <div style={{ maxWidth: '940px', margin: '0 auto', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+            {/* Sección de información del perfil */}
+            <div style={{ padding: '20px 20px 0 20px', position: 'relative' }}>
+              <div className="d-flex align-items-end justify-content-between" style={{ marginBottom: '16px' }}>
+                <div className="d-flex align-items-end gap-3">
+                  {/* Avatar con badge */}
+                  <div style={{ position: 'relative', marginTop: '-50px' }}>
+                    <input
+                      type="file"
+                      id="input-foto"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleChangeFoto}
+                    />
+                    <div
+                      style={{
+                        width: 168,
+                        height: 168,
+                        borderRadius: '50%',
+                        border: '4px solid #fff',
+                        background: '#1877f2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        overflow: 'hidden',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => document.getElementById('input-foto').click()}
+                    >
+                      {initialValues?.fotoPerfil ? (
+                        <img
+                          src={initialValues.fotoPerfil}
+                          alt="Avatar"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div style={{ fontSize: 64, color: '#fff', fontWeight: 700 }}>
+                          {initialValues?.nombre?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                      )}
+                    </div>
+                    {/* Badge azul */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 12,
+                      right: 12,
+                      width: 36,
+                      height: 36,
+                      borderRadius: '50%',
+                      background: '#1877f2',
+                      border: '3px solid #fff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#fff',
+                      fontSize: '18px',
+                      fontWeight: 700
+                    }}>
+                      ✓
+                    </div>
+                  </div>
+                  
+                  {/* Nombre y descripción */}
+                  <div style={{ paddingBottom: '8px' }}>
+                    <h1 style={{ fontSize: 32, fontWeight: 700, color: '#050505', marginBottom: 4, lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                      {initialValues?.nombre || 'Mi perfil'}
+                      {(initialValues?.planActual === 'premium' || initialValues?.membershipPlan === 'premium') && (
+                        <span style={{
+                          background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                          color: '#000',
+                          padding: '4px 12px',
+                          borderRadius: '20px',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          boxShadow: '0 2px 8px rgba(255, 215, 0, 0.3)',
+                          letterSpacing: '0.5px'
+                        }}>
+                          PREMIUM
+                        </span>
+                      )}
+                    </h1>
+                    <p style={{ fontSize: 15, color: '#65676b', marginBottom: 4 }}>
+                      {initialValues?.type === 'banda' ? 'Banda de Rock Alternativo' : 'Músico Profesional'}
+                    </p>
+                    <p style={{ fontSize: 13, color: '#65676b', marginBottom: 0 }}>
+                      {typeof initialValues?.ciudad === 'object' ? initialValues?.ciudad?.label : initialValues?.ciudad || 'Los Angeles, CA'} • Miembro desde 2023
+                    </p>
+                  </div>
                 </div>
-                <span className="badge bg-secondary mt-2" style={{ fontSize: 15 }}>{initialValues?.type === 'banda' ? 'Banda' : 'Músico'}</span>
+                
+                {/* Botones de acción */}
+                <div className="d-flex gap-2" style={{ paddingBottom: '8px' }}>
+                  <Button 
+                    variant="primary" 
+                    onClick={() => setShowEditModal(true)}
+                    style={{
+                      borderRadius: '6px',
+                      padding: '8px 16px',
+                      fontWeight: 600,
+                      background: '#1877f2',
+                      border: 'none',
+                      fontSize: '15px'
+                    }}
+                  >
+                    Editar Perfil
+                  </Button>
+                  <Button 
+                    variant="light"
+                    style={{
+                      borderRadius: '6px',
+                      padding: '8px 12px',
+                      fontWeight: 600,
+                      background: '#e4e6eb',
+                      border: 'none',
+                      color: '#050505',
+                      fontSize: '15px'
+                    }}
+                  >
+                    ⋯
+                  </Button>
+                </div>
               </div>
-              <div className="d-flex flex-column flex-md-row gap-2 mt-3 mt-md-0">
-                <Button variant="outline-primary" onClick={() => setShowEditAllModal(true)}>Editar perfil</Button>
-                <Button
-                  variant={initialValues?.disponible ? 'success' : 'secondary'}
-                  onClick={async () => {
-                    const newDisponible = !initialValues?.disponible;
-                    await setDoc(doc(db, 'perfiles', user.uid), {
-                      ...initialValues,
-                      disponible: newDisponible,
-                      uid: user.uid,
-                      email: user.email,
-                      updatedAt: new Date().toISOString(),
-                    });
-                    setInitialValues(prev => ({ ...prev, disponible: newDisponible }));
+              
+              {/* Línea divisoria */}
+              <div style={{ borderTop: '1px solid #e4e6eb', margin: '16px 0' }}></div>
+              
+              {/* Estadísticas */}
+              <div className="d-flex gap-5" style={{ padding: '0 0 16px 0' }}>
+                <div 
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                  onClick={() => navigate('/followers')}
+                >
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#1877f2' }}>
+                    {(initialValues?.seguidores || []).length}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#65676b' }}>Seguidores</div>
+                </div>
+                <div 
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                  onClick={() => navigate('/followers')}
+                >
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#1877f2' }}>
+                    {(initialValues?.siguiendo || []).length}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#65676b' }}>Siguiendo</div>
+                </div>
+                <div 
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                  onClick={() => navigate('/eventos')}
+                >
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#1877f2' }}>
+                    {stats.eventos}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#65676b' }}>Eventos</div>
+                </div>
+                <div 
+                  style={{ textAlign: 'center', cursor: 'pointer' }}
+                  onClick={() => navigate('/mis-publicaciones')}
+                >
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#1877f2' }}>
+                    {stats.publicaciones}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#65676b' }}>Publicaciones</div>
+                </div>
+              </div>
+              
+              {/* Línea divisoria */}
+              <div style={{ borderTop: '1px solid #e4e6eb' }}></div>
+              
+              {/* Tabs de navegación */}
+              <div className="d-flex gap-3" style={{ padding: '0' }}>
+                <button 
+                  onClick={() => setActiveTab('publicaciones')}
+                  style={{ 
+                    padding: '12px 16px', 
+                    border: 'none', 
+                    background: 'none', 
+                    borderBottom: activeTab === 'publicaciones' ? '3px solid #1877f2' : '3px solid transparent',
+                    color: activeTab === 'publicaciones' ? '#1877f2' : '#65676b',
+                    fontWeight: activeTab === 'publicaciones' ? 600 : 500,
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    transition: 'all 0.2s'
                   }}
                 >
-                  {initialValues?.disponible ? 'Disponible' : 'No disponible'}
-                </Button>
+                  Publicaciones
+                </button>
+                <button 
+                  onClick={() => setActiveTab('acerca')}
+                  style={{ 
+                    padding: '12px 16px', 
+                    border: 'none', 
+                    background: 'none', 
+                    borderBottom: activeTab === 'acerca' ? '3px solid #1877f2' : '3px solid transparent',
+                    color: activeTab === 'acerca' ? '#1877f2' : '#65676b',
+                    fontWeight: activeTab === 'acerca' ? 600 : 500,
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Acerca de
+                </button>
+                <button 
+                  onClick={() => setActiveTab('galeria')}
+                  style={{ 
+                    padding: '12px 16px', 
+                    border: 'none', 
+                    background: 'none', 
+                    borderBottom: activeTab === 'galeria' ? '3px solid #1877f2' : '3px solid transparent',
+                    color: activeTab === 'galeria' ? '#1877f2' : '#65676b',
+                    fontWeight: activeTab === 'galeria' ? 600 : 500,
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Galería
+                </button>
+                <button 
+                  onClick={() => navigate('/eventos')}
+                  style={{ 
+                    padding: '12px 16px', 
+                    border: 'none', 
+                    background: 'none', 
+                    borderBottom: '3px solid transparent',
+                    color: '#65676b',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Eventos
+                </button>
+                <button 
+                  onClick={() => setActiveTab('musica')}
+                  style={{ 
+                    padding: '12px 16px', 
+                    border: 'none', 
+                    background: 'none', 
+                    borderBottom: activeTab === 'musica' ? '3px solid #1877f2' : '3px solid transparent',
+                    color: activeTab === 'musica' ? '#1877f2' : '#65676b',
+                    fontWeight: activeTab === 'musica' ? 600 : 500,
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Música
+                </button>
               </div>
             </div>
-            <div className="row g-3 mt-2 mb-4 px-3">
-              {/* Nombre */}
-              <div className="col-md-6">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Nombre
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('nombre'); setFieldDraft(initialValues?.nombre || ''); }}>
-                      <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  {editField === 'nombre' ? (
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <input type="text" value={fieldDraft} maxLength={40} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 180 }}
-                        onChange={e => setFieldDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveField('nombre'); if (e.key === 'Escape') cancelField(); }}
-                      />
-                      <Button size="sm" variant="success" onClick={() => saveField('nombre')}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
+            
+            {/* Contenido con sidebar y feed */}
+            <div className="d-flex gap-3" style={{ padding: '16px', background: '#f0f2f5' }}>
+              {/* Sidebar izquierdo */}
+              <div style={{ width: '360px', flexShrink: 0 }}>
+                {/* Acerca de */}
+                <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Acerca de</h3>
+                  <p style={{ fontSize: 15, color: '#050505', marginBottom: 12 }}>
+                    {initialValues?.bio || 'Agrega una biografía para que otros conozcan más sobre ti.'}
+                  </p>
+                  {initialValues?.miembros && (
+                    <div style={{ fontSize: 15, color: '#65676b', marginBottom: 8 }}>
+                      <strong>{initialValues.miembros} Miembros</strong>
                     </div>
-                  ) : (
-                    <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.nombre || <span className="text-muted">No especificado</span>}</div>
+                  )}
+                  {initialValues?.generos && initialValues.generos.length > 0 && (
+                    <div style={{ fontSize: 15, color: '#65676b', marginBottom: 8 }}>
+                      <strong>Géneros:</strong> {initialValues.generos.join(', ')}
+                    </div>
+                  )}
+                  {initialValues?.instrumentos && initialValues.instrumentos.length > 0 && (
+                    <div style={{ fontSize: 15, color: '#65676b', marginBottom: 8 }}>
+                      <strong>Instrumentos:</strong> {initialValues.instrumentos.join(', ')}
+                    </div>
                   )}
                 </div>
-              </div>
-              {/* Tipo de perfil */}
-              <div className="col-md-6">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Tipo de perfil
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('type'); setFieldDraft(initialValues?.type || 'musico'); }}>
-                      <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  {editField === 'type' ? (
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <select value={fieldDraft} onChange={e => setFieldDraft(e.target.value)} style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px' }}>
-                        <option value="musico">Músico</option>
-                        <option value="banda">Banda</option>
-                      </select>
-                      <Button size="sm" variant="success" onClick={() => saveField('type')}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
+                
+                {/* Redes Sociales */}
+                <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Redes Sociales</h3>
+                  {initialValues?.spotify && (
+                    <div 
+                      onClick={() => window.open(initialValues.spotify, '_blank')}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, cursor: 'pointer', transition: 'opacity 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                    >
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>S</div>
+                      <span style={{ fontSize: 15 }}>Spotify</span>
                     </div>
-                  ) : (
-                    <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.type === 'banda' ? 'Banda' : 'Músico'}</div>
+                  )}
+                  {initialValues?.youtube && (
+                    <div 
+                      onClick={() => window.open(initialValues.youtube, '_blank')}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, cursor: 'pointer', transition: 'opacity 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                    >
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>Y</div>
+                      <span style={{ fontSize: 15 }}>YouTube</span>
+                    </div>
+                  )}
+                  {initialValues?.instagram && (
+                    <div 
+                      onClick={() => window.open(initialValues.instagram, '_blank')}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', transition: 'opacity 0.2s' }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                    >
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>I</div>
+                      <span style={{ fontSize: 15 }}>Instagram</span>
+                    </div>
+                  )}
+                  {!initialValues?.spotify && !initialValues?.youtube && !initialValues?.instagram && (
+                    <p style={{ fontSize: 14, color: '#65676b', textAlign: 'center', padding: '20px 0' }}>
+                      Agrega tus redes sociales en Editar Perfil
+                    </p>
                   )}
                 </div>
-              </div>
-              {/* Ciudad */}
-              <div className="col-md-6">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Ciudad
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('ciudad'); setFieldDraft(initialValues?.ciudad || ''); }}>
-                      <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  {editField === 'ciudad' ? (
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <input type="text" value={fieldDraft} maxLength={40} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 180 }}
-                        onChange={e => setFieldDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveField('ciudad'); if (e.key === 'Escape') cancelField(); }}
-                      />
-                      <Button size="sm" variant="success" onClick={() => saveField('ciudad')}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.ciudad || <span className="text-muted">No especificada</span>}</div>
-                  )}
-                </div>
-              </div>
-              {/* Géneros musicales */}
-              <div className="col-md-6">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Géneros musicales
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('generos'); setFieldDraft(initialValues?.generos?.join(', ') || ''); }}>
-                      <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  {editField === 'generos' ? (
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <input type="text" value={fieldDraft} maxLength={60} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 220 }}
-                        onChange={e => setFieldDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveField('generos'); if (e.key === 'Escape') cancelField(); }}
-                      />
-                      <Button size="sm" variant="success" onClick={() => saveField('generos')}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.generos?.length ? initialValues.generos.join(', ') : <span className="text-muted">No especificados</span>}</div>
-                  )}
-                </div>
-              </div>
-              {/* Instrumentos */}
-              <div className="col-md-6">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Instrumentos
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('instrumentos'); setFieldDraft(initialValues?.instrumentos?.join(', ') || ''); }}>
-                      <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  {editField === 'instrumentos' ? (
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <input type="text" value={fieldDraft} maxLength={60} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 220 }}
-                        onChange={e => setFieldDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveField('instrumentos'); if (e.key === 'Escape') cancelField(); }}
-                      />
-                      <Button size="sm" variant="success" onClick={() => saveField('instrumentos')}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.instrumentos?.length ? initialValues.instrumentos.join(', ') : <span className="text-muted">No especificados</span>}</div>
-                  )}
-                </div>
-              </div>
-              {/* Horarios disponibles/requeridos */}
-              <div className="col-md-6">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Horarios {initialValues?.type === 'banda' ? 'requeridos' : 'disponibles'}
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('horarios'); setFieldDraft(initialValues?.horarios?.join(', ') || ''); }}>
-                      <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  {editField === 'horarios' ? (
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <input type="text" value={fieldDraft} maxLength={60} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 220 }}
-                        onChange={e => setFieldDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveField('horarios'); if (e.key === 'Escape') cancelField(); }}
-                      />
-                      <Button size="sm" variant="success" onClick={() => saveField('horarios')}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.horarios?.length ? initialValues.horarios.join(', ') : <span className="text-muted">No especificados</span>}</div>
-                  )}
-                </div>
-              </div>
-              {/* Buscando */}
-              <div className="col-md-6">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Buscando
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('buscan'); setFieldDraft(initialValues?.buscan?.join(', ') || ''); }}>
-                      <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  {editField === 'buscan' ? (
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <input type="text" value={fieldDraft} maxLength={60} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 220 }}
-                        onChange={e => setFieldDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveField('buscan'); if (e.key === 'Escape') cancelField(); }}
-                      />
-                      <Button size="sm" variant="success" onClick={() => saveField('buscan')}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.buscan?.length ? initialValues.buscan.join(', ') : <span className="text-muted">No especificados</span>}</div>
-                  )}
-                </div>
-              </div>
-              {/* Biografía */}
-              <div className="col-12">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Biografía
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('bio'); setFieldDraft(initialValues?.bio || ''); }}>
-                      <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  {editField === 'bio' ? (
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <textarea value={fieldDraft} maxLength={120} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '4px 8px', width: 320, minHeight: 40 }}
-                        onChange={e => setFieldDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) saveField('bio'); if (e.key === 'Escape') cancelField(); }}
-                      />
-                      <Button size="sm" variant="success" onClick={() => saveField('bio')}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.bio || <span className="text-muted">¡Personaliza tu biografía!</span>}</div>
-                  )}
-                </div>
-              </div>
-              {/* Miembros (solo para banda) */}
-              {initialValues?.type === 'banda' && (
-                <div className="col-md-6">
-                  <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                    <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Miembros
-                      <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('miembros'); setFieldDraft(initialValues?.miembros || ''); }}>
-                        <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                      </span>
-                    </div>
-                    {editField === 'miembros' ? (
-                      <div className="d-flex align-items-center gap-2 mt-2">
-                        <input type="text" value={fieldDraft} maxLength={60} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 220 }}
-                          onChange={e => setFieldDraft(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') saveField('miembros'); if (e.key === 'Escape') cancelField(); }}
-                        />
-                        <Button size="sm" variant="success" onClick={() => saveField('miembros')}>Guardar</Button>
-                        <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
+                
+                {/* Próximos Eventos */}
+                <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Próximos Eventos</h3>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <div style={{ width: 48, height: 48, background: '#1877f2', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                        <div style={{ fontSize: 10, fontWeight: 600 }}>MAR</div>
+                        <div style={{ fontSize: 18, fontWeight: 700 }}>15</div>
                       </div>
-                    ) : (
-                      <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.miembros || <span className="text-muted">No especificados</span>}</div>
-                    )}
-                  </div>
-                </div>
-              )}
-              {/* Video de presentación */}
-              <div className="col-md-6">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Video de presentación (URL)
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('videoUrl'); setFieldDraft(initialValues?.videoUrl || ''); }}>
-                      <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  {editField === 'videoUrl' ? (
-                    <div className="d-flex align-items-center gap-2 mt-2">
-                      <input type="text" value={fieldDraft} maxLength={120} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 260 }}
-                        onChange={e => setFieldDraft(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') saveField('videoUrl'); if (e.key === 'Escape') cancelField(); }}
-                      />
-                      <Button size="sm" variant="success" onClick={() => saveField('videoUrl')}>Guardar</Button>
-                      <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.videoUrl ? (
-                      <a href={initialValues.videoUrl} target="_blank" rel="noopener noreferrer">{initialValues.videoUrl}</a>
-                    ) : (
-                      <span className="text-muted">No especificado</span>
-                    )}</div>
-                  )}
-                </div>
-              </div>
-              {/* Galería multimedia: fotos y videos */}
-              <div className="col-md-6">
-                <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                  <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Galería multimedia
-                    <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => setShowGaleriaModal(true)}>
-                      <i className="bi bi-upload" style={{ fontSize: 17 }} />
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 16, color: '#222', marginTop: 2, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {initialValues?.fotos?.length ? (
-                      initialValues.fotos.map((url, idx) =>
-                        url.match(/\.(mp4|webm|ogg)$/i) ? (
-                          <video key={idx} src={url} controls style={{ width: 70, height: 70, borderRadius: 8, objectFit: 'cover', background: '#eee' }} />
-                        ) : (
-                          <img key={idx} src={url} alt="media" style={{ width: 70, height: 70, borderRadius: 8, objectFit: 'cover', background: '#eee' }} />
-                        )
-                      )
-                    ) : <span className="text-muted">No hay archivos</span>}
-                  </div>
-                </div>
-                {/* Modal para subir múltiples archivos */}
-                <Modal show={showGaleriaModal} onHide={() => setShowGaleriaModal(false)} centered>
-                  <Modal.Header closeButton>
-                    <Modal.Title>Subir fotos y videos</Modal.Title>
-                  </Modal.Header>
-                  <Modal.Body className="text-center">
-                    <input type="file" multiple accept="image/*,video/*" onChange={handleGaleriaUpload} />
-                    <div className="mt-3">
-                      <Button variant="success" onClick={handleGuardarGaleria} disabled={galeriaUploading}>{galeriaUploading ? 'Subiendo...' : 'Guardar en galería'}</Button>
-                    </div>
-                    <div className="mt-2" style={{ minHeight: 24 }}>{galeriaStatus}</div>
-                  </Modal.Body>
-                </Modal>
-              </div>
-              {/* Días disponibles (para músicos) */}
-              {initialValues?.type !== 'banda' && (
-                <div className="col-md-6">
-                  <div className="card p-3 mb-2" style={{ border: '1px solid #ede9fe', borderRadius: 12 }}>
-                    <div style={{ fontWeight: 600, fontSize: 17, color: '#7c3aed' }}>Días disponibles
-                      <span style={{ marginLeft: 8, cursor: 'pointer' }} onClick={() => { setEditField('dias'); setFieldDraft((initialValues?.dias||[]).join(', ')); }}>
-                        <i className="bi bi-pencil" style={{ fontSize: 17 }} />
-                      </span>
-                    </div>
-                    {editField === 'dias' ? (
-                      <div className="d-flex align-items-center gap-2 mt-2">
-                        <input type="text" value={fieldDraft} maxLength={60} autoFocus style={{ fontSize: 16, border: '1px solid #ccc', borderRadius: 6, padding: '2px 8px', width: 220 }}
-                          onChange={e => setFieldDraft(e.target.value)}
-                          onKeyDown={e => { if (e.key === 'Enter') saveField('dias'); if (e.key === 'Escape') cancelField(); }}
-                        />
-                        <Button size="sm" variant="success" onClick={() => saveField('dias')}>Guardar</Button>
-                        <Button size="sm" variant="secondary" onClick={cancelField}>Cancelar</Button>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 600 }}>Rock Fest 2024</div>
+                        <div style={{ fontSize: 13, color: '#65676b' }}>The Roxy Theatre</div>
+                        <div style={{ fontSize: 13, color: '#65676b' }}>8:00 PM</div>
                       </div>
-                    ) : (
-                      <div style={{ fontSize: 16, color: '#222', marginTop: 2 }}>{initialValues?.dias?.length ? initialValues.dias.join(', ') : <span className="text-muted">No especificados</span>}</div>
-                    )}
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <div style={{ width: 48, height: 48, background: '#1877f2', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                        <div style={{ fontSize: 10, fontWeight: 600 }}>ABR</div>
+                        <div style={{ fontSize: 18, fontWeight: 700 }}>22</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 600 }}>Indie Night Live</div>
+                        <div style={{ fontSize: 13, color: '#65676b' }}>TRO Outdoor</div>
+                        <div style={{ fontSize: 13, color: '#65676b' }}>9:00 PM</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div 
+                    onClick={() => navigate('/eventos')}
+                    style={{ fontSize: 15, color: '#1877f2', cursor: 'pointer', fontWeight: 600, transition: 'opacity 0.2s' }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  >
+                    Ver todos los eventos →
                   </div>
                 </div>
-              )}
+              </div>
+              
+              {/* Feed central */}
+              <div style={{ flex: 1 }}>
+                {/* Crear publicación */}
+                <div style={{ background: '#fff', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                  <div className="d-flex align-items-center gap-2 mb-3">
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>
+                      {initialValues?.nombre?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                    <input 
+                      type="text" 
+                      placeholder="¿Qué estás pensando?"
+                      onClick={() => setShowCreatePost(true)}
+                      readOnly
+                      style={{ 
+                        flex: 1, 
+                        border: 'none', 
+                        background: '#f0f2f5', 
+                        borderRadius: '20px', 
+                        padding: '8px 16px',
+                        fontSize: 15,
+                        cursor: 'pointer'
+                      }}
+                    />
+                  </div>
+                  <div style={{ borderTop: '1px solid #e4e6eb', paddingTop: 8 }}>
+                    <div className="d-flex justify-content-around">
+                      <button 
+                        onClick={() => {
+                          setShowCreatePost(true);
+                          setTimeout(() => document.getElementById('post-image-input')?.click(), 100);
+                        }}
+                        style={{ 
+                          border: 'none', 
+                          background: 'none', 
+                          color: '#65676b', 
+                          fontSize: 15, 
+                          fontWeight: 500, 
+                          cursor: 'pointer', 
+                          padding: '8px 12px',
+                          transition: 'background 0.2s',
+                          borderRadius: '6px'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                      >
+                        📷 Foto
+                      </button>
+                      <button 
+                        onClick={() => setShowCreatePost(true)}
+                        style={{ 
+                          border: 'none', 
+                          background: 'none', 
+                          color: '#65676b', 
+                          fontSize: 15, 
+                          fontWeight: 500, 
+                          cursor: 'pointer', 
+                          padding: '8px 12px',
+                          transition: 'background 0.2s',
+                          borderRadius: '6px'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                      >
+                        🎥 Video
+                      </button>
+                      <button 
+                        onClick={() => navigate('/eventos')}
+                        style={{ 
+                          border: 'none', 
+                          background: 'none', 
+                          color: '#65676b', 
+                          fontSize: 15, 
+                          fontWeight: 500, 
+                          cursor: 'pointer', 
+                          padding: '8px 12px',
+                          transition: 'background 0.2s',
+                          borderRadius: '6px'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                      >
+                        📅 Evento
+                      </button>
+                      <Button 
+                        variant="primary"
+                        onClick={() => setShowCreatePost(true)}
+                        style={{ background: '#1877f2', border: 'none', borderRadius: '6px', padding: '6px 16px', fontSize: 15, fontWeight: 600 }}
+                      >
+                        Publicar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Publicación de ejemplo */}
+                <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+                  <div className="d-flex align-items-center gap-2 mb-3">
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>
+                      {initialValues?.nombre?.charAt(0)?.toUpperCase() || 'T'}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: '#050505' }}>
+                        {initialValues?.nombre || 'The Midnight Riders'}
+                      </div>
+                      <div style={{ fontSize: 13, color: '#65676b' }}>Hace 2 horas</div>
+                    </div>
+                  </div>
+                  <p style={{ fontSize: 15, color: '#050505', marginBottom: 12 }}>
+                    Increíble noche en The Roxy! Gracias a todos los que vinieron a apoyarnos. Aquí algunas fotos del show.
+                  </p>
+                  {initialValues?.fotoPortada && (
+                    <img 
+                      src={initialValues.fotoPortada} 
+                      alt="Publicación" 
+                      style={{ width: '100%', borderRadius: '8px', marginBottom: 12 }}
+                    />
+                  )}
+                  <div className="d-flex justify-content-between align-items-center" style={{ paddingTop: 8, borderTop: '1px solid #e4e6eb' }}>
+                    <div style={{ fontSize: 13, color: '#65676b' }}>1.2K Me gusta • 85 comentarios • 34 compartidos</div>
+                  </div>
+                  <div className="d-flex justify-content-around" style={{ paddingTop: 8, borderTop: '1px solid #e4e6eb', marginTop: 8 }}>
+                    <button 
+                      onClick={() => navigate('/publicaciones')}
+                      style={{ 
+                        border: 'none', 
+                        background: 'none', 
+                        color: '#65676b', 
+                        fontSize: 15, 
+                        fontWeight: 500, 
+                        cursor: 'pointer', 
+                        padding: '8px 12px', 
+                        flex: 1,
+                        transition: 'background 0.2s',
+                        borderRadius: '6px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                    >
+                      👍 Me gusta
+                    </button>
+                    <button 
+                      onClick={() => navigate('/publicaciones')}
+                      style={{ 
+                        border: 'none', 
+                        background: 'none', 
+                        color: '#65676b', 
+                        fontSize: 15, 
+                        fontWeight: 500, 
+                        cursor: 'pointer', 
+                        padding: '8px 12px', 
+                        flex: 1,
+                        transition: 'background 0.2s',
+                        borderRadius: '6px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                    >
+                      💬 Comentar
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: initialValues?.nombre || 'BandSocial',
+                            text: 'Mira mi perfil en BandSocial',
+                            url: window.location.href
+                          });
+                        } else {
+                          navigator.clipboard.writeText(window.location.href);
+                          alert('Link copiado al portapapeles');
+                        }
+                      }}
+                      style={{ 
+                        border: 'none', 
+                        background: 'none', 
+                        color: '#65676b', 
+                        fontSize: 15, 
+                        fontWeight: 500, 
+                        cursor: 'pointer', 
+                        padding: '8px 12px', 
+                        flex: 1,
+                        transition: 'background 0.2s',
+                        borderRadius: '6px'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                    >
+                      🔗 Compartir
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            {status && (
-              <div className="mt-3">
-                <div className={`alert ${status.includes('✔️') ? 'alert-success' : 'alert-danger'}`}>{status}</div>
-              </div>
-            )}
           </div>
         </Container>
       )}

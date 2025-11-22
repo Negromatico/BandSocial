@@ -1,0 +1,300 @@
+/* ========================================
+   ESTILOS MODERNOS PARA MODALES Y FORMULARIOS
+   
+   USO:
+   1. Importar: import '../styles/ModernModal.css';
+   2. Agregar clase al Modal: <Modal className="modern-modal">
+   
+   ======================================== */
+
+/* ==================== MODAL ==================== */
+
+/* Contenedor Principal del Modal */
+.modern-modal .modal-content {
+  border-radius: 20px;
+  border: none;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Header con Gradiente Púrpura */
+.modern-modal .modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 24px;
+}
+
+.modern-modal .modal-header .modal-title {
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -0.5px;
+}
+
+.modern-modal .modal-header .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.modern-modal .modal-header .btn-close:hover {
+  opacity: 1;
+}
+
+/* Body con Fondo Gris Claro */
+.modern-modal .modal-body {
+  padding: 24px;
+  background: #f8f9fa;
+}
+
+/* Footer del Modal */
+.modern-modal .modal-footer {
+  gap: 12px;
+  padding: 20px 24px;
+  background: white;
+  border-top: 2px solid #e5e7eb;
+}
+
+/* ==================== FORMULARIOS ==================== */
+
+/* Labels con Estilo */
+.modern-modal .form-label {
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+/* Inputs y Selects */
+.modern-modal .form-control,
+.modern-modal .form-select {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.modern-modal .form-control:focus,
+.modern-modal .form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  outline: none;
+}
+
+.modern-modal .form-control::placeholder {
+  color: #9ca3af;
+}
+
+/* Textareas */
+.modern-modal textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* ==================== CHECKBOXES Y RADIOS ==================== */
+
+/* Checkboxes con Estilo */
+.modern-modal .form-check {
+  padding: 8px 12px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+
+.modern-modal .form-check:hover {
+  border-color: #667eea;
+  background: #f0f4ff;
+}
+
+.modern-modal .form-check-input:checked {
+  background-color: #667eea;
+  border-color: #667eea;
+}
+
+.modern-modal .form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.modern-modal .form-check-label {
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+/* ==================== BOTONES ==================== */
+
+/* Botón Secundario (Cancelar) */
+.modern-modal .btn-secondary {
+  background: #6b7280;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.modern-modal .btn-secondary:hover {
+  background: #4b5563;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Botón Primario (Confirmar) */
+.modern-modal .btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.modern-modal .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.modern-modal .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ==================== SELECTORES PERSONALIZADOS ==================== */
+
+/* Selector de Fecha */
+.modern-modal .date-picker-container {
+  background: linear-gradient(135deg, #7c8fe6 0%, #8b7fc7 100%);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
+}
+
+.modern-modal .date-picker {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+}
+
+.modern-modal .date-column,
+.modern-modal .time-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.modern-modal .date-label,
+.modern-modal .time-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+}
+
+.modern-modal .date-select,
+.modern-modal .time-select {
+  width: 70px;
+  height: 70px;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.98);
+  border: none;
+  border-radius: 12px;
+  color: #667eea;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  padding: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.modern-modal .date-select:hover,
+.modern-modal .time-select:hover {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.modern-modal .date-select:focus,
+.modern-modal .time-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.4);
+}
+
+.modern-modal .date-separator,
+.modern-modal .time-separator {
+  font-size: 36px;
+  font-weight: 700;
+  color: white;
+  margin: 0 2px;
+  padding-bottom: 14px;
+}
+
+.modern-modal .time-separator {
+  font-size: 40px;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.4; }
+}
+
+/* Selector de Hora */
+.modern-modal .time-picker-container {
+  background: linear-gradient(135deg, #7c8fe6 0%, #8b7fc7 100%);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.25);
+}
+
+.modern-modal .time-picker {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+}
+
+.modern-modal .time-select {
+  font-size: 28px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .modern-modal .modal-header {
+    padding: 20px;
+  }
+
+  .modern-modal .modal-header .modal-title {
+    font-size: 20px;
+  }
+
+  .modern-modal .modal-body {
+    padding: 20px;
+  }
+
+  .modern-modal .date-select,
+  .modern-modal .time-select {
+    width: 60px;
+    height: 60px;
+    font-size: 20px;
+  }
+
+  .modern-modal .date-separator,
+  .modern-modal .time-separator {
+    font-size: 28px;
+  }
+}

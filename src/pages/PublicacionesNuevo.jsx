@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { db, auth } from '../services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs, query, orderBy, doc, getDoc, where, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
@@ -9,10 +9,15 @@ import PublicacionForm from '../components/PublicacionForm';
 import ComentariosPublicacion from '../components/ComentariosPublicacion';
 import ReaccionesPublicacion from '../components/ReaccionesPublicacion';
 import ContadorComentarios from '../components/ContadorComentarios';
+import AuthPromptModal from '../components/AuthPromptModal';
+import AdBanner from '../components/AdBanner';
 import { notificarNuevoSeguidor } from '../services/notificationService';
+import { GuestContext } from '../App';
 import './Publicaciones.css';
 
 const PublicacionesNuevo = () => {
+  const guestContext = useContext(GuestContext);
+  const isGuest = guestContext?.isGuest || false;
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
@@ -229,85 +234,109 @@ const PublicacionesNuevo = () => {
 
 
   return (
-    <div className="publicaciones-layout">
-      {/* Sidebar Izquierdo - Perfil */}
-      <aside className="sidebar-left">
-        <div className="profile-card">
-          <div className="profile-avatar">
-            {userProfile?.fotoPerfil ? (
-              <img src={userProfile.fotoPerfil} alt={userProfile.nombre} />
-            ) : (
-              getInitials(userProfile?.nombre || user?.email)
-            )}
-          </div>
-          <div className="profile-name">{userProfile?.nombre || 'Usuario'}</div>
-          <div className="profile-type">{userProfile?.type || 'Músico Profesional'}</div>
-          <div className="profile-stats">
-            <div className="stat-item">
-              <span className="stat-value">{seguidores}</span>
-              <span className="stat-label">Seguidores</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-value">{siguiendo}</span>
-              <span className="stat-label">Siguiendo</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="quick-access">
-          <div className="quick-access-title">Accesos Rápidos</div>
-          <Link to="/profile" className="quick-access-item">
-            <FaUser className="quick-access-icon" />
-            <span>Mi Perfil</span>
-          </Link>
-          <Link to="/musicmarket" className="quick-access-item">
-            <FaTag className="quick-access-icon" />
-            <span>Mis Ventas</span>
-          </Link>
-          <Link to="/musicos" className="quick-access-item">
-            <FaUsers className="quick-access-icon" />
-            <span>Mis Grupos</span>
-          </Link>
-          <Link to="/eventos" className="quick-access-item">
-            <FaCalendarAlt className="quick-access-icon" />
-            <span>Eventos</span>
-          </Link>
-        </div>
-      </aside>
-
-      {/* Feed Central */}
-      <main className="feed-container">
-        {/* Crear Publicación */}
-        <div className="create-post-box">
-          <div className="create-post-header">
-            <div className="create-post-avatar">
+    <>
+      <AuthPromptModal user={user} isGuest={isGuest} />
+      <div className="publicaciones-layout">
+        {/* Sidebar Izquierdo - Perfil (Solo si hay usuario) */}
+        {user && (
+          <aside className="sidebar-left">
+          <div className="profile-card">
+            <div className="profile-avatar">
               {userProfile?.fotoPerfil ? (
                 <img src={userProfile.fotoPerfil} alt={userProfile.nombre} />
               ) : (
                 getInitials(userProfile?.nombre || user?.email)
               )}
             </div>
-            <div
-              className="create-post-input"
-              onClick={() => setShowCreateModal(true)}
-            >
-              ¿Que quieres publicar el día de hoy?
+            <div className="profile-name" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {userProfile?.nombre || 'Usuario'}
+              {(userProfile?.planActual === 'premium' || userProfile?.membershipPlan === 'premium') && (
+                <span style={{
+                  background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                  color: '#000',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  boxShadow: '0 2px 4px rgba(255, 215, 0, 0.3)',
+                  letterSpacing: '0.3px'
+                }}>
+                  PRO
+                </span>
+              )}
+            </div>
+            <div className="profile-type">{userProfile?.type || 'Músico Profesional'}</div>
+            <div className="profile-stats">
+              <div className="stat-item">
+                <span className="stat-value">{seguidores}</span>
+                <span className="stat-label">Seguidores</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">{siguiendo}</span>
+                <span className="stat-label">Siguiendo</span>
+              </div>
             </div>
           </div>
-          <div className="create-post-actions">
-            <button className="post-action-btn" onClick={() => setShowCreateModal(true)}>
-              <FaImage className="post-action-icon" />
-              Foto
-            </button>
-            <button className="post-action-btn" onClick={() => setShowCreateModal(true)}>
-              <FaVideo className="post-action-icon" />
-              Video
-            </button>
-            <button className="post-action-btn publish-btn" onClick={() => setShowCreateModal(true)}>
-              Publicar
-            </button>
+
+          <div className="quick-access">
+            <div className="quick-access-title">Accesos Rápidos</div>
+            <Link to="/profile" className="quick-access-item">
+              <FaUser className="quick-access-icon" />
+              <span>Mi Perfil</span>
+            </Link>
+            <Link to="/musicmarket" className="quick-access-item">
+              <FaTag className="quick-access-icon" />
+              <span>Mis Ventas</span>
+            </Link>
+            <Link to="/grupos" className="quick-access-item">
+              <FaUsers className="quick-access-icon" />
+              <span>Mis Grupos</span>
+            </Link>
+            <Link to="/eventos" className="quick-access-item">
+              <FaCalendarAlt className="quick-access-icon" />
+              <span>Eventos</span>
+            </Link>
           </div>
-        </div>
+        </aside>
+        )}
+
+      {/* Feed Central */}
+      <main className="feed-container">
+        {/* Crear Publicación - Solo si hay usuario */}
+        {user && (
+          <div className="create-post-box">
+            <div className="create-post-header">
+              <div className="create-post-avatar">
+                {userProfile?.fotoPerfil ? (
+                  <img src={userProfile.fotoPerfil} alt={userProfile.nombre} />
+                ) : (
+                  getInitials(userProfile?.nombre || user?.email)
+                )}
+              </div>
+              <div
+                className="create-post-input"
+                onClick={() => setShowCreateModal(true)}
+              >
+                ¿Que quieres publicar el día de hoy?
+              </div>
+            </div>
+            <div className="create-post-actions">
+              <button className="post-action-btn" onClick={() => setShowCreateModal(true)}>
+                <FaImage className="post-action-icon" />
+                Foto
+              </button>
+              <button className="post-action-btn" onClick={() => setShowCreateModal(true)}>
+                <FaVideo className="post-action-icon" />
+                Video
+              </button>
+              <button className="post-action-btn publish-btn" onClick={() => setShowCreateModal(true)}>
+                Publicar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Lista de Publicaciones */}
         {loading ? (
@@ -315,8 +344,9 @@ const PublicacionesNuevo = () => {
         ) : publicaciones.length === 0 ? (
           <div className="text-center">No hay publicaciones aún.</div>
         ) : (
-          publicaciones.map(pub => (
-            <div key={pub.id} className="post-card">
+          publicaciones.map((pub, index) => (
+            <React.Fragment key={pub.id}>
+              <div className="post-card">
               <div className="post-header">
                 <Link to={`/profile/${pub.autorUid}`} className="post-avatar" style={{ textDecoration: 'none' }}>
                   {pub.autorFoto ? (
@@ -327,7 +357,25 @@ const PublicacionesNuevo = () => {
                 </Link>
                 <div className="post-author-info">
                   <Link to={`/profile/${pub.autorUid}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <div className="post-author-name">{pub.autorNombre}</div>
+                    <div className="post-author-name" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {pub.autorNombre}
+                      {(pub.autorInfo?.planActual === 'premium' || pub.autorInfo?.membershipPlan === 'premium') && (
+                        <span style={{
+                          background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
+                          color: '#000',
+                          padding: '2px 6px',
+                          borderRadius: '10px',
+                          fontSize: '9px',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          boxShadow: '0 1px 3px rgba(255, 215, 0, 0.3)',
+                          letterSpacing: '0.3px'
+                        }}>
+                          PRO
+                        </span>
+                      )}
+                    </div>
                   </Link>
                   <div className="post-meta">
                     {pub.tipo} • {pub.ciudad} • {formatDate(pub.createdAt)}
@@ -352,94 +400,114 @@ const PublicacionesNuevo = () => {
                 user={user}
               />
             </div>
+
+            {/* Anuncio cada 3 publicaciones - Solo para usuarios gratuitos */}
+            {(index + 1) % 3 === 0 && (
+              <AdBanner 
+                format="banner" 
+                position="feed"
+                isPremium={userProfile?.planActual === 'premium' || userProfile?.membershipPlan === 'premium'}
+              />
+            )}
+          </React.Fragment>
           ))
         )}
       </main>
 
-      {/* Sidebar Derecho */}
-      <aside className="sidebar-right">
-        {/* Chats Activos */}
-        <div className="chats-activos">
-          <div className="sidebar-title">Chats Activos</div>
-          {chatsActivos.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem', padding: '20px 0' }}>
-              No hay chats activos
-            </div>
-          ) : (
-            chatsActivos.map(chat => (
-              <Link key={chat.id} to="/chat" className="chat-item" style={{ textDecoration: 'none' }}>
-                <div className="chat-avatar">
-                  {chat.foto ? (
-                    <img src={chat.foto} alt={chat.nombre} />
-                  ) : (
-                    getInitials(chat.nombre)
-                  )}
-                  {chat.online && <div className="chat-status" />}
-                </div>
-                <div className="chat-info">
-                  <div className="chat-name">{chat.nombre}</div>
-                  <div className="chat-preview">{chat.mensaje}</div>
-                </div>
-              </Link>
-            ))
-          )}
-        </div>
+      {/* Sidebar Derecho - Solo si hay usuario */}
+      {user && (
+        <aside className="sidebar-right">
+          {/* Anuncio Sidebar - Solo para usuarios gratuitos */}
+          <AdBanner 
+            format="rectangle" 
+            position="sidebar"
+            isPremium={userProfile?.planActual === 'premium' || userProfile?.membershipPlan === 'premium'}
+          />
 
-        {/* Sugerencias */}
-        <div className="sugerencias">
-          <div className="sidebar-title">Sugerencias</div>
-          {sugerencias.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem', padding: '20px 0' }}>
-              No hay sugerencias
-            </div>
-          ) : (
-            sugerencias.map(sug => (
-              <div key={sug.id} className="sugerencia-item">
-                <Link to={`/profile/${sug.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
-                  <div className="sugerencia-avatar">
-                    {sug.foto ? (
-                      <img src={sug.foto} alt={sug.nombre} />
+          {/* Chats Activos */}
+          <div className="chats-activos">
+            <div className="sidebar-title">Chats Activos</div>
+            {chatsActivos.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem', padding: '20px 0' }}>
+                No hay chats activos
+              </div>
+            ) : (
+              chatsActivos.map(chat => (
+                <Link key={chat.id} to="/chat" className="chat-item" style={{ textDecoration: 'none' }}>
+                  <div className="chat-avatar">
+                    {chat.foto ? (
+                      <img src={chat.foto} alt={chat.nombre} />
                     ) : (
-                      getInitials(sug.nombre)
+                      getInitials(chat.nombre)
                     )}
+                    {chat.online && <div className="chat-status" />}
                   </div>
-                  <div className="sugerencia-info">
-                    <div className="sugerencia-name">{sug.nombre}</div>
-                    <div className="sugerencia-type">{sug.tipo}</div>
+                  <div className="chat-info">
+                    <div className="chat-name">{chat.nombre}</div>
+                    <div className="chat-preview">{chat.mensaje}</div>
                   </div>
                 </Link>
-                <button 
-                  className="seguir-btn"
-                  onClick={() => handleSeguir(sug.id)}
-                  disabled={loadingFollow[sug.id]}
-                  style={{
-                    background: siguiendoList.includes(sug.id) ? '#e5e7eb' : '#667eea',
-                    color: siguiendoList.includes(sug.id) ? '#6b7280' : 'white'
-                  }}
-                >
-                  {loadingFollow[sug.id] ? '...' : (siguiendoList.includes(sug.id) ? 'Siguiendo' : 'Seguir')}
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      </aside>
+              ))
+            )}
+          </div>
 
-      {/* Modal para crear publicación */}
-      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Crear Publicación</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <PublicacionForm
-            onSuccess={() => {
-              setShowCreateModal(false);
-              fetchPublicaciones();
-            }}
-          />
-        </Modal.Body>
-      </Modal>
-    </div>
+          {/* Sugerencias */}
+          <div className="sugerencias">
+            <div className="sidebar-title">Sugerencias</div>
+            {sugerencias.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem', padding: '20px 0' }}>
+                No hay sugerencias
+              </div>
+            ) : (
+              sugerencias.map(sug => (
+                <div key={sug.id} className="sugerencia-item">
+                  <Link to={`/profile/${sug.id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
+                    <div className="sugerencia-avatar">
+                      {sug.foto ? (
+                        <img src={sug.foto} alt={sug.nombre} />
+                      ) : (
+                        getInitials(sug.nombre)
+                      )}
+                    </div>
+                    <div className="sugerencia-info">
+                      <div className="sugerencia-name">{sug.nombre}</div>
+                      <div className="sugerencia-type">{sug.tipo}</div>
+                    </div>
+                  </Link>
+                  <button 
+                    className="seguir-btn"
+                    onClick={() => handleSeguir(sug.id)}
+                    disabled={loadingFollow[sug.id]}
+                    style={{
+                      background: siguiendoList.includes(sug.id) ? '#e5e7eb' : '#667eea',
+                      color: siguiendoList.includes(sug.id) ? '#6b7280' : 'white'
+                    }}
+                  >
+                    {loadingFollow[sug.id] ? '...' : (siguiendoList.includes(sug.id) ? 'Siguiendo' : 'Seguir')}
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </aside>
+      )}
+
+        {/* Modal para crear publicación */}
+        <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} size="lg">
+          <Modal.Header closeButton>
+            <Modal.Title>Crear Publicación</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <PublicacionForm
+              onSuccess={() => {
+                setShowCreateModal(false);
+                fetchPublicaciones();
+              }}
+            />
+          </Modal.Body>
+        </Modal>
+      </div>
+    </>
   );
 };
 

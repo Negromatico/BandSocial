@@ -93,7 +93,7 @@ const ProfileView = () => {
               {perfil.fotoPerfil && perfil.fotoPerfil !== '' ? (
                 <img src={perfil.fotoPerfil} alt="avatar" style={{ width: 90, height: 90, objectFit: 'cover' }} />
               ) : (
-                <span style={{ fontSize: 52, color: '#fff', lineHeight: '90px', display: 'block', textAlign: 'center' }}>🎵</span>
+                <div style={{ fontSize: 52, color: '#fff', lineHeight: '90px', display: 'block', textAlign: 'center' }}>?</div>
               )}
             </div>
             <div>

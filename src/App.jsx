@@ -11,7 +11,7 @@ const Register = lazy(() => import('./pages/Register'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const Home = lazy(() => import('./pages/Home'));
 const Profile = lazy(() => import('./pages/Profile'));
-const ProfileView = lazy(() => import('./pages/ProfileView'));
+const ProfileView = lazy(() => import('./pages/ProfileViewNew'));
 const PublicacionesNuevo = lazy(() => import('./pages/PublicacionesNuevo'));
 const Chat = lazy(() => import('./pages/Chat'));
 const Posts = lazy(() => import('./pages/Posts'));
@@ -22,6 +22,9 @@ const Membership = lazy(() => import('./pages/Membership'));
 const Payment = lazy(() => import('./pages/Payment'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const Followers = lazy(() => import('./pages/Followers'));
+const Buscar = lazy(() => import('./pages/Buscar'));
+const MisPublicaciones = lazy(() => import('./pages/MisPublicaciones'));
+const MisGrupos = lazy(() => import('./pages/MisGrupos'));
 
 // Componente de loading
 const LoadingSpinner = () => (
@@ -39,7 +42,7 @@ const LoadingSpinner = () => (
       <div className="spinner-border" role="status" style={{ width: '3rem', height: '3rem', marginBottom: '1rem' }}>
         <span className="visually-hidden">Cargando...</span>
       </div>
-      <h4>🎸 BandSocial</h4>
+      <h4>BandSocial</h4>
       <p>Cargando...</p>
     </div>
   </div>
@@ -47,14 +50,14 @@ const LoadingSpinner = () => (
 
 function MainLayout() {
   const location = useLocation();
-  const hideNavbarPaths = ['/', '/login', '/register', '/reset-password', '/membership', '/payment'];
+  const hideNavbarPaths = ['/login', '/register', '/reset-password', '/membership', '/payment'];
   const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
   
   return (
     <Suspense fallback={<LoadingSpinner />}>
       {shouldShowNavbar && <AppNavbar />}
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<PublicacionesNuevo />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -68,9 +71,11 @@ function MainLayout() {
         <Route path="/chat" element={<Chat />} />
         <Route path="/posts" element={<Posts />} />
         <Route path="/prelanding" element={<PreLanding />} />
-        <Route path="/musicos" element={<Home />} />
+        <Route path="/grupos" element={<MisGrupos />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/followers" element={<Followers />} />
+        <Route path="/buscar" element={<Buscar />} />
+        <Route path="/mis-publicaciones" element={<MisPublicaciones />} />
       </Routes>
     </Suspense>
   );

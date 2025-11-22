@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiCheckCircle, FiXCircle, FiAlertCircle, FiInfo, FiX } from 'react-icons/fi';
+import './Toast.css';
 
 const Toast = ({ message, type = 'info', duration = 3000, onClose }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -64,7 +65,7 @@ export const useToast = () => {
   };
 
   const ToastContainer = () => (
-    <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 9999 }}>
+    <div style={{ position: 'fixed', top: '80px', right: '20px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '10px' }}>
       {toasts.map(toast => (
         <Toast
           key={toast.id}

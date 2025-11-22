@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge, Modal } from 'react-bootstrap';
 import { FaStar, FaMapMarkerAlt, FaFilter, FaPlus } from 'react-icons/fa';
 import { db, auth } from '../services/firebase';
-import { collection, getDocs, addDoc, query, orderBy, doc, getDoc, Timestamp, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, orderBy, doc, getDoc, Timestamp, where, updateDoc } from 'firebase/firestore';
 import { uploadToCloudinary } from '../services/cloudinary';
 import UpgradePremiumModal from '../components/UpgradePremiumModal';
+import { useToast } from '../components/Toast';
+import Select from 'react-select';
 import './Musicmarket.css';
 
 const MusicmarketNuevo = () => {
@@ -31,6 +33,19 @@ const MusicmarketNuevo = () => {
   const [imagenPreview, setImagenPreview] = useState('');
   const [creating, setCreating] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  
+  // Estados para valoración
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comentarioResena, setComentarioResena] = useState('');
+  const [submittingRating, setSubmittingRating] = useState(false);
+  
+  // API de ciudades
+  const [ciudadesOptions, setCiudadesOptions] = useState([]);
+  
+  const { showToast, ToastContainer } = useToast();
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => setUser(u));
@@ -39,7 +54,22 @@ const MusicmarketNuevo = () => {
 
   useEffect(() => {
     fetchInstrumentos();
+    fetchCiudades();
   }, []);
+
+  const fetchCiudades = async () => {
+    try {
+      const response = await fetch('https://api-colombia.com/api/v1/City');
+      const data = await response.json();
+      const ciudades = data.map(city => ({
+        value: city.name,
+        label: city.name
+      }));
+      setCiudadesOptions(ciudades);
+    } catch (error) {
+      console.error('Error fetching ciudades:', error);
+    }
+  };
 
   const fetchInstrumentos = async () => {
     setLoading(true);
@@ -115,7 +145,7 @@ const MusicmarketNuevo = () => {
 
       let imagenUrl = '';
       if (imagen) {
-        imagenUrl = await uploadToCloudinary(imagen, 'Productos', 'productos/instrumentos');
+        imagenUrl = await uploadToCloudinary(imagen, 'Bandas', 'productos');
       }
 
       await addDoc(collection(db, 'productos'), {
@@ -187,8 +217,80 @@ const MusicmarketNuevo = () => {
     ));
   };
 
+  const handleOpenRatingModal = (producto) => {
+    if (!user) {
+      showToast('Debes iniciar sesión para valorar productos', 'warning');
+      return;
+    }
+    setSelectedProduct(producto);
+    setUserRating(0);
+    setHoverRating(0);
+    setComentarioResena('');
+    setShowRatingModal(true);
+  };
+
+  const handleSubmitRating = async () => {
+    if (userRating === 0) {
+      showToast('Por favor selecciona una calificación', 'warning');
+      return;
+    }
+
+    setSubmittingRating(true);
+    try {
+      // Obtener el producto actual
+      const productoRef = doc(db, 'productos', selectedProduct.id);
+      const productoSnap = await getDoc(productoRef);
+      
+      if (!productoSnap.exists()) {
+        showToast('Producto no encontrado', 'error');
+        return;
+      }
+
+      const productoData = productoSnap.data();
+      const ratingActual = productoData.rating || 0;
+      const resenasActuales = productoData.resenas || 0;
+
+      // Calcular nuevo rating promedio
+      const nuevoTotalRating = (ratingActual * resenasActuales) + userRating;
+      const nuevasResenas = resenasActuales + 1;
+      const nuevoRatingPromedio = nuevoTotalRating / nuevasResenas;
+
+      // Actualizar producto
+      await updateDoc(productoRef, {
+        rating: Math.round(nuevoRatingPromedio * 10) / 10, // Redondear a 1 decimal
+        resenas: nuevasResenas
+      });
+
+      // Guardar reseña individual (opcional - para futuras funcionalidades)
+      await addDoc(collection(db, 'resenas'), {
+        productoId: selectedProduct.id,
+        usuarioId: user.uid,
+        rating: userRating,
+        comentario: comentarioResena,
+        createdAt: Timestamp.now()
+      });
+
+      // Actualizar lista local
+      setInstrumentos(prev => prev.map(inst => 
+        inst.id === selectedProduct.id 
+          ? { ...inst, rating: Math.round(nuevoRatingPromedio * 10) / 10, resenas: nuevasResenas }
+          : inst
+      ));
+
+      showToast('¡Valoración enviada exitosamente!', 'success');
+      setShowRatingModal(false);
+    } catch (error) {
+      console.error('Error submitting rating:', error);
+      showToast('Error al enviar la valoración', 'error');
+    } finally {
+      setSubmittingRating(false);
+    }
+  };
+
   return (
     <>
+      <ToastContainer />
+      
       <UpgradePremiumModal 
         show={showUpgradeModal} 
         onHide={() => setShowUpgradeModal(false)}
@@ -267,17 +369,28 @@ const MusicmarketNuevo = () => {
             <option value="Usado">Usado</option>
           </Form.Select>
 
-          <Form.Select 
-            size="sm" 
-            className="filtro-select"
-            value={filtroUbicacion}
-            onChange={(e) => setFiltroUbicacion(e.target.value)}
-          >
-            <option value="">Todas las ubicaciones</option>
-            {[...new Set(instrumentos.map(i => i.ubicacion))].filter(Boolean).map(ubicacion => (
-              <option key={ubicacion} value={ubicacion}>{ubicacion}</option>
-            ))}
-          </Form.Select>
+          <Select
+            options={[
+              { value: '', label: 'Todas las ciudades' },
+              ...ciudadesOptions
+            ]}
+            value={filtroUbicacion ? ciudadesOptions.find(c => c.value === filtroUbicacion) : { value: '', label: 'Todas las ciudades' }}
+            onChange={(selected) => setFiltroUbicacion(selected?.value || '')}
+            placeholder="Filtrar por ciudad..."
+            isClearable
+            isSearchable
+            styles={{
+              control: (base) => ({
+                ...base,
+                minWidth: '200px',
+                fontSize: '14px'
+              }),
+              menu: (base) => ({
+                ...base,
+                zIndex: 9999
+              })
+            }}
+          />
         </div>
       </div>
 
@@ -323,7 +436,13 @@ const MusicmarketNuevo = () => {
                     <h5 className="instrument-price mb-0">
                       ${instrumento.precio?.toLocaleString('es-CO')} COP
                     </h5>
-                    <Button variant="primary" size="sm">Ver detalles</Button>
+                    <Button 
+                      variant="primary" 
+                      size="sm"
+                      onClick={() => handleOpenRatingModal(instrumento)}
+                    >
+                      Valorar
+                    </Button>
                   </div>
                   {instrumento.vendedorNombre && (
                     <small className="text-muted d-block mt-2">
@@ -380,12 +499,21 @@ const MusicmarketNuevo = () => {
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Ubicación</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={nuevoProducto.ubicacion}
-                    onChange={(e) => setNuevoProducto({ ...nuevoProducto, ubicacion: e.target.value })}
-                    required
+                  <Form.Label>Ubicación (Ciudad)</Form.Label>
+                  <Select
+                    options={ciudadesOptions}
+                    value={ciudadesOptions.find(c => c.value === nuevoProducto.ubicacion) || null}
+                    onChange={(selected) => setNuevoProducto({ ...nuevoProducto, ubicacion: selected?.value || '' })}
+                    placeholder="Selecciona una ciudad..."
+                    isClearable
+                    isSearchable
+                    styles={{
+                      control: (base) => ({
+                        ...base,
+                        borderRadius: '8px',
+                        padding: '2px'
+                      })
+                    }}
                   />
                 </Form.Group>
               </Col>
@@ -445,6 +573,88 @@ const MusicmarketNuevo = () => {
               </Button>
             </div>
           </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal de valoración */}
+      <Modal show={showRatingModal} onHide={() => setShowRatingModal(false)} centered>
+        <Modal.Header closeButton style={{ background: '#f0f2f5', borderBottom: '1px solid #e4e6eb' }}>
+          <Modal.Title style={{ fontSize: 20, fontWeight: 700 }}>
+            Valorar Producto
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '24px' }}>
+          {selectedProduct && (
+            <>
+              <div className="text-center mb-4">
+                <h5 style={{ fontWeight: 600, marginBottom: 8 }}>{selectedProduct.nombre}</h5>
+                <p className="text-muted mb-3">¿Qué te pareció este producto?</p>
+                
+                {/* Estrellas interactivas */}
+                <div className="d-flex justify-content-center gap-2 mb-3">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FaStar
+                      key={star}
+                      size={40}
+                      style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                      color={star <= (hoverRating || userRating) ? '#ffc107' : '#e0e0e0'}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      onClick={() => setUserRating(star)}
+                    />
+                  ))}
+                </div>
+                
+                {userRating > 0 && (
+                  <p style={{ fontSize: 14, color: '#6366f1', fontWeight: 600 }}>
+                    {userRating === 1 && 'Muy malo'}
+                    {userRating === 2 && 'Malo'}
+                    {userRating === 3 && 'Regular'}
+                    {userRating === 4 && 'Bueno'}
+                    {userRating === 5 && 'Excelente'}
+                  </p>
+                )}
+              </div>
+
+              <Form.Group className="mb-3">
+                <Form.Label style={{ fontWeight: 600, fontSize: 15 }}>
+                  Comentario (opcional)
+                </Form.Label>
+                <Form.Control
+                  as="textarea"
+                  rows={3}
+                  value={comentarioResena}
+                  onChange={(e) => setComentarioResena(e.target.value)}
+                  placeholder="Cuéntanos tu experiencia con este producto..."
+                  style={{ borderRadius: '8px', padding: '12px' }}
+                />
+              </Form.Group>
+
+              <div className="d-flex gap-2 justify-content-end">
+                <Button 
+                  variant="light" 
+                  onClick={() => setShowRatingModal(false)}
+                  style={{ borderRadius: '8px', padding: '10px 24px', fontWeight: 600 }}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  variant="primary"
+                  onClick={handleSubmitRating}
+                  disabled={submittingRating || userRating === 0}
+                  style={{ 
+                    borderRadius: '8px', 
+                    padding: '10px 24px', 
+                    fontWeight: 600,
+                    background: '#6366f1',
+                    border: 'none'
+                  }}
+                >
+                  {submittingRating ? 'Enviando...' : 'Enviar Valoración'}
+                </Button>
+              </div>
+            </>
+          )}
         </Modal.Body>
       </Modal>
     </Container>

@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { auth, db } from '../services/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { sendPasswordResetEmail as sendResetEmailNotification } from '../services/passwordResetService';
 import { useNavigate } from 'react-router-dom';
 import { Button, Form, Alert } from 'react-bootstrap';
 import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import logo from '../assets/logo.png';
 import './Login.css';
 
 const Login = () => {
@@ -38,29 +41,50 @@ const Login = () => {
     }
     
     try {
+      console.log('🔍 INICIO: Proceso de recuperación de contraseña');
+      console.log('📧 Email ingresado:', resetEmail);
+      console.log('🔄 Llamando a Firebase sendPasswordResetEmail...');
+      
+      // Enviar email de recuperación con Firebase Auth
+      // Firebase envía automáticamente un email con el enlace de reset
       await sendPasswordResetEmail(auth, resetEmail);
+      
+      console.log('✅ Firebase respondió exitosamente');
+      console.log('📬 Email debería llegar a:', resetEmail);
+      console.log('💡 IMPORTANTE: Revisa tu carpeta de SPAM');
+      
       setResetSent(true);
-      console.log('Correo de recuperación enviado exitosamente a:', resetEmail);
+      
+      // OPCIONAL: Personalizar el template de Firebase
+      // Ve a: Firebase Console → Authentication → Templates → Password reset
+      
     } catch (err) {
-      console.error('Error al enviar correo de recuperación:', err);
+      console.error('❌ ERROR COMPLETO:', err);
+      console.error('❌ Código de error:', err.code);
+      console.error('❌ Mensaje:', err.message);
       
       let errorMessage = 'No se pudo enviar el correo. ';
       
-      switch (err.code) {
-        case 'auth/user-not-found':
-          errorMessage += 'Este correo no está registrado.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage += 'El formato del correo es inválido.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage += 'Demasiados intentos. Intenta más tarde.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage += 'Error de conexión. Verifica tu internet.';
-          break;
-        default:
-          errorMessage += err.message || 'Intenta de nuevo.';
+      if (err.code) {
+        switch (err.code) {
+          case 'auth/user-not-found':
+            errorMessage += 'Este correo no está registrado.';
+            console.log('💡 SOLUCIÓN: Registra este email primero en /register');
+            break;
+          case 'auth/invalid-email':
+            errorMessage += 'El formato del correo es inválido.';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage += 'Demasiados intentos. Intenta más tarde.';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage += 'Error de conexión. Verifica tu internet.';
+            break;
+          default:
+            errorMessage += err.message || 'Intenta nuevamente.';
+        }
+      } else {
+        errorMessage += 'Error desconocido.';
       }
       
       setResetError(errorMessage);
@@ -76,6 +100,7 @@ const Login = () => {
         </h1>
         <div className="login-card">
           <div className="login-header">
+            <img src={logo} alt="BandSocial" className="login-logo" />
             <h2 className="login-title">¡Sube al escenario!</h2>
             <p className="login-subtitle">Inicia sesión y conecta con tu audiencia</p>
           </div>

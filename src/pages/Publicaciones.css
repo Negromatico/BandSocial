@@ -7,6 +7,21 @@
   padding: 0 20px;
 }
 
+/* Layout cuando no hay usuario (sin sidebars) */
+.publicaciones-layout:has(.feed-container:only-child) {
+  grid-template-columns: 1fr;
+  max-width: 800px;
+}
+
+/* Layout cuando solo falta un sidebar */
+.publicaciones-layout:has(.sidebar-left):not(:has(.sidebar-right)) {
+  grid-template-columns: 250px 1fr;
+}
+
+.publicaciones-layout:has(.sidebar-right):not(:has(.sidebar-left)) {
+  grid-template-columns: 1fr 300px;
+}
+
 /* Sidebar Izquierdo - Perfil */
 .sidebar-left {
   position: sticky;
@@ -423,18 +438,39 @@
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   padding: 16px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .sugerencia-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 12px;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+  width: 100%;
+}
+
+.sugerencia-item:hover {
+  background: #f9fafb;
+}
+
+.sugerencia-item > a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .sugerencia-avatar {
   width: 45px;
   height: 45px;
+  min-width: 45px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
@@ -455,18 +491,27 @@
 .sugerencia-info {
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .sugerencia-name {
   font-weight: 600;
   color: #1f2937;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  display: block;
+  line-height: 1.2;
 }
 
 .sugerencia-type {
   font-size: 0.75rem;
   color: #9ca3af;
+  text-transform: capitalize;
 }
 
 .seguir-btn {
@@ -479,11 +524,19 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .seguir-btn:hover {
   background: #4f46e5;
   transform: scale(1.05);
+}
+
+.seguir-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Responsive */

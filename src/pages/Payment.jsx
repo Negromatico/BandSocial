@@ -3,13 +3,16 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button, Form, Alert } from 'react-bootstrap';
 import { FaCreditCard, FaUser, FaLock, FaCrown, FaArrowLeft } from 'react-icons/fa';
 import { auth, db } from '../services/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { sendSubscriptionConfirmationEmail } from '../services/emailService';
+import { useToast } from '../components/Toast';
 import './Payment.css';
 
 const Payment = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const planPrice = 29990;
+  const { showToast, ToastContainer } = useToast();
   
   const [formData, setFormData] = useState({
     cardNumber: '',
@@ -98,39 +101,77 @@ const Payment = () => {
     setProcessing(true);
 
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('Usuario no autenticado');
+      }
+
+      // Obtener datos del usuario
+      const userRef = doc(db, 'perfiles', user.uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+
       // Simular procesamiento de pago (2 segundos)
+      showToast('Procesando pago...', 'info');
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Actualizar el plan del usuario en Firestore
-      const user = auth.currentUser;
-      if (user) {
-        const userRef = doc(db, 'perfiles', user.uid);
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 30);
+      // Activar suscripción Premium inmediatamente
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 30);
+      const transactionId = `BS-${Date.now()}-${user.uid.slice(0, 8)}`;
 
-        await updateDoc(userRef, {
-          membershipPlan: 'premium',
-          membershipStartDate: startDate.toISOString(),
-          membershipEndDate: endDate.toISOString(),
-          lastPaymentDate: startDate.toISOString(),
-          lastPaymentAmount: planPrice,
-          updatedAt: new Date().toISOString(),
-        });
+      await updateDoc(userRef, {
+        planActual: 'premium',
+        membershipPlan: 'premium',
+        membershipStartDate: startDate.toISOString(),
+        membershipEndDate: endDate.toISOString(),
+        lastPaymentDate: startDate.toISOString(),
+        lastPaymentAmount: planPrice,
+        transactionId: transactionId,
+        updatedAt: new Date().toISOString(),
+      });
+
+      showToast('¡Suscripción activada exitosamente!', 'success');
+
+      // Enviar correo de confirmación
+      const emailData = {
+        userEmail: user.email,
+        userName: userData?.nombre || user.displayName || 'Usuario',
+        planName: 'Premium',
+        amount: planPrice,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        transactionId: transactionId,
+        paymentMethod: 'Tarjeta de Crédito',
+      };
+
+      const emailResult = await sendSubscriptionConfirmationEmail(emailData);
+      
+      if (emailResult.success) {
+        showToast('Correo de confirmación enviado', 'success');
+      } else {
+        console.warn('No se pudo enviar el correo de confirmación');
       }
+
+      // Esperar un momento para que el usuario vea las notificaciones
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Redirigir al perfil con mensaje de éxito
       navigate('/profile', { state: { paymentSuccess: true } });
     } catch (error) {
       console.error('Error al procesar el pago:', error);
       setPaymentError('Error al procesar el pago. Por favor, intenta nuevamente.');
+      showToast('Error al procesar el pago', 'error');
     } finally {
       setProcessing(false);
     }
   };
 
   return (
-    <div className="payment-container">
+    <>
+      <ToastContainer />
+      <div className="payment-container">
       <div className="payment-background">
         <h1 className="payment-logo">
           <span className="logo-band">BAND</span>
@@ -275,6 +316,7 @@ const Payment = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

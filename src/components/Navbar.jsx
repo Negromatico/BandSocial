@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { GuestContext } from '../App';
 import useUnreadChats from '../hooks/useUnreadChats';
 import { FaSearch, FaUserCircle } from 'react-icons/fa';
+import logo from '../assets/logo.png';
 import './Navbar.css';
 
 const AppNavbar = () => {
@@ -66,9 +67,9 @@ const AppNavbar = () => {
     <Navbar bg="white" expand="lg" className="custom-navbar shadow-sm sticky-top">
       <Container fluid className="px-4">
         {/* Logo */}
-        <Navbar.Brand as={Link} to="/publicaciones" className="navbar-logo">
-          <span className="logo-band">BAND</span>
-          <span className="logo-social">SOCIAL</span>
+        <Navbar.Brand as={Link} to="/publicaciones" className="brand-logo">
+          <img src={logo} alt="BandSocial" className="navbar-logo" />
+          <span className="brand-name">BandSocial</span>
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -123,7 +124,7 @@ const AppNavbar = () => {
                   className="user-dropdown"
                 >
                   <NavDropdown.Item as={Link} to="/profile">Mi Perfil</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="/publicaciones">Mis Publicaciones</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="/mis-publicaciones">Mis Publicaciones</NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/followers">Seguidores y Siguiendo</NavDropdown.Item>
                   {!isGuest && (
                     <NavDropdown.Item as={Link} to="/chat">

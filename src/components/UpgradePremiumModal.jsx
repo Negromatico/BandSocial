@@ -17,25 +17,25 @@ const UpgradePremiumModal = ({ show, onHide, limitType = 'publicaciones' }) => {
         return {
           title: '¡Has alcanzado el límite de publicaciones!',
           description: 'Tu plan Estándar permite 1 publicación. Actualiza a Premium para publicar sin límites.',
-          icon: '📝'
+          icon: ''
         };
       case 'productos':
         return {
           title: '¡Has alcanzado el límite de productos!',
           description: 'Tu plan Estándar permite 1 producto en MusicMarket. Actualiza a Premium para vender sin límites.',
-          icon: '🎸'
+          icon: ''
         };
       case 'eventos':
         return {
           title: '¡Has alcanzado el límite de eventos!',
           description: 'Tu plan Estándar permite 1 evento. Actualiza a Premium para crear eventos sin límites.',
-          icon: '🎤'
+          icon: ''
         };
       default:
         return {
           title: '¡Has alcanzado el límite!',
           description: 'Actualiza a Premium para disfrutar de funciones ilimitadas.',
-          icon: '⭐'
+          icon: ''
         };
     }
   };
