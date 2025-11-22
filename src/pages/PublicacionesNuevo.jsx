@@ -10,7 +10,6 @@ import ComentariosPublicacion from '../components/ComentariosPublicacion';
 import ReaccionesPublicacion from '../components/ReaccionesPublicacion';
 import ContadorComentarios from '../components/ContadorComentarios';
 import AuthPromptModal from '../components/AuthPromptModal';
-import AdBanner from '../components/AdBanner';
 import { notificarNuevoSeguidor } from '../services/notificationService';
 import { GuestContext } from '../App';
 import './Publicaciones.css';
@@ -400,15 +399,6 @@ const PublicacionesNuevo = () => {
                 user={user}
               />
             </div>
-
-            {/* Anuncio cada 3 publicaciones - Solo para usuarios gratuitos */}
-            {(index + 1) % 3 === 0 && (
-              <AdBanner 
-                format="banner" 
-                position="feed"
-                isPremium={userProfile?.planActual === 'premium' || userProfile?.membershipPlan === 'premium'}
-              />
-            )}
           </React.Fragment>
           ))
         )}
@@ -417,13 +407,6 @@ const PublicacionesNuevo = () => {
       {/* Sidebar Derecho - Solo si hay usuario */}
       {user && (
         <aside className="sidebar-right">
-          {/* Anuncio Sidebar - Solo para usuarios gratuitos */}
-          <AdBanner 
-            format="rectangle" 
-            position="sidebar"
-            isPremium={userProfile?.planActual === 'premium' || userProfile?.membershipPlan === 'premium'}
-          />
-
           {/* Chats Activos */}
           <div className="chats-activos">
             <div className="sidebar-title">Chats Activos</div>

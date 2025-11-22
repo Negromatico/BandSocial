@@ -4,7 +4,6 @@ import { collection, getDocs, query, orderBy, doc, getDoc, updateDoc, arrayUnion
 import { Button, Modal, Form } from 'react-bootstrap';
 import { GuestContext } from '../App';
 import { FaFilter, FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaClock, FaThLarge, FaList } from 'react-icons/fa';
-import AdBanner from '../components/AdBanner';
 import './Eventos.css';
 import '../styles/ModernModal.css';
 
@@ -424,15 +423,6 @@ const EventosNuevo = () => {
                     </button>
                   </div>
                 </div>
-
-                {/* Anuncio cada 4 eventos - Solo para usuarios gratuitos */}
-                {(index + 1) % 4 === 0 && (
-                  <AdBanner 
-                    format="banner" 
-                    position="events"
-                    isPremium={userProfile?.planActual === 'premium' || userProfile?.membershipPlan === 'premium'}
-                  />
-                )}
               </React.Fragment>
               );
             })}
