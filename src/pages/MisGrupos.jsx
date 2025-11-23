@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../services/firebase';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc, arrayUnion, arrayRemove, serverTimestamp } from 'firebase/firestore';
 import { Button, Modal, Form, Card } from 'react-bootstrap';
-import { FaUsers, FaPlus, FaGuitar, FaMusic, FaMapMarkerAlt, FaCrown, FaUserPlus, FaSignOutAlt } from 'react-icons/fa';
+import { FaUsers, FaPlus, FaGuitar, FaMusic, FaMapMarkerAlt, FaCrown, FaUserPlus, FaSignOutAlt, FaImage } from 'react-icons/fa';
+import { uploadToCloudinary } from '../services/cloudinary';
 import '../styles/ModernModal.css';
 import './MisGrupos.css';
 
@@ -21,6 +22,11 @@ const MisGrupos = () => {
     ciudad: '',
     imagen: ''
   });
+
+  // Estados para subida de imagen
+  const [imagenFile, setImagenFile] = useState(null);
+  const [imagenPreview, setImagenPreview] = useState('');
+  const [uploadingImagen, setUploadingImagen] = useState(false);
 
   const generos = ['Rock', 'Pop', 'Jazz', 'Hip Hop', 'Indie', 'Salsa', 'Reggae', 'Metal', 'Electrónica', 'Otro'];
 
@@ -63,6 +69,19 @@ const MisGrupos = () => {
     }
   };
 
+  const handleImagenChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImagenFile(file);
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagenPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCrearGrupo = async (e) => {
     e.preventDefault();
 
@@ -72,8 +91,17 @@ const MisGrupos = () => {
     }
 
     try {
+      setUploadingImagen(true);
+
+      // Subir imagen a Cloudinary si hay una seleccionada
+      let imagenUrl = nuevoGrupo.imagen;
+      if (imagenFile) {
+        imagenUrl = await uploadToCloudinary(imagenFile, 'bandsocial_grupos', 'grupos');
+      }
+
       const grupoData = {
         ...nuevoGrupo,
+        imagen: imagenUrl,
         creadorUid: user.uid,
         creadorNombre: userProfile?.nombre || 'Usuario',
         miembros: [user.uid],
@@ -95,12 +123,16 @@ const MisGrupos = () => {
         ciudad: '',
         imagen: ''
       });
+      setImagenFile(null);
+      setImagenPreview('');
 
       // Recargar grupos
       fetchGrupos();
     } catch (error) {
       console.error('Error al crear grupo:', error);
       alert('Error al crear el grupo. Intenta de nuevo.');
+    } finally {
+      setUploadingImagen(false);
     }
   };
 
@@ -282,21 +314,43 @@ const MisGrupos = () => {
             </div>
 
             <Form.Group className="mb-3">
-              <Form.Label>URL de Imagen (opcional)</Form.Label>
+              <Form.Label>Imagen del Grupo</Form.Label>
               <Form.Control
-                type="url"
-                placeholder="https://ejemplo.com/imagen.jpg"
-                value={nuevoGrupo.imagen}
-                onChange={(e) => setNuevoGrupo({...nuevoGrupo, imagen: e.target.value})}
+                type="file"
+                accept="image/*"
+                onChange={handleImagenChange}
               />
+              <Form.Text className="text-muted">
+                Sube una imagen desde tu ordenador (JPG, PNG, etc.)
+              </Form.Text>
+              
+              {/* Preview de la imagen */}
+              {imagenPreview && (
+                <div className="mt-3">
+                  <img 
+                    src={imagenPreview} 
+                    alt="Preview" 
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '200px',
+                      borderRadius: '12px',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+              )}
             </Form.Group>
 
             <div className="d-flex justify-content-end gap-2">
               <Button variant="secondary" onClick={() => setShowCrearGrupo(false)}>
                 Cancelar
               </Button>
-              <Button variant="primary" type="submit">
-                Crear Grupo
+              <Button 
+                variant="primary" 
+                type="submit"
+                disabled={uploadingImagen}
+              >
+                {uploadingImagen ? 'Subiendo imagen...' : 'Crear Grupo'}
               </Button>
             </div>
           </Form>

@@ -3,7 +3,8 @@ import { db, auth } from '../services/firebase';
 import { collection, getDocs, query, orderBy, doc, getDoc, updateDoc, arrayUnion, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Button, Modal, Form } from 'react-bootstrap';
 import { GuestContext } from '../App';
-import { FaFilter, FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaClock, FaThLarge, FaList } from 'react-icons/fa';
+import { FaFilter, FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaClock, FaThLarge, FaList, FaImage } from 'react-icons/fa';
+import { uploadToCloudinary } from '../services/cloudinary';
 import './Eventos.css';
 import '../styles/ModernModal.css';
 
@@ -34,6 +35,11 @@ const EventosNuevo = () => {
     imagen: ''
   });
   const [creandoEvento, setCreandoEvento] = useState(false);
+
+  // Estados para subida de imagen
+  const [imagenFile, setImagenFile] = useState(null);
+  const [imagenPreview, setImagenPreview] = useState('');
+  const [uploadingImagen, setUploadingImagen] = useState(false);
 
   // Filtros
   const [filtroGenero, setFiltroGenero] = useState([]);
@@ -175,6 +181,19 @@ const EventosNuevo = () => {
     return { dia, mes };
   };
 
+  const handleImagenChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImagenFile(file);
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagenPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleCrearEvento = async (e) => {
     e.preventDefault();
     
@@ -190,10 +209,19 @@ const EventosNuevo = () => {
     }
 
     setCreandoEvento(true);
+    setUploadingImagen(true);
 
     try {
+      // Subir imagen a Cloudinary si hay una seleccionada
+      let imagenUrl = nuevoEvento.imagen;
+      if (imagenFile) {
+        imagenUrl = await uploadToCloudinary(imagenFile, 'bandsocial_eventos', 'eventos');
+      }
+
       const eventoData = {
         ...nuevoEvento,
+        imagen: imagenUrl,
+        imagenesUrl: imagenUrl ? [imagenUrl] : [],
         precio: nuevoEvento.precio ? parseFloat(nuevoEvento.precio) : 0,
         creadorUid: user.uid,
         creadorNombre: userProfile?.nombre || 'Usuario',
@@ -220,6 +248,8 @@ const EventosNuevo = () => {
         generos: [],
         imagen: ''
       });
+      setImagenFile(null);
+      setImagenPreview('');
 
       // Recargar eventos
       fetchEventos();
@@ -228,6 +258,7 @@ const EventosNuevo = () => {
       alert('Error al crear el evento. Intenta de nuevo.');
     } finally {
       setCreandoEvento(false);
+      setUploadingImagen(false);
     }
   };
 
@@ -682,21 +713,43 @@ const EventosNuevo = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>URL de Imagen (opcional)</Form.Label>
+              <Form.Label>Imagen del Evento</Form.Label>
               <Form.Control
-                type="url"
-                placeholder="https://ejemplo.com/imagen.jpg"
-                value={nuevoEvento.imagen}
-                onChange={(e) => setNuevoEvento({...nuevoEvento, imagen: e.target.value})}
+                type="file"
+                accept="image/*"
+                onChange={handleImagenChange}
               />
+              <Form.Text className="text-muted">
+                Sube una imagen desde tu ordenador (JPG, PNG, etc.)
+              </Form.Text>
+              
+              {/* Preview de la imagen */}
+              {imagenPreview && (
+                <div className="mt-3">
+                  <img 
+                    src={imagenPreview} 
+                    alt="Preview" 
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '200px',
+                      borderRadius: '12px',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+              )}
             </Form.Group>
 
             <div className="d-flex justify-content-end gap-2">
               <Button variant="secondary" onClick={() => setShowCrearEvento(false)}>
                 Cancelar
               </Button>
-              <Button variant="primary" type="submit" disabled={creandoEvento}>
-                {creandoEvento ? 'Creando...' : 'Crear Evento'}
+              <Button 
+                variant="primary" 
+                type="submit" 
+                disabled={creandoEvento || uploadingImagen}
+              >
+                {uploadingImagen ? 'Subiendo imagen...' : creandoEvento ? 'Creando...' : 'Crear Evento'}
               </Button>
             </div>
           </Form>
