@@ -64,7 +64,8 @@ const ChatModal = ({ show, onHide, otherUser, otherUserId, otherUserName, otherU
       // Limpiar el input inmediatamente para mejor UX
       setNewMsg('');
       
-      // Enviar mensaje
+      // Enviar mensaje directamente sin metadata
+      // El mensaje se guardará en /chats/{chatId}/messages
       await addDoc(collection(db, 'chats', chatId, 'messages'), {
         text: messageText,
         from: user.uid,
@@ -72,34 +73,7 @@ const ChatModal = ({ show, onHide, otherUser, otherUserId, otherUserName, otherU
         createdAt: serverTimestamp(),
       });
       
-      // Obtener nombre del usuario actual
-      let currentUserName = user.displayName || user.email;
-      if (!user.displayName) {
-        try {
-          const userDoc = await getDoc(doc(db, 'perfiles', user.uid));
-          if (userDoc.exists()) {
-            currentUserName = userDoc.data().nombre || user.email;
-          }
-        } catch (err) {
-          console.error('Error obteniendo nombre de usuario:', err);
-        }
-      }
-      
-      // Crear chat metadata solo para el usuario actual
-      // El metadata del otro usuario se creará cuando él responda
-      try {
-        await setDoc(doc(db, 'userChats', user.uid, 'chats', chatId), {
-          chatId,
-          with: normalizedOtherUser.uid,
-          withEmail: normalizedOtherUser.email || '',
-          withNombre: normalizedOtherUser.nombre || normalizedOtherUser.email || 'Usuario',
-          lastMsg: messageText,
-          lastAt: new Date().toISOString(),
-        }, { merge: true });
-      } catch (metadataError) {
-        // Si falla el metadata, no es crítico, el mensaje ya se envió
-        console.warn('No se pudo actualizar metadata del chat:', metadataError);
-      }
+      console.log('Mensaje enviado exitosamente');
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
       alert('Error al enviar el mensaje. Por favor intenta de nuevo.');
