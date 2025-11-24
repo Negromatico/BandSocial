@@ -218,12 +218,24 @@ service cloud.firestore {
     // LEGACY: Chats antiguos (mantener compatibilidad)
     // ============================================
     match /userChats/{userId} {
+      // Lectura: Solo el propietario
       allow read: if isAuthenticated() && isOwner(userId);
-      allow write: if isAuthenticated() && isOwner(userId);
+      
+      // Escritura: El propietario O alguien que está creando un chat con este usuario
+      allow write: if isAuthenticated() && 
+        (isOwner(userId) || 
+         (request.resource.data.keys().hasAny(['chatId', 'with', 'lastMsg']) &&
+          request.resource.data.with == request.auth.uid));
       
       match /chats/{chatId} {
+        // Lectura: Solo el propietario
         allow read: if isAuthenticated() && isOwner(userId);
-        allow write: if isAuthenticated() && isOwner(userId);
+        
+        // Escritura: El propietario O alguien que está en el chat
+        allow write: if isAuthenticated() && 
+          (isOwner(userId) || 
+           (request.resource.data.keys().hasAny(['chatId', 'with', 'lastMsg']) &&
+            request.resource.data.with == request.auth.uid));
       }
     }
     

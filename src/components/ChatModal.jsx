@@ -85,25 +85,21 @@ const ChatModal = ({ show, onHide, otherUser, otherUserId, otherUserName, otherU
         }
       }
       
-      // Crear chat metadata para ambos usuarios
-      await Promise.all([
-        setDoc(doc(db, 'userChats', user.uid, 'chats', chatId), {
+      // Crear chat metadata solo para el usuario actual
+      // El metadata del otro usuario se creará cuando él responda
+      try {
+        await setDoc(doc(db, 'userChats', user.uid, 'chats', chatId), {
           chatId,
           with: normalizedOtherUser.uid,
           withEmail: normalizedOtherUser.email || '',
           withNombre: normalizedOtherUser.nombre || normalizedOtherUser.email || 'Usuario',
           lastMsg: messageText,
           lastAt: new Date().toISOString(),
-        }, { merge: true }),
-        setDoc(doc(db, 'userChats', normalizedOtherUser.uid, 'chats', chatId), {
-          chatId,
-          with: user.uid,
-          withEmail: user.email,
-          withNombre: currentUserName,
-          lastMsg: messageText,
-          lastAt: new Date().toISOString(),
-        }, { merge: true }),
-      ]);
+        }, { merge: true });
+      } catch (metadataError) {
+        // Si falla el metadata, no es crítico, el mensaje ya se envió
+        console.warn('No se pudo actualizar metadata del chat:', metadataError);
+      }
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
       alert('Error al enviar el mensaje. Por favor intenta de nuevo.');
