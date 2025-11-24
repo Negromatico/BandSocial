@@ -5,6 +5,7 @@ import { GuestContext } from '../App';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import { uploadToCloudinary } from '../services/cloudinary';
 import UpgradePremiumModal from './UpgradePremiumModal';
+import { esPremium } from '../utils/premiumCheck';
 import '../styles/ModernModal.css';
 
 
@@ -86,21 +87,23 @@ const PublicacionForm = ({ onCreated }) => {
       const perfilSnap = await getDoc(doc(db, 'perfiles', user.uid));
       if (perfilSnap.exists()) {
         const perfil = perfilSnap.data();
-        const planActual = perfil.planActual || 'estandar';
         
-        // Contar publicaciones del usuario
-        const publicacionesQuery = query(
-          collection(db, 'publicaciones'),
-          where('autorUid', '==', user.uid)
-        );
-        const publicacionesSnap = await getDocs(publicacionesQuery);
-        const cantidadPublicaciones = publicacionesSnap.size;
-        
-        // Verificar límites según plan
-        if (planActual === 'estandar' && cantidadPublicaciones >= 1) {
-          setLoading(false);
-          setShowUpgradeModal(true);
-          return;
+        // Solo verificar límites si NO es premium
+        if (!esPremium(perfil)) {
+          // Contar publicaciones del usuario
+          const publicacionesQuery = query(
+            collection(db, 'publicaciones'),
+            where('autorUid', '==', user.uid)
+          );
+          const publicacionesSnap = await getDocs(publicacionesQuery);
+          const cantidadPublicaciones = publicacionesSnap.size;
+          
+          // Verificar límites para usuarios estándar (máximo 1 publicación)
+          if (cantidadPublicaciones >= 1) {
+            setLoading(false);
+            setShowUpgradeModal(true);
+            return;
+          }
         }
       }
       let imagenesUrl = [];

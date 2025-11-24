@@ -6,6 +6,7 @@ import { collection, getDocs, addDoc, query, orderBy, doc, getDoc, Timestamp, wh
 import { uploadToCloudinary } from '../services/cloudinary';
 import UpgradePremiumModal from '../components/UpgradePremiumModal';
 import { useToast } from '../components/Toast';
+import { esPremium } from '../utils/premiumCheck';
 import Select from 'react-select';
 import './Musicmarket.css';
 
@@ -125,21 +126,23 @@ const MusicmarketNuevo = () => {
       
       if (perfilSnap.exists()) {
         const perfil = perfilSnap.data();
-        const planActual = perfil.planActual || 'estandar';
         
-        // Contar productos del usuario
-        const productosQuery = query(
-          collection(db, 'productos'),
-          where('vendedorUid', '==', user.uid)
-        );
-        const productosSnap = await getDocs(productosQuery);
-        const cantidadProductos = productosSnap.size;
-        
-        // Verificar límites según plan
-        if (planActual === 'estandar' && cantidadProductos >= 1) {
-          setCreating(false);
-          setShowUpgradeModal(true);
-          return;
+        // Solo verificar límites si NO es premium
+        if (!esPremium(perfil)) {
+          // Contar productos del usuario
+          const productosQuery = query(
+            collection(db, 'productos'),
+            where('vendedorUid', '==', user.uid)
+          );
+          const productosSnap = await getDocs(productosQuery);
+          const cantidadProductos = productosSnap.size;
+          
+          // Verificar límites para usuarios estándar (máximo 1 producto)
+          if (cantidadProductos >= 1) {
+            setCreating(false);
+            setShowUpgradeModal(true);
+            return;
+          }
         }
       }
 

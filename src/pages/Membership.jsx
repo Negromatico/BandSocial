@@ -65,6 +65,7 @@ const Membership = () => {
       if (user) {
         const userRef = doc(db, 'perfiles', user.uid);
         await updateDoc(userRef, {
+          planActual: planId,
           membershipPlan: planId,
           membershipStartDate: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
