@@ -1,14 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button, Form, Spinner } from 'react-bootstrap';
-import { BsChevronDown, BsXLg } from 'react-icons/bs';
+import { BsChevronDown, BsChevronUp, BsXLg, BsCheckAll } from 'react-icons/bs';
+import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../services/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc as docFirestore, setDoc } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc as docFirestore, setDoc, where, getDocs, updateDoc } from 'firebase/firestore';
+import { notificarNuevoMensaje } from '../services/notificationService';
 
 const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props }) => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isRead, setIsRead] = useState(false);
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
   const me = auth.currentUser;
   const chatId = user && me ? [user.uid, me.uid].sort().join('_') : null;
 
@@ -17,11 +21,69 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
     setLoading(true);
     const q = query(collection(db, 'chats', chatId, 'messages'), orderBy('createdAt'));
     const unsub = onSnapshot(q, (snap) => {
-      setMessages(snap.docs.map(doc => doc.data()));
+      setMessages(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
     });
     return unsub;
   }, [chatId]);
+
+  // Escuchar el estado de lectura del destinatario
+  useEffect(() => {
+    if (!chatId || !me || !user) return;
+
+    const unsubscribe = onSnapshot(
+      docFirestore(db, 'userChats', user.uid, 'chats', chatId),
+      (doc) => {
+        if (doc.exists()) {
+          const data = doc.data();
+          // El mensaje está visto si el destinatario lo marcó como leído Y el último mensaje es mío
+          const messageIsRead = data.lastRead === true && data.lastFrom === me.uid;
+          setIsRead(messageIsRead);
+        } else {
+          setIsRead(false);
+        }
+      },
+      (error) => {
+        console.error('Error escuchando estado de lectura:', error);
+        setIsRead(false);
+      }
+    );
+
+    return unsubscribe;
+  }, [chatId, me, user]);
+
+  // Marcar mensajes como leídos cuando se abre el chat
+  useEffect(() => {
+    if (!chatId || !me || !user || minimized) return;
+
+    const marcarComoLeido = async () => {
+      try {
+        // Marcar el chat como leído en userChats
+        await setDoc(docFirestore(db, 'userChats', me.uid, 'chats', chatId), {
+          lastRead: true
+        }, { merge: true });
+
+        // Eliminar notificaciones de mensajes de este usuario
+        const notifQuery = query(
+          collection(db, 'notificaciones'),
+          where('usuarioId', '==', me.uid),
+          where('tipo', '==', 'mensaje'),
+          where('origenUid', '==', user.uid),
+          where('leida', '==', false)
+        );
+        
+        const notifSnap = await getDocs(notifQuery);
+        const updatePromises = notifSnap.docs.map(doc => 
+          updateDoc(docFirestore(db, 'notificaciones', doc.id), { leida: true })
+        );
+        await Promise.all(updatePromises);
+      } catch (error) {
+        console.error('Error marcando mensajes como leídos:', error);
+      }
+    };
+
+    marcarComoLeido();
+  }, [chatId, me, user, minimized]);
 
   useEffect(() => {
     if (!minimized) {
@@ -63,84 +125,240 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
         lastRead: false
       }, { merge: true }),
     ]);
+    
+    // Enviar notificación al destinatario
+    await notificarNuevoMensaje(me.uid, user.uid, msgText);
   };
 
   return (
     <div
       style={{
-        width: 320,
-        height: minimized ? 48 : 400,
-        background: '#18181b',
-        color: '#fff',
-        borderRadius: 18,
-        boxShadow: '0 4px 32px #0004',
+        width: 380,
+        height: minimized ? 56 : 520,
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%)',
+        backdropFilter: 'blur(10px)',
+        color: '#1f2937',
+        borderRadius: 20,
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(102, 126, 234, 0.1)',
         overflow: 'hidden',
-        marginBottom: 8,
+        marginBottom: 10,
         display: 'flex',
         flexDirection: 'column',
+        border: '1px solid rgba(102, 126, 234, 0.2)',
+        transition: 'all 0.3s ease',
         ...style,
       }}
       {...props}
     >
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#27272a', padding: '8px 16px', height: 48 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 18 }}>
-            {user?.avatar ? <img src={user.avatar} alt="avatar" style={{ width: 32, height: 32, borderRadius: '50%' }} /> : (user?.nombre?.[0] || user?.email?.[0] || '?')}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+        padding: '12px 18px', 
+        height: 56,
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+      }}>
+        <div 
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 12,
+            cursor: 'pointer',
+            transition: 'opacity 0.2s'
+          }}
+          onClick={() => navigate(`/profile/${user.uid}`)}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+        >
+          <div style={{ 
+            width: 40, 
+            height: 40, 
+            borderRadius: '50%', 
+            background: 'rgba(255, 255, 255, 0.2)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontWeight: 700, 
+            fontSize: 18,
+            color: '#fff',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+          }}>
+            {user?.avatar ? (
+              <img src={user.avatar} alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              (user?.nombre?.[0] || user?.email?.[0] || '?').toUpperCase()
+            )}
           </div>
-          <span style={{ fontWeight: 600, fontSize: 16 }}>{user?.nombre || user?.email || 'Usuario'}</span>
+          <span style={{ fontWeight: 700, fontSize: 16, color: '#fff', letterSpacing: '0.3px' }}>
+            {user?.nombre || user?.email || 'Usuario'}
+          </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Button variant="link" style={{ color: '#fff', fontSize: 18, padding: 0 }} onClick={onMinimize}><BsChevronDown /></Button>
-          <Button variant="link" style={{ color: '#fff', fontSize: 18, padding: 0 }} onClick={onClose}><BsXLg /></Button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Button 
+            variant="link" 
+            style={{ 
+              color: '#fff', 
+              fontSize: 20, 
+              padding: 0,
+              opacity: 0.9,
+              transition: 'opacity 0.2s'
+            }} 
+            onClick={onMinimize}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
+          >
+            {minimized ? <BsChevronUp /> : <BsChevronDown />}
+          </Button>
+          <Button 
+            variant="link" 
+            style={{ 
+              color: '#fff', 
+              fontSize: 18, 
+              padding: 0,
+              opacity: 0.9,
+              transition: 'opacity 0.2s'
+            }} 
+            onClick={onClose}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
+          >
+            <BsXLg />
+          </Button>
         </div>
       </div>
       {/* Mensajes */}
       {!minimized && (
-        <div style={{ flex: 1, overflowY: 'auto', background: '#222', padding: 12 }}>
+        <div style={{ 
+          flex: 1, 
+          overflowY: 'auto', 
+          background: 'linear-gradient(to bottom, rgba(249, 250, 251, 0.5), rgba(255, 255, 255, 0.8))', 
+          padding: 16,
+          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.03) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.03) 0%, transparent 50%)'
+        }}>
           {loading ? (
-            <div className="text-center my-4"><Spinner animation="border" /></div>
+            <div className="text-center my-4">
+              <Spinner animation="border" style={{ color: '#667eea' }} />
+            </div>
           ) : (
             messages.length > 0 ? messages.map((msg, idx) => (
               <div key={idx} style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: msg.from === me?.uid ? 'flex-end' : 'flex-start',
-                marginBottom: 8
+                marginBottom: 10
               }}>
                 <div style={{
-                  maxWidth: '80%',
-                  background: msg.from === me?.uid ? '#7c3aed' : '#27272a',
-                  color: msg.from === me?.uid ? '#fff' : '#fafafa',
+                  maxWidth: '75%',
+                  background: msg.from === me?.uid 
+                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
+                    : 'rgba(255, 255, 255, 0.9)',
+                  color: msg.from === me?.uid ? '#fff' : '#1f2937',
                   borderRadius: 16,
-                  padding: '7px 13px',
-                  fontSize: 15,
+                  padding: '10px 16px',
+                  fontSize: 14,
                   fontWeight: 500,
-                  boxShadow: msg.from === me?.uid ? '0 2px 8px #7c3aed33' : '0 1px 4px #0001',
-                  marginLeft: msg.from === me?.uid ? 32 : 0,
-                  marginRight: msg.from === me?.uid ? 0 : 32,
-                  marginTop: 2
+                  boxShadow: msg.from === me?.uid 
+                    ? '0 4px 12px rgba(102, 126, 234, 0.3)' 
+                    : '0 2px 8px rgba(0, 0, 0, 0.08)',
+                  border: msg.from === me?.uid 
+                    ? 'none' 
+                    : '1px solid rgba(102, 126, 234, 0.1)',
+                  wordWrap: 'break-word',
+                  lineHeight: 1.4
                 }}>
                   {msg.text}
                 </div>
+                {msg.from === me?.uid && idx === messages.length - 1 && isRead && (
+                  <div style={{
+                    fontSize: 11,
+                    color: '#9ca3af',
+                    marginTop: 4,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4
+                  }}>
+                    <BsCheckAll style={{ fontSize: 14, color: '#667eea' }} />
+                    Visto
+                  </div>
+                )}
               </div>
-            )) : <div style={{ color: '#bbb', textAlign: 'center', marginTop: 40 }}>No hay mensajes aún.</div>
+            )) : (
+              <div style={{ 
+                color: '#9ca3af', 
+                textAlign: 'center', 
+                marginTop: 80,
+                fontSize: 14
+              }}>
+                <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.5 }}>💬</div>
+                <div>No hay mensajes aún</div>
+                <div style={{ fontSize: 13, marginTop: 8 }}>Envía un mensaje para iniciar la conversación</div>
+              </div>
+            )
           )}
           <div ref={messagesEndRef} />
         </div>
       )}
       {/* Input */}
       {!minimized && (
-        <Form style={{ background: '#27272a', padding: 8, borderTop: '1px solid #18181b' }} onSubmit={handleSend}>
-          <div style={{ display: 'flex', gap: 8 }}>
+        <Form 
+          style={{ 
+            background: 'rgba(255, 255, 255, 0.9)', 
+            padding: 12, 
+            borderTop: '1px solid rgba(102, 126, 234, 0.1)',
+            backdropFilter: 'blur(10px)'
+          }} 
+          onSubmit={handleSend}
+        >
+          <div style={{ display: 'flex', gap: 10 }}>
             <Form.Control
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder="Escribe un mensaje..."
-              style={{ background: '#18181b', color: '#fff', border: 'none' }}
+              style={{ 
+                background: 'rgba(249, 250, 251, 0.8)', 
+                color: '#1f2937', 
+                border: '1px solid rgba(102, 126, 234, 0.2)',
+                borderRadius: 12,
+                padding: '10px 14px',
+                fontSize: 14,
+                transition: 'all 0.2s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#667eea';
+                e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'rgba(102, 126, 234, 0.2)';
+                e.target.style.boxShadow = 'none';
+              }}
             />
-            <Button type="submit" variant="primary">Enviar</Button>
+            <Button 
+              type="submit" 
+              style={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                border: 'none',
+                borderRadius: 12,
+                padding: '10px 20px',
+                fontWeight: 600,
+                fontSize: 14,
+                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(102, 126, 234, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.3)';
+              }}
+            >
+              Enviar
+            </Button>
           </div>
         </Form>
       )}

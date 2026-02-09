@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Badge, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Badge, Modal, Carousel } from 'react-bootstrap';
 import { FaStar, FaMapMarkerAlt, FaFilter, FaPlus } from 'react-icons/fa';
 import { db, auth } from '../services/firebase';
 import { collection, getDocs, addDoc, query, orderBy, doc, getDoc, Timestamp, where, updateDoc } from 'firebase/firestore';
@@ -30,8 +30,8 @@ const MusicmarketNuevo = () => {
     categoria: 'Musica',
     estado: 'Nuevo'
   });
-  const [imagen, setImagen] = useState(null);
-  const [imagenPreview, setImagenPreview] = useState('');
+  const [imagenes, setImagenes] = useState([]);
+  const [imagenesPreviews, setImagenesPreviews] = useState([]);
   const [creating, setCreating] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
@@ -102,11 +102,23 @@ const MusicmarketNuevo = () => {
   };
 
   const handleImagenChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImagen(file);
-      setImagenPreview(URL.createObjectURL(file));
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      // Limitar a máximo 5 imágenes
+      const maxFiles = files.slice(0, 5);
+      setImagenes(maxFiles);
+      
+      // Crear previews para cada imagen
+      const previews = maxFiles.map(file => URL.createObjectURL(file));
+      setImagenesPreviews(previews);
     }
+  };
+
+  const handleRemoveImage = (index) => {
+    const newImagenes = imagenes.filter((_, i) => i !== index);
+    const newPreviews = imagenesPreviews.filter((_, i) => i !== index);
+    setImagenes(newImagenes);
+    setImagenesPreviews(newPreviews);
   };
 
   const handleCrearProducto = async (e) => {
@@ -146,15 +158,20 @@ const MusicmarketNuevo = () => {
         }
       }
 
-      let imagenUrl = '';
-      if (imagen) {
-        imagenUrl = await uploadToCloudinary(imagen, 'Bandas', 'productos');
+      // Subir todas las imágenes a Cloudinary
+      let imagenesUrls = [];
+      if (imagenes.length > 0) {
+        const uploadPromises = imagenes.map(img => 
+          uploadToCloudinary(img, 'Bandas', 'productos')
+        );
+        imagenesUrls = await Promise.all(uploadPromises);
       }
 
       await addDoc(collection(db, 'productos'), {
         ...nuevoProducto,
         precio: Number(nuevoProducto.precio),
-        imagen: imagenUrl,
+        imagen: imagenesUrls[0] || '', // Primera imagen como principal
+        imagenes: imagenesUrls, // Array con todas las imágenes
         vendedorUid: user.uid,
         vendedorNombre: vendedorNombre,
         rating: 0,
@@ -171,8 +188,8 @@ const MusicmarketNuevo = () => {
         categoria: 'Musica',
         estado: 'Nuevo'
       });
-      setImagen(null);
-      setImagenPreview('');
+      setImagenes([]);
+      setImagenesPreviews([]);
       fetchInstrumentos();
       alert('Producto publicado exitosamente');
     } catch (error) {
@@ -415,11 +432,26 @@ const MusicmarketNuevo = () => {
             <Col key={instrumento.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
               <Card className="instrument-card h-100">
                 <div className="instrument-image-container">
-                  <Card.Img 
-                    variant="top" 
-                    src={instrumento.imagen || 'https://via.placeholder.com/300x200?text=Sin+Imagen'} 
-                    className="instrument-image"
-                  />
+                  {instrumento.imagenes && instrumento.imagenes.length > 1 ? (
+                    <Carousel interval={null} indicators={true} controls={true}>
+                      {instrumento.imagenes.map((img, idx) => (
+                        <Carousel.Item key={idx}>
+                          <img
+                            className="d-block w-100 instrument-image"
+                            src={img || 'https://via.placeholder.com/300x200?text=Sin+Imagen'}
+                            alt={`${instrumento.nombre} - ${idx + 1}`}
+                            style={{ height: '250px', objectFit: 'cover' }}
+                          />
+                        </Carousel.Item>
+                      ))}
+                    </Carousel>
+                  ) : (
+                    <Card.Img 
+                      variant="top" 
+                      src={instrumento.imagen || 'https://via.placeholder.com/300x200?text=Sin+Imagen'} 
+                      className="instrument-image"
+                    />
+                  )}
                   <Badge bg="success" className="estado-badge">{instrumento.estado}</Badge>
                 </div>
                 <Card.Body>
@@ -551,19 +583,82 @@ const MusicmarketNuevo = () => {
             </Row>
 
             <Form.Group className="mb-3">
-              <Form.Label>Imagen del Producto</Form.Label>
+              <Form.Label>Imágenes del Producto (máximo 5)</Form.Label>
               <Form.Control
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleImagenChange}
               />
-              {imagenPreview && (
-                <img 
-                  src={imagenPreview} 
-                  alt="Preview" 
-                  className="mt-2" 
-                  style={{ maxWidth: '200px', borderRadius: '8px' }} 
-                />
+              <Form.Text className="text-muted">
+                Puedes seleccionar hasta 5 imágenes. La primera será la imagen principal.
+              </Form.Text>
+              {imagenesPreviews.length > 0 && (
+                <div className="mt-3" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  {imagenesPreviews.map((preview, index) => (
+                    <div 
+                      key={index} 
+                      style={{ 
+                        position: 'relative',
+                        width: '120px',
+                        height: '120px'
+                      }}
+                    >
+                      <img 
+                        src={preview} 
+                        alt={`Preview ${index + 1}`} 
+                        style={{ 
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          borderRadius: '8px',
+                          border: index === 0 ? '3px solid #0d6efd' : '1px solid #ddd'
+                        }} 
+                      />
+                      {index === 0 && (
+                        <span 
+                          style={{
+                            position: 'absolute',
+                            bottom: '5px',
+                            left: '5px',
+                            background: '#0d6efd',
+                            color: 'white',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          Principal
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        style={{
+                          position: 'absolute',
+                          top: '5px',
+                          right: '5px',
+                          background: '#dc3545',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '16px',
+                          lineHeight: 1,
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
               )}
             </Form.Group>
 

@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { db, auth } from '../services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, query, orderBy, doc, getDoc, where, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, getDoc, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 import { Modal, Button, Form } from 'react-bootstrap';
-import { FaImage, FaVideo, FaHeart, FaComment, FaShare, FaUser, FaTag, FaUsers, FaCalendarAlt } from 'react-icons/fa';
+import { FaImage, FaVideo, FaHeart, FaComment, FaShare, FaUser, FaTag, FaUsers, FaCalendarAlt, FaMusic } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import PublicacionForm from '../components/PublicacionForm';
 import ComentariosPublicacion from '../components/ComentariosPublicacion';
@@ -12,11 +12,13 @@ import ContadorComentarios from '../components/ContadorComentarios';
 import AuthPromptModal from '../components/AuthPromptModal';
 import { notificarNuevoSeguidor } from '../services/notificationService';
 import { GuestContext } from '../App';
+import { useChatDock } from '../contexts/ChatDockContext';
 import './Publicaciones.css';
 
 const PublicacionesNuevo = () => {
   const guestContext = useContext(GuestContext);
   const isGuest = guestContext?.isGuest || false;
+  const { openChat } = useChatDock();
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
@@ -37,9 +39,60 @@ const PublicacionesNuevo = () => {
   useEffect(() => {
     if (user) {
       fetchUserProfile();
-      fetchChatsActivos();
       fetchSugerencias();
       fetchSeguidoresStats();
+      
+      // Listener en tiempo real para mensajes recientes
+      const unsubChats = onSnapshot(
+        collection(db, 'userChats', user.uid, 'chats'),
+        async (snapshot) => {
+          const chatsData = [];
+          
+          for (const chatDoc of snapshot.docs) {
+            const chat = chatDoc.data();
+            if (chat.with) {
+              const perfilSnap = await getDoc(doc(db, 'perfiles', chat.with));
+              let nombre = chat.withNombre || chat.withEmail || 'Usuario';
+              let foto = null;
+              
+              if (perfilSnap.exists()) {
+                const perfil = perfilSnap.data();
+                nombre = perfil.nombre || perfil.email || nombre;
+                foto = perfil.fotoPerfil;
+              }
+              
+              // Detectar si hay mensajes no leídos
+              const noLeido = chat.lastFrom && chat.lastFrom !== user.uid && !chat.lastRead;
+              
+              chatsData.push({
+                id: chat.chatId,
+                otroUsuarioId: chat.with,
+                nombre: nombre,
+                mensaje: chat.lastMsg || 'Inicia una conversación',
+                online: false,
+                foto: foto,
+                timestamp: chat.lastAt || new Date().toISOString(),
+                noLeido: noLeido
+              });
+            }
+          }
+          
+          // Ordenar por timestamp
+          chatsData.sort((a, b) => {
+            const timeA = new Date(a.timestamp);
+            const timeB = new Date(b.timestamp);
+            return timeB - timeA;
+          });
+          
+          setChatsActivos(chatsData.slice(0, 5));
+        },
+        (error) => {
+          console.error('Error listening to chats:', error);
+          setChatsActivos([]);
+        }
+      );
+      
+      return () => unsubChats();
     }
   }, [user]);
 
@@ -52,42 +105,6 @@ const PublicacionesNuevo = () => {
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
-    }
-  };
-
-  const fetchChatsActivos = async () => {
-    if (!user) return;
-    try {
-      // Obtener conversaciones del usuario con filtro where
-      const chatsQuery = query(
-        collection(db, 'conversaciones'),
-        where('participantes', 'array-contains', user.uid),
-        orderBy('ultimoMensaje', 'desc')
-      );
-      const chatsSnap = await getDocs(chatsQuery);
-      const chatsData = [];
-      
-      for (const chatDoc of chatsSnap.docs) {
-        const chat = chatDoc.data();
-        const otroUsuarioId = chat.participantes.find(id => id !== user.uid);
-        if (otroUsuarioId) {
-          const perfilSnap = await getDoc(doc(db, 'perfiles', otroUsuarioId));
-          if (perfilSnap.exists()) {
-            const perfil = perfilSnap.data();
-            chatsData.push({
-              id: chatDoc.id,
-              nombre: perfil.nombre || perfil.email || 'Usuario',
-              mensaje: chat.ultimoMensajeTexto || 'Mensaje',
-              online: false, // Puedes implementar lógica de presencia
-              foto: perfil.fotoPerfil
-            });
-          }
-        }
-        if (chatsData.length >= 5) break;
-      }
-      setChatsActivos(chatsData);
-    } catch (error) {
-      console.error('Error fetching chats:', error);
     }
   };
 
@@ -297,6 +314,10 @@ const PublicacionesNuevo = () => {
               <FaCalendarAlt className="quick-access-icon" />
               <span>Eventos</span>
             </Link>
+            <Link to="/juego" className="quick-access-item">
+              <FaMusic className="quick-access-icon" />
+              <span>Piano Tiles</span>
+            </Link>
           </div>
         </aside>
         )}
@@ -407,29 +428,81 @@ const PublicacionesNuevo = () => {
       {/* Sidebar Derecho - Solo si hay usuario */}
       {user && (
         <aside className="sidebar-right">
-          {/* Chats Activos */}
+          {/* Mensajes Recientes */}
           <div className="chats-activos">
-            <div className="sidebar-title">Chats Activos</div>
+            <div className="sidebar-title">Mensajes Recientes</div>
             {chatsActivos.length === 0 ? (
               <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem', padding: '20px 0' }}>
-                No hay chats activos
+                No hay mensajes recientes
               </div>
             ) : (
               chatsActivos.map(chat => (
-                <Link key={chat.id} to="/chat" className="chat-item" style={{ textDecoration: 'none' }}>
-                  <div className="chat-avatar">
+                <div
+                  key={chat.id}
+                  className="chat-item"
+                  style={{ 
+                    textDecoration: 'none', 
+                    cursor: 'pointer',
+                    background: chat.noLeido ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.1))' : 'transparent',
+                    borderLeft: chat.noLeido ? '3px solid #667eea' : '3px solid transparent',
+                    fontWeight: chat.noLeido ? '600' : 'normal',
+                    position: 'relative'
+                  }}
+                  onClick={() => openChat({
+                    with: chat.otroUsuarioId,
+                    withEmail: chat.nombre,
+                    withNombre: chat.nombre,
+                    chatId: chat.id,
+                    avatar: chat.foto
+                  })}
+                >
+                  <div className="chat-avatar" style={{ position: 'relative' }}>
                     {chat.foto ? (
                       <img src={chat.foto} alt={chat.nombre} />
                     ) : (
                       getInitials(chat.nombre)
                     )}
                     {chat.online && <div className="chat-status" />}
+                    {chat.noLeido && (
+                      <div style={{
+                        position: 'absolute',
+                        top: -2,
+                        right: -2,
+                        width: 12,
+                        height: 12,
+                        background: '#ef4444',
+                        borderRadius: '50%',
+                        border: '2px solid white',
+                        boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)'
+                      }} />
+                    )}
                   </div>
-                  <div className="chat-info">
-                    <div className="chat-name">{chat.nombre}</div>
-                    <div className="chat-preview">{chat.mensaje}</div>
+                  <div className="chat-info" style={{ flex: 1 }}>
+                    <div className="chat-name" style={{ 
+                      color: chat.noLeido ? '#667eea' : 'inherit',
+                      fontWeight: chat.noLeido ? '700' : 'inherit'
+                    }}>
+                      {chat.nombre}
+                    </div>
+                    <div className="chat-preview" style={{
+                      color: chat.noLeido ? '#1f2937' : 'inherit',
+                      fontWeight: chat.noLeido ? '600' : 'inherit'
+                    }}>
+                      {chat.mensaje}
+                    </div>
                   </div>
-                </Link>
+                  {chat.noLeido && (
+                    <div style={{
+                      background: '#ef4444',
+                      borderRadius: '50%',
+                      width: 10,
+                      height: 10,
+                      boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)',
+                      marginLeft: 'auto',
+                      flexShrink: 0
+                    }} />
+                  )}
+                </div>
               ))
             )}
           </div>
@@ -482,7 +555,7 @@ const PublicacionesNuevo = () => {
           </Modal.Header>
           <Modal.Body>
             <PublicacionForm
-              onSuccess={() => {
+              onCreated={() => {
                 setShowCreateModal(false);
                 fetchPublicaciones();
               }}

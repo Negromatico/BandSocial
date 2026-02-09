@@ -6,6 +6,7 @@ import { Button, Spinner } from 'react-bootstrap';
 import { FaUserPlus, FaUserMinus, FaEnvelope, FaEllipsisH, FaMapMarkerAlt, FaCalendar, FaGuitar, FaUsers, FaMusic, FaExternalLinkAlt } from 'react-icons/fa';
 import ChatModal from '../components/ChatModal';
 import { notificarNuevoSeguidor } from '../services/notificationService';
+import { useChatDock } from '../contexts/ChatDockContext';
 import './ProfileViewNew.css';
 
 const ProfileViewNew = () => {
@@ -20,6 +21,7 @@ const ProfileViewNew = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [eventos, setEventos] = useState([]);
   const currentUser = auth.currentUser;
+  const { openChat } = useChatDock();
 
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -60,6 +62,8 @@ const ProfileViewNew = () => {
         cleanedData.uid = uid;
         
         console.log('✅ Datos limpiados:', cleanedData);
+        console.log('✅ Nombre del perfil:', cleanedData.nombre);
+        console.log('✅ Ciudad:', cleanedData.ciudad);
         setPerfil(cleanedData);
         
         // Verificar si el usuario actual sigue a este perfil
@@ -183,39 +187,58 @@ const ProfileViewNew = () => {
           <div className="profile-main-info">
             <div className="profile-name-section">
               <h1 className="profile-name">
-                {perfil.nombre}
+                {perfil.nombre || 'Usuario de BandSocial'}
                 {(perfil.planActual === 'premium' || perfil.membershipPlan === 'premium') && (
                   <span className="badge-premium">PREMIUM</span>
                 )}
               </h1>
               <p className="profile-type">
-                {perfil.type === 'banda' ? 'Banda de Rock Alternativo' : 'Músico Profesional'}
+                {perfil.type === 'banda' ? 'Banda Musical' : 
+                 perfil.type === 'musico' ? 'Músico Profesional' : 
+                 perfil.type === 'venue' ? 'Lugar de Eventos' : 
+                 'Miembro de BandSocial'}
               </p>
               <div className="profile-location">
                 <FaMapMarkerAlt /> {perfil.ciudad || 'Colombia'}
-                <span className="separator">•</span>
-                <FaCalendar /> Miembro desde {(() => {
-                  if (perfil.createdAt) {
-                    // Si es un timestamp de Firestore
-                    if (perfil.createdAt.seconds) {
-                      return new Date(perfil.createdAt.seconds * 1000).getFullYear();
-                    }
-                    // Si es un string o Date
-                    return new Date(perfil.createdAt).getFullYear();
-                  }
-                  return '2025';
-                })()}
+                {perfil.createdAt && (
+                  <>
+                    <span className="separator">•</span>
+                    <FaCalendar /> Miembro desde {(() => {
+                      // Si es un timestamp de Firestore
+                      if (perfil.createdAt.seconds) {
+                        return new Date(perfil.createdAt.seconds * 1000).getFullYear();
+                      }
+                      // Si es un string o Date
+                      return new Date(perfil.createdAt).getFullYear();
+                    })()}
+                  </>
+                )}
               </div>
             </div>
 
             {/* Botones de Acción */}
-            <div className="profile-actions">
-              {currentUser && currentUser.uid !== uid && (
+            <div className="profile-actions" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              {currentUser && currentUser.uid !== uid ? (
                 <>
-                  <Button
+                  <button
                     className={`btn-seguir ${siguiendo ? 'siguiendo' : ''}`}
                     onClick={handleSeguir}
                     disabled={loadingFollow}
+                    style={{
+                      background: siguiendo ? '#e4e6eb' : '#1877f2',
+                      color: siguiendo ? '#050505' : 'white',
+                      border: 'none',
+                      padding: '10px 24px',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      fontSize: '15px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: loadingFollow ? 'not-allowed' : 'pointer',
+                      opacity: loadingFollow ? 0.6 : 1,
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
                   >
                     {loadingFollow ? (
                       <Spinner animation="border" size="sm" />
@@ -224,18 +247,74 @@ const ProfileViewNew = () => {
                     ) : (
                       <><FaUserPlus /> Seguir</>
                     )}
-                  </Button>
-                  <Button
+                  </button>
+                  <button
                     className="btn-mensaje"
-                    onClick={() => setShowChat(true)}
+                    onClick={() => {
+                      const chatId = [currentUser.uid, uid].sort().join('_');
+                      openChat({
+                        with: uid,
+                        withEmail: perfil?.email || 'Usuario',
+                        withNombre: perfil?.nombre || 'Usuario',
+                        chatId: chatId,
+                        avatar: perfil?.fotoPerfil || ''
+                      });
+                    }}
+                    style={{
+                      background: '#e4e6eb',
+                      color: '#050505',
+                      border: 'none',
+                      padding: '10px 24px',
+                      borderRadius: 8,
+                      fontWeight: 600,
+                      fontSize: 15,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
                   >
                     <FaEnvelope /> Mensaje
-                  </Button>
+                  </button>
+                  <button 
+                    className="btn-more"
+                    style={{
+                      background: '#e4e6eb',
+                      color: '#050505',
+                      border: 'none',
+                      padding: '10px 16px',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                    }}
+                  >
+                    <FaEllipsisH />
+                  </button>
                 </>
-              )}
-              <Button className="btn-more">
-                <FaEllipsisH />
-              </Button>
+              ) : currentUser && currentUser.uid === uid ? (
+                <button 
+                  className="btn-mensaje"
+                  onClick={() => window.location.href = '/profile'}
+                  style={{
+                    background: '#e4e6eb',
+                    color: '#050505',
+                    border: 'none',
+                    padding: '10px 24px',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '15px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                  }}
+                >
+                  Editar Perfil
+                </button>
+              ) : null}
             </div>
           </div>
         </div>

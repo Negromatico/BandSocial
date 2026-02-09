@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Dropdown, Badge } from 'react-bootstrap';
-import { FaBell, FaUserPlus, FaHeart, FaComment, FaMusic, FaCalendar } from 'react-icons/fa';
+import { FaBell, FaUserPlus, FaHeart, FaComment, FaMusic, FaCalendar, FaEnvelope } from 'react-icons/fa';
 import { db, auth } from '../services/firebase';
 import { collection, query, where, orderBy, onSnapshot, updateDoc, doc, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { useChatDock } from '../contexts/ChatDockContext';
 import './NotificationCenter.css';
 
 const NotificationCenter = () => {
@@ -11,6 +12,7 @@ const NotificationCenter = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { openChat } = useChatDock();
   const user = auth.currentUser;
 
   useEffect(() => {
@@ -78,6 +80,15 @@ const NotificationCenter = () => {
       case 'evento':
         navigate('/eventos');
         break;
+      case 'mensaje':
+        // Abrir chat flotante con el remitente
+        openChat({
+          with: notification.origenUid,
+          withEmail: notification.origenNombre || 'Usuario',
+          withNombre: notification.origenNombre || 'Usuario',
+          chatId: [user.uid, notification.origenUid].sort().join('_')
+        });
+        break;
       default:
         break;
     }
@@ -95,6 +106,8 @@ const NotificationCenter = () => {
         return <FaMusic className="notif-icon" style={{ color: '#f59e0b' }} />;
       case 'evento':
         return <FaCalendar className="notif-icon" style={{ color: '#8b5cf6' }} />;
+      case 'mensaje':
+        return <FaEnvelope className="notif-icon" style={{ color: '#3b82f6' }} />;
       default:
         return <FaBell className="notif-icon" style={{ color: '#6b7280' }} />;
     }

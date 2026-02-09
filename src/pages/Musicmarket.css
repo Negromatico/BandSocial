@@ -43,6 +43,9 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .instrument-card:hover {
@@ -50,10 +53,59 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
-.card-image-wrapper {
+.instrument-image-container {
   position: relative;
   overflow: hidden;
-  height: 200px;
+  height: 250px;
+  width: 100%;
+  background: #f0f0f0;
+}
+
+.instrument-image-container .carousel {
+  height: 100%;
+}
+
+.instrument-image-container .carousel-inner {
+  height: 100%;
+}
+
+.instrument-image-container .carousel-item {
+  height: 100%;
+}
+
+.instrument-image-container .carousel-control-prev,
+.instrument-image-container .carousel-control-next {
+  width: 40px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.instrument-card:hover .carousel-control-prev,
+.instrument-card:hover .carousel-control-next {
+  opacity: 0.8;
+}
+
+.instrument-image-container .carousel-control-prev:hover,
+.instrument-image-container .carousel-control-next:hover {
+  opacity: 1 !important;
+}
+
+.instrument-image-container .carousel-indicators {
+  bottom: 10px;
+  margin-bottom: 0;
+}
+
+.instrument-image-container .carousel-indicators [data-bs-target] {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.7);
+  border: none;
+  margin: 0 3px;
+}
+
+.instrument-image-container .carousel-indicators .active {
+  background-color: #fff;
 }
 
 .card-badge {
@@ -66,18 +118,30 @@
   font-weight: 600;
 }
 
-.card-image {
+.instrument-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   transition: transform 0.3s ease;
 }
 
-.instrument-card:hover .card-image {
-  transform: scale(1.1);
+.instrument-card:hover .instrument-image {
+  transform: scale(1.05);
 }
 
-.instrument-name {
+.estado-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.instrument-title {
   font-size: 1.1rem;
   font-weight: 600;
   color: #1e3a5f;
@@ -86,7 +150,9 @@
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
+  min-height: 2.6rem;
 }
 
 .instrument-description {
@@ -97,7 +163,15 @@
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
+  min-height: 2.7rem;
+}
+
+.instrument-price {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0d6efd;
 }
 
 .rating-section {
@@ -161,7 +235,7 @@
     max-width: 100%;
   }
 
-  .card-image-wrapper {
-    height: 180px;
+  .instrument-image-container {
+    height: 200px;
   }
 }

@@ -35,18 +35,54 @@ const EventosNuevo = () => {
     imagen: ''
   });
   const [creandoEvento, setCreandoEvento] = useState(false);
+  const [erroresValidacion, setErroresValidacion] = useState([]);
+  const [mensajeExito, setMensajeExito] = useState('');
 
   // Estados para subida de imagen
   const [imagenFile, setImagenFile] = useState(null);
   const [imagenPreview, setImagenPreview] = useState('');
   const [uploadingImagen, setUploadingImagen] = useState(false);
+  const [ciudadesOptions, setCiudadesOptions] = useState([]);
 
   // Filtros
   const [filtroGenero, setFiltroGenero] = useState([]);
   const [filtroCiudad, setFiltroCiudad] = useState('');
   const [filtroTipo, setFiltroTipo] = useState([]);
 
-  const generos = ['Rock', 'Pop', 'Jazz', 'Hip Hop', 'Indie', 'Salsa'];
+  const generos = [
+    'Rock',
+    'Pop',
+    'Jazz',
+    'Hip Hop',
+    'Indie',
+    'Salsa',
+    'Reggaeton',
+    'Vallenato',
+    'Cumbia',
+    'Merengue',
+    'Bachata',
+    'Electrónica',
+    'House',
+    'Techno',
+    'Reggae',
+    'Blues',
+    'Country',
+    'Folk',
+    'Metal',
+    'Punk',
+    'R&B',
+    'Soul',
+    'Funk',
+    'Disco',
+    'Tropical',
+    'Ranchera',
+    'Bolero',
+    'Tango',
+    'Flamenco',
+    'Clásica',
+    'Alternativo',
+    'Experimental'
+  ].sort();
   const tiposEvento = ['Conciertos', 'Festivales', 'Jam Sessions', 'Workshops'];
 
   useEffect(() => {
@@ -109,7 +145,20 @@ const EventosNuevo = () => {
 
   useEffect(() => {
     fetchEventos();
+    fetchCiudades();
   }, []);
+
+  const fetchCiudades = async () => {
+    try {
+      const response = await fetch('https://api-colombia.com/api/v1/City');
+      const data = await response.json();
+      const uniqueCities = [...new Set(data.map(city => city.name))].sort();
+      setCiudadesOptions(uniqueCities);
+    } catch (error) {
+      console.error('Error cargando ciudades:', error);
+      setCiudadesOptions([]);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -198,16 +247,39 @@ const EventosNuevo = () => {
     e.preventDefault();
     
     if (!user) {
-      alert('Debes iniciar sesión para crear un evento');
+      setErroresValidacion(['Debes iniciar sesión para crear un evento']);
       return;
     }
 
-    // Validaciones
-    if (!nuevoEvento.titulo || !nuevoEvento.fecha || !nuevoEvento.hora || !nuevoEvento.lugar) {
-      alert('Por favor completa todos los campos obligatorios');
+    // Validaciones detalladas
+    const camposFaltantes = [];
+    
+    if (!nuevoEvento.titulo || nuevoEvento.titulo.trim() === '') {
+      camposFaltantes.push('Título del Evento');
+    }
+    if (!nuevoEvento.fecha || nuevoEvento.fecha.trim() === '') {
+      camposFaltantes.push('Fecha del Evento');
+    }
+    if (!nuevoEvento.hora || nuevoEvento.hora.trim() === '') {
+      camposFaltantes.push('Hora del Evento');
+    }
+    if (!nuevoEvento.lugar || nuevoEvento.lugar.trim() === '') {
+      camposFaltantes.push('Lugar del Evento');
+    }
+    if (!nuevoEvento.ciudad || nuevoEvento.ciudad.trim() === '') {
+      camposFaltantes.push('Ciudad');
+    }
+    if (!nuevoEvento.tipo || nuevoEvento.tipo.trim() === '') {
+      camposFaltantes.push('Tipo de Evento');
+    }
+
+    if (camposFaltantes.length > 0) {
+      setErroresValidacion(camposFaltantes);
       return;
     }
 
+    // Limpiar errores si todo está bien
+    setErroresValidacion([]);
     setCreandoEvento(true);
     setUploadingImagen(true);
 
@@ -215,7 +287,7 @@ const EventosNuevo = () => {
       // Subir imagen a Cloudinary si hay una seleccionada
       let imagenUrl = nuevoEvento.imagen;
       if (imagenFile) {
-        imagenUrl = await uploadToCloudinary(imagenFile, 'bandsocial_eventos', 'eventos');
+        imagenUrl = await uploadToCloudinary(imagenFile, 'Bandas', 'eventos');
       }
 
       const eventoData = {
@@ -232,8 +304,13 @@ const EventosNuevo = () => {
 
       await addDoc(collection(db, 'eventos'), eventoData);
       
-      alert('¡Evento creado exitosamente!');
+      setMensajeExito('¡Evento creado exitosamente!');
       setShowCrearEvento(false);
+      
+      // Ocultar mensaje después de 5 segundos
+      setTimeout(() => {
+        setMensajeExito('');
+      }, 5000);
       
       // Resetear formulario
       setNuevoEvento({
@@ -255,7 +332,7 @@ const EventosNuevo = () => {
       fetchEventos();
     } catch (error) {
       console.error('Error al crear evento:', error);
-      alert('Error al crear el evento. Intenta de nuevo.');
+      setErroresValidacion(['Error al crear el evento. Intenta de nuevo.']);
     } finally {
       setCreandoEvento(false);
       setUploadingImagen(false);
@@ -264,6 +341,66 @@ const EventosNuevo = () => {
 
   return (
     <div className="eventos-container">
+      {/* Notificación de éxito */}
+      {mensajeExito && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '80px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+            border: '2px solid #10b981',
+            borderRadius: '12px',
+            padding: '16px 24px',
+            boxShadow: '0 8px 24px rgba(16, 185, 129, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            minWidth: '300px',
+            animation: 'slideDown 0.3s ease-out'
+          }}
+        >
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            background: '#10b981',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: '20px'
+          }}>
+            ✓
+          </div>
+          <div style={{
+            flex: 1,
+            color: '#065f46',
+            fontWeight: '600',
+            fontSize: '16px'
+          }}>
+            {mensajeExito}
+          </div>
+          <button
+            onClick={() => setMensajeExito('')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#065f46',
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '0 4px',
+              lineHeight: 1
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Sidebar de filtros */}
       <aside className="eventos-sidebar">
         <div className="sidebar-title">
@@ -480,12 +617,77 @@ const EventosNuevo = () => {
       </Modal>
 
       {/* Modal Crear Evento */}
-      <Modal show={showCrearEvento} onHide={() => setShowCrearEvento(false)} size="lg" className="modern-modal">
+      <Modal 
+        show={showCrearEvento} 
+        onHide={() => {
+          setShowCrearEvento(false);
+          setErroresValidacion([]);
+        }} 
+        size="lg" 
+        className="modern-modal"
+      >
         <Modal.Header closeButton>
           <Modal.Title>Crear Nuevo Evento</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleCrearEvento}>
+            {/* Sección de errores de validación */}
+            {erroresValidacion.length > 0 && (
+              <div 
+                style={{
+                  background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                  border: '2px solid #ef4444',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '20px',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)'
+                }}
+              >
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  marginBottom: '12px',
+                  gap: '8px'
+                }}>
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: '#ef4444',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '16px'
+                  }}>
+                    !
+                  </div>
+                  <h6 style={{ 
+                    margin: 0, 
+                    color: '#991b1b',
+                    fontWeight: '700',
+                    fontSize: '16px'
+                  }}>
+                    Por favor completa los siguientes campos:
+                  </h6>
+                </div>
+                <ul style={{ 
+                  margin: 0, 
+                  paddingLeft: '20px',
+                  color: '#7f1d1d',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}>
+                  {erroresValidacion.map((error, index) => (
+                    <li key={index} style={{ marginBottom: '6px' }}>
+                      {error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <Form.Group className="mb-3">
               <Form.Label>Título del Evento *</Form.Label>
               <Form.Control
@@ -653,13 +855,16 @@ const EventosNuevo = () => {
 
             <Form.Group className="mb-3">
               <Form.Label>Ciudad *</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Ej: Bogotá"
+              <Form.Select
                 value={nuevoEvento.ciudad}
                 onChange={(e) => setNuevoEvento({...nuevoEvento, ciudad: e.target.value})}
                 required
-              />
+              >
+                <option value="">Selecciona una ciudad</option>
+                {ciudadesOptions.map(ciudad => (
+                  <option key={ciudad} value={ciudad}>{ciudad}</option>
+                ))}
+              </Form.Select>
             </Form.Group>
 
             <div className="row">
@@ -692,24 +897,69 @@ const EventosNuevo = () => {
 
             <Form.Group className="mb-3">
               <Form.Label>Géneros Musicales</Form.Label>
-              <div className="d-flex flex-wrap gap-2">
-                {generos.map(genero => (
-                  <Form.Check
-                    key={genero}
-                    type="checkbox"
-                    id={`genero-${genero}`}
-                    label={genero}
-                    checked={nuevoEvento.generos.includes(genero)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setNuevoEvento({...nuevoEvento, generos: [...nuevoEvento.generos, genero]});
-                      } else {
-                        setNuevoEvento({...nuevoEvento, generos: nuevoEvento.generos.filter(g => g !== genero)});
-                      }
-                    }}
-                  />
-                ))}
+              <div 
+                className="border rounded p-3" 
+                style={{ 
+                  maxHeight: '200px', 
+                  overflowY: 'auto',
+                  backgroundColor: '#fff'
+                }}
+              >
+                <div className="row g-3">
+                  {generos.map(genero => (
+                    <div key={genero} className="col-6 col-md-4 mb-1">
+                      <div 
+                        className="form-check p-2 rounded" 
+                        style={{ 
+                          cursor: 'pointer',
+                          backgroundColor: nuevoEvento.generos.includes(genero) ? '#e7f3ff' : 'transparent',
+                          border: nuevoEvento.generos.includes(genero) ? '1px solid #0d6efd' : '1px solid transparent',
+                          transition: 'all 0.2s'
+                        }}
+                        onClick={() => {
+                          if (nuevoEvento.generos.includes(genero)) {
+                            setNuevoEvento({...nuevoEvento, generos: nuevoEvento.generos.filter(g => g !== genero)});
+                          } else {
+                            setNuevoEvento({...nuevoEvento, generos: [...nuevoEvento.generos, genero]});
+                          }
+                        }}
+                      >
+                        <Form.Check
+                          type="checkbox"
+                          id={`genero-${genero}`}
+                          label={genero}
+                          checked={nuevoEvento.generos.includes(genero)}
+                          onChange={() => {}} // Manejado por el div padre
+                          style={{ pointerEvents: 'none' }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
+              <Form.Text className="text-muted">
+                Selecciona uno o varios géneros haciendo clic
+              </Form.Text>
+              {nuevoEvento.generos.length > 0 && (
+                <div className="mt-2">
+                  <strong>Seleccionados ({nuevoEvento.generos.length}):</strong>{' '}
+                  {nuevoEvento.generos.map((g) => (
+                    <span key={g} className="badge bg-primary me-1 mb-1">
+                      {g}
+                      <button
+                        type="button"
+                        className="btn-close btn-close-white ms-1"
+                        style={{ fontSize: '0.6rem' }}
+                        onClick={() => setNuevoEvento({
+                          ...nuevoEvento,
+                          generos: nuevoEvento.generos.filter(gen => gen !== g)
+                        })}
+                        aria-label="Eliminar"
+                      />
+                    </span>
+                  ))}
+                </div>
+              )}
             </Form.Group>
 
             <Form.Group className="mb-3">

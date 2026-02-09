@@ -3,6 +3,7 @@ import './global.css';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { auth } from './services/firebase';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ChatDockProvider } from './contexts/ChatDockContext';
 
 // Lazy loading de componentes para mejorar rendimiento
 const Login = lazy(() => import('./pages/Login'));
@@ -13,7 +14,6 @@ const Home = lazy(() => import('./pages/Home'));
 const Profile = lazy(() => import('./pages/Profile'));
 const ProfileView = lazy(() => import('./pages/ProfileViewNew'));
 const PublicacionesNuevo = lazy(() => import('./pages/PublicacionesNuevo'));
-const Chat = lazy(() => import('./pages/Chat'));
 const Posts = lazy(() => import('./pages/Posts'));
 const AppNavbar = lazy(() => import('./components/Navbar'));
 const EventosNuevo = lazy(() => import('./pages/EventosNuevo'));
@@ -25,6 +25,7 @@ const Followers = lazy(() => import('./pages/Followers'));
 const Buscar = lazy(() => import('./pages/Buscar'));
 const MisPublicaciones = lazy(() => import('./pages/MisPublicaciones'));
 const MisGrupos = lazy(() => import('./pages/MisGrupos'));
+const GamePage = lazy(() => import('./pages/GamePage'));
 
 // Componente de loading
 const LoadingSpinner = () => (
@@ -68,7 +69,6 @@ function MainLayout() {
         <Route path="/publicaciones" element={<PublicacionesNuevo />} />
         <Route path="/eventos" element={<EventosNuevo />} />
         <Route path="/musicmarket" element={<MusicmarketNuevo />} />
-        <Route path="/chat" element={<Chat />} />
         <Route path="/posts" element={<Posts />} />
         <Route path="/prelanding" element={<PreLanding />} />
         <Route path="/grupos" element={<MisGrupos />} />
@@ -76,6 +76,7 @@ function MainLayout() {
         <Route path="/followers" element={<Followers />} />
         <Route path="/buscar" element={<Buscar />} />
         <Route path="/mis-publicaciones" element={<MisPublicaciones />} />
+        <Route path="/juego" element={<GamePage />} />
       </Routes>
     </Suspense>
   );
@@ -115,9 +116,11 @@ const App = () => {
   return (
     <ErrorBoundary>
       <GuestContext.Provider value={{isGuest, activateGuest, deactivateGuest}}>
-        <BrowserRouter>
-          <MainLayout />
-        </BrowserRouter>
+        <ChatDockProvider>
+          <BrowserRouter>
+            <MainLayout />
+          </BrowserRouter>
+        </ChatDockProvider>
       </GuestContext.Provider>
     </ErrorBoundary>
   );

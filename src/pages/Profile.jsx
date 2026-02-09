@@ -7,6 +7,7 @@ import { uploadToCloudinary } from '../services/cloudinary';
 import Select from 'react-select';
 import { instrumentos } from '../data/opciones';
 import { useToast } from '../components/Toast';
+import ImageCropModal from '../components/ImageCropModal';
 import './Profile.css';
 
 const Profile = () => {
@@ -26,6 +27,14 @@ const Profile = () => {
   const [postImagePreview, setPostImagePreview] = useState('');
   const [postLoading, setPostLoading] = useState(false);
   const [postStatus, setPostStatus] = useState('');
+  const [userPublicaciones, setUserPublicaciones] = useState([]);
+  const [loadingPublicaciones, setLoadingPublicaciones] = useState(false);
+  const [showEditPost, setShowEditPost] = useState(false);
+  const [editingPost, setEditingPost] = useState(null);
+  const [editPostContent, setEditPostContent] = useState('');
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [cropImageFile, setCropImageFile] = useState(null);
+  const [cropImageType, setCropImageType] = useState(''); // 'banner' o 'perfil'
   const navigate = useNavigate();
   const { showToast, ToastContainer } = useToast();
 
@@ -41,6 +50,7 @@ const Profile = () => {
     if (user) {
       fetchProfile();
       fetchStats();
+      fetchUserPublicaciones();
     }
   }, [user]);
 
@@ -131,27 +141,38 @@ const Profile = () => {
     }
   };
 
-  const handleChangeBanner = async (e) => {
+  const handleChangeBanner = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    try {
-      const url = await uploadToCloudinary(file, 'Bandas', 'portadas');
-      await updateDoc(doc(db, 'perfiles', user.uid), { fotoPortada: url });
-      setInitialValues(prev => ({ ...prev, fotoPortada: url }));
-    } catch (err) {
-      console.error('Error subiendo portada:', err);
-    }
+    setCropImageFile(file);
+    setCropImageType('banner');
+    setShowCropModal(true);
   };
 
-  const handleChangeFoto = async (e) => {
+  const handleChangeFoto = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setCropImageFile(file);
+    setCropImageType('perfil');
+    setShowCropModal(true);
+  };
+
+  const handleCropComplete = async (croppedFile) => {
     try {
-      const url = await uploadToCloudinary(file, 'Bandas', 'perfiles');
-      await updateDoc(doc(db, 'perfiles', user.uid), { fotoPerfil: url });
-      setInitialValues(prev => ({ ...prev, fotoPerfil: url }));
+      if (cropImageType === 'banner') {
+        const url = await uploadToCloudinary(croppedFile, 'Bandas', 'portadas');
+        await updateDoc(doc(db, 'perfiles', user.uid), { fotoPortada: url });
+        setInitialValues(prev => ({ ...prev, fotoPortada: url }));
+        showToast('Banner actualizado exitosamente', 'success');
+      } else if (cropImageType === 'perfil') {
+        const url = await uploadToCloudinary(croppedFile, 'Bandas', 'perfiles');
+        await updateDoc(doc(db, 'perfiles', user.uid), { fotoPerfil: url });
+        setInitialValues(prev => ({ ...prev, fotoPerfil: url }));
+        showToast('Foto de perfil actualizada exitosamente', 'success');
+      }
     } catch (err) {
-      console.error('Error subiendo foto:', err);
+      console.error('Error subiendo imagen:', err);
+      showToast('Error al subir la imagen', 'error');
     }
   };
 
@@ -167,15 +188,80 @@ const Profile = () => {
     }
   };
 
-  const handleCreatePost = async () => {
-    if (!postContent.trim() && !postImage) {
-      setPostStatus('Escribe algo o agrega una imagen');
+  const fetchUserPublicaciones = async () => {
+    if (!user) return;
+    setLoadingPublicaciones(true);
+    try {
+      const q = query(
+        collection(db, 'publicaciones'),
+        where('autorUid', '==', user.uid),
+        orderBy('createdAt', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      const pubs = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setUserPublicaciones(pubs.filter(p => !p.deleted));
+    } catch (error) {
+      console.error('Error cargando publicaciones:', error);
+    } finally {
+      setLoadingPublicaciones(false);
+    }
+  };
+
+  const handleEditPost = (post) => {
+    setEditingPost(post);
+    setEditPostContent(post.descripcion || '');
+    setShowEditPost(true);
+  };
+
+  const handleUpdatePost = async () => {
+    if (!editPostContent.trim() || !editingPost) return;
+    
+    try {
+      await updateDoc(doc(db, 'publicaciones', editingPost.id), {
+        descripcion: editPostContent.trim(),
+        titulo: editPostContent.split('\n')[0].substring(0, 60)
+      });
+      
+      setShowEditPost(false);
+      setEditingPost(null);
+      setEditPostContent('');
+      await fetchUserPublicaciones();
+      showToast('Publicación actualizada exitosamente', 'success');
+    } catch (error) {
+      console.error('Error actualizando publicación:', error);
+      showToast('Error al actualizar la publicación', 'error');
+    }
+  };
+
+  const handleDeletePost = async (postId) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) return;
+    
+    try {
+      await updateDoc(doc(db, 'publicaciones', postId), {
+        deleted: true
+      });
+      await fetchUserPublicaciones();
+      await fetchStats();
+      showToast('Publicación eliminada exitosamente', 'success');
+    } catch (error) {
+      console.error('Error eliminando publicación:', error);
+      showToast('Error al eliminar la publicación', 'error');
+    }
+  };
+
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+    if (!postContent.trim()) {
+      setPostStatus('Por favor escribe algo');
       return;
     }
-
+    
     setPostLoading(true);
-    setPostStatus('Publicando...');
-
+    setPostStatus('');
+    
     try {
       let imageUrl = '';
       if (postImage) {
@@ -183,13 +269,13 @@ const Profile = () => {
       }
 
       const newPost = {
-        contenido: postContent.trim(),
-        imagen: imageUrl,
+        titulo: postContent.split('\n')[0].substring(0, 60),
+        descripcion: postContent,
         autorUid: user.uid,
-        autorNombre: initialValues?.nombre || 'Usuario',
-        autorFoto: initialValues?.fotoPerfil || '',
+        autorNombre: initialValues?.nombre || user.displayName || user.email,
         createdAt: serverTimestamp(),
-        likes: [],
+        imagenesUrl: imageUrl ? [imageUrl] : [],
+        tipo: 'otro',
         comentarios: 0
       };
 
@@ -202,8 +288,9 @@ const Profile = () => {
       setShowCreatePost(false);
       setPostStatus('');
       
-      // Recargar estadísticas
-      fetchStats();
+      // Recargar
+      await fetchStats();
+      await fetchUserPublicaciones();
       
       showToast('¡Publicación creada exitosamente!', 'success');
     } catch (err) {
@@ -418,14 +505,16 @@ const Profile = () => {
               <Select
                 isMulti
                 value={(editDraft.instrumentos || []).map(i => {
-                  // Si i ya es un objeto, retornarlo; si es string, convertirlo
+                  // Si i ya es un objeto, retornarlo; si es string, buscar en opciones
                   if (typeof i === 'object' && i.value && i.label) {
                     return i;
                   }
-                  return { value: i, label: i };
+                  // Buscar el instrumento en las opciones
+                  const found = instrumentos.find(inst => inst.value === i || inst.label === i);
+                  return found || { value: i, label: i };
                 })}
                 onChange={(selected) => setEditDraft({ ...editDraft, instrumentos: (selected || []).map(s => s.value) })}
-                options={instrumentos.map(i => ({ value: i, label: i }))}
+                options={instrumentos}
                 placeholder="Selecciona instrumentos..."
               />
             </Form.Group>
@@ -857,6 +946,17 @@ const Profile = () => {
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             )}
+            {/* Degradado inferior para integración suave */}
+            <div style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '120px',
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 40%, rgba(255,255,255,0.8) 80%, rgba(255,255,255,1) 100%)',
+              pointerEvents: 'none',
+              zIndex: 1
+            }} />
             <input
               type="file"
               id="input-portada"
@@ -1449,6 +1549,18 @@ const Profile = () => {
           </div>
         </Container>
       )}
+
+      {/* Modal de edición de imágenes */}
+      <ImageCropModal
+        show={showCropModal}
+        onHide={() => setShowCropModal(false)}
+        imageFile={cropImageFile}
+        onCropComplete={handleCropComplete}
+        aspectRatio={cropImageType === 'banner' ? 16 / 9 : 1}
+        title={cropImageType === 'banner' ? 'Editar Banner' : 'Editar Foto de Perfil'}
+      />
+
+      <ToastContainer />
     </>
   );
 };

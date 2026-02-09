@@ -132,7 +132,7 @@ const MessengerChat = () => {
         ) : chats.length === 0 ? (
           <div className="text-center my-5" style={{ color: '#a78bfa' }}>
             <div style={{ fontSize: 38 }}>💬</div>
-            <div>No tienes chats activos todavía</div>
+            <div>No tienes mensajes recientes todavía</div>
           </div>
         ) : (
           <ListGroup variant="flush">

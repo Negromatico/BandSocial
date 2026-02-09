@@ -112,8 +112,7 @@ service cloud.firestore {
       // Crear: Usuario autenticado, debe ser el creador
       allow create: if isAuthenticated() 
         && request.resource.data.creadorUid == request.auth.uid
-        && hasRequiredFields(['nombre', 'fecha', 'creadorUid', 'createdAt'])
-        && request.resource.data.fecha is timestamp;
+        && hasRequiredFields(['titulo', 'fecha', 'creadorUid', 'createdAt']);
       
       // Actualizar: Creador puede editar todo, otros solo asistentes
       allow update: if isAuthenticated() 
@@ -248,6 +247,24 @@ service cloud.firestore {
         allow write: if isAuthenticated() 
           && request.resource.data.from == request.auth.uid;
       }
+    }
+    
+    // ============================================
+    // PIANO TILES SCORES (Ranking del juego)
+    // ============================================
+    match /pianoTilesScores/{scoreId} {
+      // Lectura: Pública (para mostrar ranking)
+      allow read: if true;
+      
+      // Crear: Usuario autenticado, debe ser su propia puntuación
+      allow create: if isAuthenticated() 
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'userName', 'score', 'timestamp'])
+        && request.resource.data.score is number
+        && request.resource.data.score >= 0;
+      
+      // Actualizar/Eliminar: No permitido (puntuaciones son inmutables)
+      allow update, delete: if false;
     }
     
     // ============================================

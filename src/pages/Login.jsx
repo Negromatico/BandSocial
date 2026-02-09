@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { sendPasswordResetEmail as sendResetEmailNotification } from '../services/passwordResetService';
 import { useNavigate } from 'react-router-dom';
 import { Button, Form, Alert } from 'react-bootstrap';
@@ -23,8 +23,30 @@ const Login = () => {
   const onSubmit = async (data) => {
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      navigate('/membership');
+      const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      const user = userCredential.user;
+      
+      // Obtener el perfil del usuario para verificar su plan
+      const perfilRef = doc(db, 'perfiles', user.uid);
+      const perfilSnap = await getDoc(perfilRef);
+      
+      if (perfilSnap.exists()) {
+        const perfil = perfilSnap.data();
+        
+        // Verificar si el usuario ya tiene plan premium
+        const esPremium = perfil.planActual === 'premium' || perfil.membershipPlan === 'premium';
+        
+        if (esPremium) {
+          // Si ya es premium, ir directo a publicaciones
+          navigate('/publicaciones');
+        } else {
+          // Si no es premium, mostrar página de membership
+          navigate('/membership');
+        }
+      } else {
+        // Si no existe el perfil, ir a membership para configurarlo
+        navigate('/membership');
+      }
     } catch (err) {
       setError('Correo o contraseña incorrectos');
     }

@@ -168,3 +168,31 @@ export const notificarNuevoEvento = async (creadorUid, eventoId, eventoNombre) =
     console.error('Error en notificarNuevoEvento:', error);
   }
 };
+
+/**
+ * Crear notificación cuando alguien te envía un mensaje
+ */
+export const notificarNuevoMensaje = async (remitenteUid, destinatarioUid, mensajeTexto) => {
+  try {
+    const remitenteSnap = await getDoc(doc(db, 'perfiles', remitenteUid));
+    const remitenteNombre = remitenteSnap.exists() 
+      ? (remitenteSnap.data().nombre || 'Alguien')
+      : 'Alguien';
+
+    const mensajePreview = mensajeTexto.length > 50 
+      ? mensajeTexto.substring(0, 50) + '...' 
+      : mensajeTexto;
+
+    const mensaje = `${remitenteNombre} te envió un mensaje: "${mensajePreview}"`;
+    
+    return await crearNotificacion(
+      destinatarioUid,
+      'mensaje',
+      mensaje,
+      remitenteUid
+    );
+  } catch (error) {
+    console.error('Error en notificarNuevoMensaje:', error);
+    return null;
+  }
+};

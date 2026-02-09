@@ -38,12 +38,21 @@ const MisPublicaciones = () => {
     try {
       const q = query(
         collection(db, 'publicaciones'),
-        where('autorUid', '==', user.uid),
-        orderBy('createdAt', 'desc')
+        where('autorUid', '==', user.uid)
       );
       
       const snapshot = await getDocs(q);
-      const pubs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      let pubs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Filtrar publicaciones eliminadas
+      pubs = pubs.filter(p => !p.deleted);
+      
+      // Ordenar por fecha en el cliente
+      pubs.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB - dateA;
+      });
       
       setPublicaciones(pubs);
     } catch (err) {

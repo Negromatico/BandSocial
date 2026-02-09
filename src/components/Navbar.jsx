@@ -93,12 +93,21 @@ const AppNavbar = () => {
             <InputGroup>
               <Form.Control
                 type="text"
-                placeholder="Search"
+                placeholder="Buscar usuarios, eventos, productos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="search-input"
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearch(e);
+                  }
+                }}
               />
-              <InputGroup.Text className="search-icon">
+              <InputGroup.Text 
+                className="search-icon" 
+                onClick={handleSearch}
+                style={{ cursor: 'pointer' }}
+              >
                 <FaSearch />
               </InputGroup.Text>
             </InputGroup>

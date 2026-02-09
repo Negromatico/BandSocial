@@ -1,15 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import { FaCheck, FaTimes, FaCrown, FaMusic } from 'react-icons/fa';
 import { auth, db } from '../services/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import './Membership.css';
 
 const Membership = () => {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentPlan, setCurrentPlan] = useState(null);
+
+  // Cargar el plan actual del usuario
+  useEffect(() => {
+    const loadCurrentPlan = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          const perfilRef = doc(db, 'perfiles', user.uid);
+          const perfilSnap = await getDoc(perfilRef);
+          if (perfilSnap.exists()) {
+            const perfil = perfilSnap.data();
+            const plan = perfil.planActual || perfil.membershipPlan || null;
+            setCurrentPlan(plan);
+          }
+        } catch (error) {
+          console.error('Error al cargar plan actual:', error);
+        }
+      }
+    };
+    
+    loadCurrentPlan();
+  }, []);
 
   const plans = [
     {
@@ -102,9 +125,14 @@ const Membership = () => {
               key={plan.id}
               className={`plan-card ${selectedPlan === plan.id ? 'selected' : ''} ${
                 plan.id === 'premium' ? 'premium-card' : ''
-              }`}
+              } ${currentPlan === plan.id ? 'current-plan' : ''}`}
             >
-              {plan.badge && (
+              {currentPlan === plan.id && (
+                <div className="plan-badge" style={{ background: '#28a745' }}>
+                  <span>Tu Plan Actual</span>
+                </div>
+              )}
+              {plan.badge && currentPlan !== plan.id && (
                 <div className="plan-badge">
                   <span>{plan.badge}</span>
                 </div>
@@ -146,16 +174,27 @@ const Membership = () => {
               <Button
                 className={`plan-button ${plan.buttonClass}`}
                 onClick={() => handleSelectPlan(plan.id)}
-                disabled={loading}
+                disabled={loading || currentPlan === plan.id}
               >
-                {loading && selectedPlan === plan.id ? 'Procesando...' : plan.buttonText}
+                {currentPlan === plan.id 
+                  ? 'Plan Actual' 
+                  : loading && selectedPlan === plan.id 
+                    ? 'Procesando...' 
+                    : plan.buttonText}
               </Button>
             </div>
           ))}
         </div>
 
         <div className="membership-footer">
-          <p>Puedes cambiar tu plan en cualquier momento desde tu perfil</p>
+          <Button
+            className="btn-continue-free"
+            onClick={() => navigate('/publicaciones')}
+            variant="outline-light"
+          >
+            Continuar sin seleccionar plan
+          </Button>
+          <p className="mt-3">Puedes cambiar tu plan en cualquier momento desde tu perfil</p>
         </div>
       </div>
     </div>

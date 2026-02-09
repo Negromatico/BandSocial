@@ -28,57 +28,66 @@ const Buscar = () => {
     const searchTerm = query.toLowerCase().trim();
 
     try {
+      // Realizar todas las búsquedas en paralelo para mejor rendimiento
+      const [usuariosSnap, publicacionesSnap, eventosSnap, productosSnap] = await Promise.all([
+        getDocs(collection(db, 'perfiles')),
+        getDocs(query(collection(db, 'publicaciones'), orderBy('createdAt', 'desc'), limit(50))),
+        getDocs(query(collection(db, 'eventos'), orderBy('createdAt', 'desc'), limit(50))),
+        getDocs(query(collection(db, 'productos'), orderBy('createdAt', 'desc'), limit(50)))
+      ]);
+
       // Buscar usuarios
-      const usuariosRef = collection(db, 'perfiles');
-      const usuariosSnap = await getDocs(usuariosRef);
       const usuarios = usuariosSnap.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(user => 
           user.nombre?.toLowerCase().includes(searchTerm) ||
           user.email?.toLowerCase().includes(searchTerm) ||
-          user.ciudad?.toLowerCase().includes(searchTerm)
+          user.ciudad?.toLowerCase().includes(searchTerm) ||
+          user.generos?.some(g => g.toLowerCase().includes(searchTerm)) ||
+          user.instrumentos?.some(i => i.toLowerCase().includes(searchTerm))
         )
-        .slice(0, 10);
+        .slice(0, 15);
 
       // Buscar publicaciones
-      const publicacionesRef = collection(db, 'publicaciones');
-      const publicacionesSnap = await getDocs(query(publicacionesRef, orderBy('createdAt', 'desc'), limit(20)));
       const publicaciones = publicacionesSnap.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(pub => 
           pub.titulo?.toLowerCase().includes(searchTerm) ||
           pub.descripcion?.toLowerCase().includes(searchTerm) ||
-          pub.tipo?.toLowerCase().includes(searchTerm)
+          pub.tipo?.toLowerCase().includes(searchTerm) ||
+          pub.ciudad?.toLowerCase().includes(searchTerm)
         )
-        .slice(0, 10);
+        .slice(0, 15);
 
       // Buscar eventos
-      const eventosRef = collection(db, 'eventos');
-      const eventosSnap = await getDocs(query(eventosRef, orderBy('fecha', 'desc'), limit(20)));
       const eventos = eventosSnap.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(evento => 
           evento.titulo?.toLowerCase().includes(searchTerm) ||
           evento.lugar?.toLowerCase().includes(searchTerm) ||
-          evento.tipo?.toLowerCase().includes(searchTerm)
+          evento.tipo?.toLowerCase().includes(searchTerm) ||
+          evento.ciudad?.toLowerCase().includes(searchTerm) ||
+          evento.generos?.some(g => g.toLowerCase().includes(searchTerm))
         )
-        .slice(0, 10);
+        .slice(0, 15);
 
       // Buscar productos
-      const productosRef = collection(db, 'productos');
-      const productosSnap = await getDocs(query(productosRef, orderBy('createdAt', 'desc'), limit(20)));
       const productos = productosSnap.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(prod => 
           prod.nombre?.toLowerCase().includes(searchTerm) ||
           prod.descripcion?.toLowerCase().includes(searchTerm) ||
-          prod.categoria?.toLowerCase().includes(searchTerm)
+          prod.categoria?.toLowerCase().includes(searchTerm) ||
+          prod.ubicacion?.toLowerCase().includes(searchTerm) ||
+          prod.estado?.toLowerCase().includes(searchTerm)
         )
-        .slice(0, 10);
+        .slice(0, 15);
 
       setResults({ usuarios, publicaciones, eventos, productos });
     } catch (error) {
       console.error('Error en búsqueda:', error);
+      // Mostrar resultados vacíos en caso de error
+      setResults({ usuarios: [], publicaciones: [], eventos: [], productos: [] });
     } finally {
       setLoading(false);
     }

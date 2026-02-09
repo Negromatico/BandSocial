@@ -4,6 +4,7 @@ import { BsChatDotsFill } from 'react-icons/bs';
 import { db, auth } from '../services/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import ChatWindow from './ChatWindow';
+import { useChatDock } from '../contexts/ChatDockContext';
 
 function getChatId(uid1, uid2) {
   return [uid1, uid2].sort().join('_');
@@ -14,6 +15,7 @@ const ChatDock = () => {
   const [openChats, setOpenChats] = useState([]); // [{user, minimized}]
   const [recentChats, setRecentChats] = useState([]); // [{chatId, with, withEmail, withNombre, ...}]
   const [user, setUser] = useState(null);
+  const { chatToOpen, setChatToOpen } = useChatDock();
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => setUser(u));
@@ -32,6 +34,14 @@ const ChatDock = () => {
     });
     return unsub;
   }, [user]);
+
+  // Efecto para abrir chat desde contexto
+  useEffect(() => {
+    if (chatToOpen) {
+      handleOpenChat(chatToOpen);
+      setChatToOpen(null);
+    }
+  }, [chatToOpen]);
 
   // Abrir chat (si ya está abierto, lo maximiza)
   const handleOpenChat = (chat) => {
@@ -52,13 +62,13 @@ const ChatDock = () => {
     });
     setOpen(false);
   };
-  // Minimizar
-  const handleMinimize = (uid) => setOpenChats(chats => chats.map(c => c.user.uid === uid ? { ...c, minimized: true } : c));
+  // Minimizar/Maximizar (alternar)
+  const handleMinimize = (uid) => setOpenChats(chats => chats.map(c => c.user.uid === uid ? { ...c, minimized: !c.minimized } : c));
   // Cerrar
   const handleClose = (uid) => setOpenChats(chats => chats.filter(c => c.user.uid !== uid));
 
   return (
-    <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 2000, display: 'flex', flexDirection: 'row', alignItems: 'flex-end' }}>
+    <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 2000, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
       {/* Ventanas de chat abiertas, apiladas horizontalmente */}
       {openChats.map(({ user, minimized }) => (
         <ChatWindow
@@ -67,36 +77,165 @@ const ChatDock = () => {
           minimized={minimized}
           onMinimize={() => handleMinimize(user.uid)}
           onClose={() => handleClose(user.uid)}
-          style={{ marginRight: 12 }}
+          style={{ marginRight: 0 }}
         />
       ))}
       {/* Dock flotante */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
         {/* Botón flotante */}
         <Button
-          variant="primary"
-          style={{ borderRadius: '50%', width: 56, height: 56, boxShadow: '0 2px 8px #0002', display: open ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, marginBottom: 8 }}
+          style={{ 
+            borderRadius: '50%', 
+            width: 64, 
+            height: 64, 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: 'none',
+            boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)', 
+            display: open ? 'none' : 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontSize: 30, 
+            marginBottom: 10,
+            transition: 'all 0.3s ease',
+            cursor: 'pointer'
+          }}
           onClick={() => setOpen(true)}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.boxShadow = '0 6px 25px rgba(102, 126, 234, 0.6)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.4)';
+          }}
         >
           <BsChatDotsFill />
         </Button>
         {/* Ventana dock lista de chats */}
         {open && (
-          <div style={{ width: 340, background: '#18181b', color: '#fff', borderRadius: 18, boxShadow: '0 4px 32px #0004', overflow: 'hidden', marginBottom: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#27272a', padding: '12px 18px' }}>
-              <span style={{ fontWeight: 600, fontSize: 18 }}>Mensajes</span>
-              <Button variant="link" style={{ color: '#fff', fontSize: 22, padding: 0 }} onClick={() => setOpen(false)}>&times;</Button>
+          <div style={{ 
+            width: 420, 
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%)',
+            backdropFilter: 'blur(10px)',
+            color: '#1f2937', 
+            borderRadius: 20, 
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(102, 126, 234, 0.1)', 
+            overflow: 'hidden', 
+            marginBottom: 10,
+            border: '1px solid rgba(102, 126, 234, 0.2)'
+          }}>
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+              padding: '16px 20px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <BsChatDotsFill style={{ fontSize: 20, color: '#fff' }} />
+                <span style={{ fontWeight: 700, fontSize: 19, color: '#fff', letterSpacing: '0.3px' }}>Mensajes Recientes</span>
+              </div>
+              <Button 
+                variant="link" 
+                style={{ 
+                  color: '#fff', 
+                  fontSize: 28, 
+                  padding: 0,
+                  opacity: 0.9,
+                  transition: 'opacity 0.2s',
+                  lineHeight: 1,
+                  textDecoration: 'none'
+                }} 
+                onClick={() => setOpen(false)}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
+              >
+                ×
+              </Button>
             </div>
-            <div style={{ minHeight: 200, maxHeight: 400, overflowY: 'auto', background: '#222', padding: 10 }}>
+            <div style={{ 
+              minHeight: 250, 
+              maxHeight: 500, 
+              overflowY: 'auto', 
+              background: 'transparent', 
+              padding: 12 
+            }}>
               {recentChats.length > 0 ? recentChats.map(chat => (
-                <div key={chat.chatId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 8px', borderRadius: 10, cursor: 'pointer', transition: 'background .2s', marginBottom: 4, background: '#232323' }} onClick={() => handleOpenChat(chat)}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: 18 }}>
-                    {chat.avatar ? <img src={chat.avatar} alt="avatar" style={{ width: 36, height: 36, borderRadius: '50%' }} /> : (chat.withNombre?.[0] || chat.withEmail?.[0] || '?')}
+                <div 
+                  key={chat.chatId} 
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 14, 
+                    padding: '14px 12px', 
+                    borderRadius: 12, 
+                    cursor: 'pointer', 
+                    transition: 'all 0.2s ease', 
+                    marginBottom: 6, 
+                    background: 'rgba(255, 255, 255, 0.7)',
+                    border: '1px solid rgba(102, 126, 234, 0.1)',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
+                  }} 
+                  onClick={() => handleOpenChat(chat)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(102, 126, 234, 0.1)';
+                    e.currentTarget.style.transform = 'translateX(-4px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.7)';
+                    e.currentTarget.style.transform = 'translateX(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.05)';
+                  }}
+                >
+                  <div style={{ 
+                    width: 48, 
+                    height: 48, 
+                    borderRadius: '50%', 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontWeight: 700, 
+                    fontSize: 20,
+                    color: '#fff',
+                    flexShrink: 0,
+                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.3)'
+                  }}>
+                    {chat.avatar ? (
+                      <img src={chat.avatar} alt="avatar" style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      (chat.withNombre?.[0] || chat.withEmail?.[0] || '?').toUpperCase()
+                    )}
                   </div>
-                  <span style={{ fontWeight: 600 }}>{chat.withNombre || chat.withEmail}</span>
-                  <span style={{ color: '#bbb', fontSize: 13, marginLeft: 'auto' }}>{chat.lastMsg ? chat.lastMsg.slice(0, 25) : ''}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: '#1f2937', marginBottom: 4 }}>
+                      {chat.withNombre || chat.withEmail}
+                    </div>
+                    <div style={{ 
+                      color: '#6b7280', 
+                      fontSize: 13, 
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {chat.lastMsg ? chat.lastMsg.slice(0, 35) + (chat.lastMsg.length > 35 ? '...' : '') : 'Inicia una conversación'}
+                    </div>
+                  </div>
                 </div>
-              )) : <div style={{ color: '#bbb', textAlign: 'center', marginTop: 40 }}>No hay conversaciones recientes.</div>}
+              )) : (
+                <div style={{ 
+                  color: '#9ca3af', 
+                  textAlign: 'center', 
+                  marginTop: 60,
+                  marginBottom: 60,
+                  fontSize: 15
+                }}>
+                  <div style={{ fontSize: 48, marginBottom: 12, opacity: 0.5 }}>💬</div>
+                  <div>No hay conversaciones recientes</div>
+                </div>
+              )}
             </div>
           </div>
         )}
