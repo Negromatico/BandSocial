@@ -79,6 +79,11 @@
   z-index: 1;
 }
 
+[data-theme="dark"] .payment-card {
+  background: rgba(36, 37, 38, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
 .back-button {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.3);
@@ -199,6 +204,11 @@
   width: 100%;
 }
 
+[data-theme="dark"] .input-with-icon {
+  background: rgba(58, 59, 60, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
 .payment-input {
   height: 42px;
   border-radius: 8px;
@@ -209,6 +219,11 @@
   transition: all 0.3s ease;
   padding: 0 12px;
   width: 100%;
+}
+
+[data-theme="dark"] .payment-input {
+  background: rgba(58, 59, 60, 0.4);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .input-with-icon::placeholder,

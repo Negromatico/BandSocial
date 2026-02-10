@@ -386,7 +386,7 @@ const EventosNuevo = () => {
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            background: '#10b981',
+            background: 'var(--success-color)',
             color: 'white',
             display: 'flex',
             alignItems: 'center',
@@ -398,7 +398,7 @@ const EventosNuevo = () => {
           </div>
           <div style={{
             flex: 1,
-            color: '#065f46',
+            color: 'var(--success-color)',
             fontWeight: '600',
             fontSize: '16px'
           }}>
@@ -409,7 +409,7 @@ const EventosNuevo = () => {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#065f46',
+              color: 'var(--success-color)',
               fontSize: '24px',
               cursor: 'pointer',
               padding: '0 4px',
@@ -593,7 +593,7 @@ const EventosNuevo = () => {
                     {user && ev.creadorUid === user.uid ? (
                       <button
                         className="asistir-btn"
-                        style={{ background: '#dc3545' }}
+                        style={{ background: 'var(--danger-color)' }}
                         onClick={() => handleEliminarEvento(ev.id)}
                       >
                         Eliminar
@@ -671,7 +671,7 @@ const EventosNuevo = () => {
                     width: '24px',
                     height: '24px',
                     borderRadius: '50%',
-                    background: '#ef4444',
+                    background: 'var(--danger-color)',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',
@@ -683,7 +683,7 @@ const EventosNuevo = () => {
                   </div>
                   <h6 style={{ 
                     margin: 0, 
-                    color: '#991b1b',
+                    color: 'var(--danger-color)',
                     fontWeight: '700',
                     fontSize: '16px'
                   }}>
@@ -693,7 +693,7 @@ const EventosNuevo = () => {
                 <ul style={{ 
                   margin: 0, 
                   paddingLeft: '20px',
-                  color: '#7f1d1d',
+                  color: 'var(--text-secondary)',
                   fontSize: '14px',
                   fontWeight: '500'
                 }}>
@@ -920,7 +920,7 @@ const EventosNuevo = () => {
                 style={{ 
                   maxHeight: '200px', 
                   overflowY: 'auto',
-                  backgroundColor: '#fff'
+                  backgroundColor: 'var(--card-bg)'
                 }}
               >
                 <div className="row g-3">

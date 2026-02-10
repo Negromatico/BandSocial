@@ -114,6 +114,11 @@
   flex-direction: column;
 }
 
+[data-theme="dark"] .plan-card {
+  background: rgba(36, 37, 38, 0.3);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
 .plan-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
@@ -123,6 +128,10 @@
 .premium-card {
   border-color: #ffd700;
   background: rgba(255, 215, 0, 0.05);
+}
+
+[data-theme="dark"] .premium-card {
+  background: rgba(255, 215, 0, 0.08);
 }
 
 .premium-card:hover {

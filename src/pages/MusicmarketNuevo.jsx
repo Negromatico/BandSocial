@@ -667,7 +667,7 @@ const MusicmarketNuevo = () => {
                             position: 'absolute',
                             bottom: '5px',
                             left: '5px',
-                            background: '#0d6efd',
+                            background: 'var(--button-primary)',
                             color: 'white',
                             padding: '2px 6px',
                             borderRadius: '4px',
@@ -685,7 +685,7 @@ const MusicmarketNuevo = () => {
                           position: 'absolute',
                           top: '5px',
                           right: '5px',
-                          background: '#dc3545',
+                          background: 'var(--danger-color)',
                           color: 'white',
                           border: 'none',
                           borderRadius: '50%',
@@ -722,7 +722,7 @@ const MusicmarketNuevo = () => {
 
       {/* Modal de valoración */}
       <Modal show={showRatingModal} onHide={() => setShowRatingModal(false)} centered>
-        <Modal.Header closeButton style={{ background: '#f0f2f5', borderBottom: '1px solid #e4e6eb' }}>
+        <Modal.Header closeButton style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-color)' }}>
           <Modal.Title style={{ fontSize: 20, fontWeight: 700 }}>
             Valorar Producto
           </Modal.Title>
@@ -750,7 +750,7 @@ const MusicmarketNuevo = () => {
                 </div>
                 
                 {userRating > 0 && (
-                  <p style={{ fontSize: 14, color: '#6366f1', fontWeight: 600 }}>
+                  <p style={{ fontSize: 14, color: 'var(--button-primary)', fontWeight: 600 }}>
                     {userRating === 1 && 'Muy malo'}
                     {userRating === 2 && 'Malo'}
                     {userRating === 3 && 'Regular'}
@@ -790,7 +790,7 @@ const MusicmarketNuevo = () => {
                     borderRadius: '8px', 
                     padding: '10px 24px', 
                     fontWeight: 600,
-                    background: '#6366f1',
+                    background: 'var(--button-primary)',
                     border: 'none'
                   }}
                 >
@@ -829,7 +829,7 @@ const MusicmarketNuevo = () => {
                         style={{ 
                           maxHeight: '500px', 
                           objectFit: 'contain',
-                          backgroundColor: '#f8f9fa',
+                          backgroundColor: 'var(--bg-secondary)',
                           borderRadius: '8px'
                         }}
                       />
@@ -844,7 +844,7 @@ const MusicmarketNuevo = () => {
                   style={{ 
                     maxHeight: '500px', 
                     objectFit: 'contain',
-                    backgroundColor: '#f8f9fa',
+                    backgroundColor: 'var(--bg-secondary)',
                     borderRadius: '8px'
                   }}
                 />
@@ -854,7 +854,7 @@ const MusicmarketNuevo = () => {
               <div className="product-details">
                 <div className="mb-3">
                   <h5 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Precio</h5>
-                  <h3 style={{ color: '#6366f1', fontWeight: 700 }}>
+                  <h3 style={{ color: 'var(--button-primary)', fontWeight: 700 }}>
                     ${selectedProductDetails.precio?.toLocaleString('es-CO')} COP
                   </h3>
                 </div>
