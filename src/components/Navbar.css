@@ -92,6 +92,10 @@
   color: var(--text-primary);
 }
 
+.search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
 .search-input:focus {
   border-color: var(--button-primary);
   box-shadow: none;
