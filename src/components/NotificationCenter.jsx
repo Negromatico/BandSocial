@@ -72,13 +72,29 @@ const NotificationCenter = () => {
         break;
       case 'like':
       case 'comentario':
+        // Si tiene referenciaId (ID de la publicación), navegar a publicaciones con scroll
+        if (notification.referenciaId) {
+          navigate('/publicaciones', { state: { scrollToPublicacion: notification.referenciaId } });
+        } else {
+          navigate('/publicaciones');
+        }
+        break;
+      case 'nueva_publicacion':
         navigate('/publicaciones');
         break;
       case 'producto':
-        navigate('/musicmarket');
+        if (notification.referenciaId) {
+          navigate('/musicmarket', { state: { scrollToProducto: notification.referenciaId } });
+        } else {
+          navigate('/musicmarket');
+        }
         break;
       case 'evento':
-        navigate('/eventos');
+        if (notification.referenciaId) {
+          navigate('/eventos', { state: { scrollToEvento: notification.referenciaId } });
+        } else {
+          navigate('/eventos');
+        }
         break;
       case 'mensaje':
         // Abrir chat flotante con el remitente
@@ -102,6 +118,8 @@ const NotificationCenter = () => {
         return <FaHeart className="notif-icon" style={{ color: '#ef4444' }} />;
       case 'comentario':
         return <FaComment className="notif-icon" style={{ color: '#10b981' }} />;
+      case 'nueva_publicacion':
+        return <FaBell className="notif-icon" style={{ color: '#3b82f6' }} />;
       case 'producto':
         return <FaMusic className="notif-icon" style={{ color: '#f59e0b' }} />;
       case 'evento':

@@ -1,12 +1,13 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Navbar, Nav, Container, Form, InputGroup, NavDropdown } from 'react-bootstrap';
+import { Navbar, Nav, Container, Form, InputGroup, NavDropdown, Button } from 'react-bootstrap';
 import NotificationCenter from './NotificationCenter';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../services/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { GuestContext } from '../App';
 import useUnreadChats from '../hooks/useUnreadChats';
-import { FaSearch, FaUserCircle } from 'react-icons/fa';
+import { useTheme } from '../contexts/ThemeContext';
+import { FaSearch, FaUserCircle, FaMoon, FaSun } from 'react-icons/fa';
 import logo from '../assets/logo.png';
 import './Navbar.css';
 
@@ -17,6 +18,7 @@ const AppNavbar = () => {
   const guestContext = useContext(GuestContext);
   const isGuest = guestContext && guestContext.isGuest;
   const unreadCount = useUnreadChats();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -57,9 +59,10 @@ const AppNavbar = () => {
   };
 
   const handleSearch = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/buscar?q=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery(''); // Limpiar después de buscar
     }
   };
 
@@ -115,6 +118,28 @@ const AppNavbar = () => {
 
           {/* Right Side Actions */}
           <div className="navbar-actions d-flex align-items-center gap-3">
+            {/* Theme Toggle Button */}
+            <Button
+              variant="light"
+              onClick={toggleTheme}
+              className="theme-toggle-btn"
+              style={{
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: 'none',
+                backgroundColor: 'var(--button-secondary)',
+                color: 'var(--text-primary)'
+              }}
+              title={theme === 'light' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
+            >
+              {theme === 'light' ? <FaMoon size={18} /> : <FaSun size={18} />}
+            </Button>
+            
             {user && !isGuest && (
               <>
                 <NotificationCenter />
@@ -135,16 +160,8 @@ const AppNavbar = () => {
                   <NavDropdown.Item as={Link} to="/profile">Mi Perfil</NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/mis-publicaciones">Mis Publicaciones</NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/followers">Seguidores y Siguiendo</NavDropdown.Item>
-                  {!isGuest && (
-                    <NavDropdown.Item as={Link} to="/chat">
-                      Chat {unreadCount > 0 && <span className="badge bg-danger ms-2">{unreadCount}</span>}
-                    </NavDropdown.Item>
-                  )}
                   <NavDropdown.Divider />
                   <NavDropdown.Item onClick={handleLogout}>Cerrar sesión</NavDropdown.Item>
-                  <NavDropdown.Item onClick={handleDeleteAccount} className="text-danger">
-                    Borrar cuenta
-                  </NavDropdown.Item>
                 </NavDropdown>
               </>
             )}

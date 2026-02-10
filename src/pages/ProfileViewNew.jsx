@@ -85,13 +85,24 @@ const ProfileViewNew = () => {
 
         // Obtener publicaciones
         try {
-          const pubQuery = query(collection(db, 'publicaciones'), where('autorUid', '==', uid), orderBy('createdAt', 'desc'));
+          const pubQuery = query(collection(db, 'publicaciones'), where('autorUid', '==', uid));
           const pubSnap = await getDocs(pubQuery);
-          setPublicaciones(pubSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-          setStats(prev => ({ ...prev, publicaciones: pubSnap.size }));
+          let pubs = pubSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          
+          // Filtrar publicaciones eliminadas
+          pubs = pubs.filter(p => !p.deleted);
+          
+          // Ordenar por fecha en el cliente
+          pubs.sort((a, b) => {
+            const dateA = a.createdAt?.toDate?.() || new Date(0);
+            const dateB = b.createdAt?.toDate?.() || new Date(0);
+            return dateB - dateA;
+          });
+          
+          setPublicaciones(pubs);
+          setStats(prev => ({ ...prev, publicaciones: pubs.length }));
         } catch (error) {
-          console.error('⚠️ Error cargando publicaciones (probablemente falta índice):', error.message);
-          console.log('💡 Crea el índice en Firebase Console o revisa CREAR_INDICE_FIRESTORE.md');
+          console.error('Error cargando publicaciones:', error);
         }
 
         // Obtener eventos
@@ -160,8 +171,8 @@ const ProfileViewNew = () => {
     <div className="profile-view-new">
       {/* Banner de Portada */}
       <div className="profile-banner">
-        {perfil.bannerUrl ? (
-          <img src={perfil.bannerUrl} alt="Banner" />
+        {perfil.fotoPortada ? (
+          <img src={perfil.fotoPortada} alt="Banner" />
         ) : (
           <div className="default-banner" />
         )}

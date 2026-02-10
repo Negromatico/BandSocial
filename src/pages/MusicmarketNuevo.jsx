@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Badge, Modal, Carousel } from 'react-bootstrap';
-import { FaStar, FaMapMarkerAlt, FaFilter, FaPlus } from 'react-icons/fa';
+import { FaStar, FaMapMarkerAlt, FaFilter, FaPlus, FaComments } from 'react-icons/fa';
 import { db, auth } from '../services/firebase';
 import { collection, getDocs, addDoc, query, orderBy, doc, getDoc, Timestamp, where, updateDoc } from 'firebase/firestore';
 import { uploadToCloudinary } from '../services/cloudinary';
 import UpgradePremiumModal from '../components/UpgradePremiumModal';
 import { useToast } from '../components/Toast';
 import { esPremium } from '../utils/premiumCheck';
+import { useChatDock } from '../contexts/ChatDockContext';
 import Select from 'react-select';
 import './Musicmarket.css';
 
@@ -43,10 +44,15 @@ const MusicmarketNuevo = () => {
   const [comentarioResena, setComentarioResena] = useState('');
   const [submittingRating, setSubmittingRating] = useState(false);
   
+  // Estado para modal de detalles del producto
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedProductDetails, setSelectedProductDetails] = useState(null);
+  
   // API de ciudades
   const [ciudadesOptions, setCiudadesOptions] = useState([]);
   
   const { showToast, ToastContainer } = useToast();
+  const { openChat } = useChatDock();
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => setUser(u));
@@ -237,16 +243,25 @@ const MusicmarketNuevo = () => {
     ));
   };
 
+  const handleOpenDetailsModal = (producto) => {
+    setSelectedProductDetails(producto);
+    setShowDetailsModal(true);
+  };
+
   const handleOpenRatingModal = (producto) => {
+    console.log('handleOpenRatingModal llamado', { producto, user });
     if (!user) {
+      console.log('Usuario no autenticado');
       showToast('Debes iniciar sesión para valorar productos', 'warning');
       return;
     }
+    console.log('Abriendo modal de valoración para:', producto.nombre);
     setSelectedProduct(producto);
     setUserRating(0);
     setHoverRating(0);
     setComentarioResena('');
     setShowRatingModal(true);
+    console.log('Modal de valoración abierto');
   };
 
   const handleSubmitRating = async () => {
@@ -431,7 +446,11 @@ const MusicmarketNuevo = () => {
           {instrumentosOrdenados.map(instrumento => (
             <Col key={instrumento.id} xs={12} sm={6} md={4} lg={3} className="mb-4">
               <Card className="instrument-card h-100">
-                <div className="instrument-image-container">
+                <div 
+                  className="instrument-image-container" 
+                  onClick={() => handleOpenDetailsModal(instrumento)}
+                  style={{ cursor: 'pointer' }}
+                >
                   {instrumento.imagenes && instrumento.imagenes.length > 1 ? (
                     <Carousel interval={null} indicators={true} controls={true}>
                       {instrumento.imagenes.map((img, idx) => (
@@ -455,7 +474,13 @@ const MusicmarketNuevo = () => {
                   <Badge bg="success" className="estado-badge">{instrumento.estado}</Badge>
                 </div>
                 <Card.Body>
-                  <Card.Title className="instrument-title">{instrumento.nombre}</Card.Title>
+                  <Card.Title 
+                    className="instrument-title" 
+                    onClick={() => handleOpenDetailsModal(instrumento)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {instrumento.nombre}
+                  </Card.Title>
                   <Card.Text className="instrument-description text-muted">
                     {instrumento.descripcion}
                   </Card.Text>
@@ -483,6 +508,27 @@ const MusicmarketNuevo = () => {
                     <small className="text-muted d-block mt-2">
                       Vendedor: {instrumento.vendedorNombre}
                     </small>
+                  )}
+                  {/* Botón para contactar vendedor */}
+                  {user && instrumento.vendedorUid && instrumento.vendedorUid !== user.uid && (
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      className="w-100 mt-2"
+                      onClick={() => {
+                        const chatId = [user.uid, instrumento.vendedorUid].sort().join('_');
+                        openChat({
+                          with: instrumento.vendedorUid,
+                          withEmail: instrumento.vendedorEmail || instrumento.vendedorNombre || 'Vendedor',
+                          withNombre: instrumento.vendedorNombre || 'Vendedor',
+                          chatId: chatId,
+                          avatar: instrumento.vendedorFoto || ''
+                        });
+                      }}
+                    >
+                      <FaComments className="me-1" />
+                      Contactar vendedor
+                    </Button>
                   )}
                 </Card.Body>
               </Card>
@@ -750,6 +796,160 @@ const MusicmarketNuevo = () => {
                 >
                   {submittingRating ? 'Enviando...' : 'Enviar Valoración'}
                 </Button>
+              </div>
+            </>
+          )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Modal de detalles del producto */}
+      <Modal 
+        show={showDetailsModal} 
+        onHide={() => setShowDetailsModal(false)} 
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton style={{ background: 'var(--card-bg)', borderBottom: '1px solid var(--border-color)' }}>
+          <Modal.Title style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>
+            {selectedProductDetails?.nombre}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '24px', background: 'var(--card-bg)', color: 'var(--text-primary)' }}>
+          {selectedProductDetails && (
+            <>
+              {/* Carrusel de imágenes en tamaño real */}
+              {selectedProductDetails.imagenes && selectedProductDetails.imagenes.length > 0 ? (
+                <Carousel interval={null} indicators={true} controls={true} className="mb-4">
+                  {selectedProductDetails.imagenes.map((img, idx) => (
+                    <Carousel.Item key={idx}>
+                      <img
+                        className="d-block w-100"
+                        src={img || 'https://via.placeholder.com/800x600?text=Sin+Imagen'}
+                        alt={`${selectedProductDetails.nombre} - ${idx + 1}`}
+                        style={{ 
+                          maxHeight: '500px', 
+                          objectFit: 'contain',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '8px'
+                        }}
+                      />
+                    </Carousel.Item>
+                  ))}
+                </Carousel>
+              ) : (
+                <img
+                  className="d-block w-100 mb-4"
+                  src={selectedProductDetails.imagen || 'https://via.placeholder.com/800x600?text=Sin+Imagen'}
+                  alt={selectedProductDetails.nombre}
+                  style={{ 
+                    maxHeight: '500px', 
+                    objectFit: 'contain',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '8px'
+                  }}
+                />
+              )}
+
+              {/* Información del producto */}
+              <div className="product-details">
+                <div className="mb-3">
+                  <h5 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Precio</h5>
+                  <h3 style={{ color: '#6366f1', fontWeight: 700 }}>
+                    ${selectedProductDetails.precio?.toLocaleString('es-CO')} COP
+                  </h3>
+                </div>
+
+                <div className="mb-3">
+                  <h5 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Estado</h5>
+                  <Badge bg="success" style={{ fontSize: 14, padding: '6px 12px' }}>
+                    {selectedProductDetails.estado}
+                  </Badge>
+                </div>
+
+                <div className="mb-3">
+                  <h5 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Descripción</h5>
+                  <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    {selectedProductDetails.descripcion}
+                  </p>
+                </div>
+
+                <div className="mb-3">
+                  <h5 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Ubicación</h5>
+                  <div className="d-flex align-items-center" style={{ color: 'var(--text-secondary)' }}>
+                    <FaMapMarkerAlt className="me-2" />
+                    <span>{selectedProductDetails.ubicacion}</span>
+                  </div>
+                </div>
+
+                {selectedProductDetails.categoria && (
+                  <div className="mb-3">
+                    <h5 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Categoría</h5>
+                    <Badge bg="secondary" style={{ fontSize: 14, padding: '6px 12px' }}>
+                      {selectedProductDetails.categoria}
+                    </Badge>
+                  </div>
+                )}
+
+                <div className="mb-3">
+                  <h5 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Valoración</h5>
+                  <div className="d-flex align-items-center">
+                    {renderStars(selectedProductDetails.rating || 0)}
+                    <span className="ms-2" style={{ color: 'var(--text-secondary)' }}>
+                      ({selectedProductDetails.resenas || 0} valoraciones)
+                    </span>
+                  </div>
+                </div>
+
+                {selectedProductDetails.vendedorNombre && (
+                  <div className="mb-3">
+                    <h5 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>Vendedor</h5>
+                    <p style={{ color: 'var(--text-secondary)' }}>
+                      {selectedProductDetails.vendedorNombre}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Botones de acción */}
+              <div className="d-flex gap-2 mt-4">
+                <Button 
+                  variant="primary"
+                  onClick={() => handleOpenRatingModal(selectedProductDetails)}
+                  style={{ 
+                    borderRadius: '8px', 
+                    padding: '10px 24px', 
+                    fontWeight: 600,
+                    flex: 1
+                  }}
+                >
+                  Valorar Producto
+                </Button>
+                
+                {user && selectedProductDetails.vendedorUid && selectedProductDetails.vendedorUid !== user.uid && (
+                  <Button
+                    variant="outline-primary"
+                    onClick={() => {
+                      const chatId = [user.uid, selectedProductDetails.vendedorUid].sort().join('_');
+                      openChat({
+                        with: selectedProductDetails.vendedorUid,
+                        withEmail: selectedProductDetails.vendedorEmail || selectedProductDetails.vendedorNombre || 'Vendedor',
+                        withNombre: selectedProductDetails.vendedorNombre || 'Vendedor',
+                        chatId: chatId,
+                        avatar: selectedProductDetails.vendedorFoto || ''
+                      });
+                      setShowDetailsModal(false);
+                    }}
+                    style={{ 
+                      borderRadius: '8px', 
+                      padding: '10px 24px', 
+                      fontWeight: 600,
+                      flex: 1
+                    }}
+                  >
+                    <FaComments className="me-1" />
+                    Contactar Vendedor
+                  </Button>
+                )}
               </div>
             </>
           )}

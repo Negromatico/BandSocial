@@ -32,6 +32,10 @@ const Profile = () => {
   const [showEditPost, setShowEditPost] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [editPostContent, setEditPostContent] = useState('');
+  const [userEventos, setUserEventos] = useState([]);
+  const [loadingEventos, setLoadingEventos] = useState(false);
+  const [userProductos, setUserProductos] = useState([]);
+  const [loadingProductos, setLoadingProductos] = useState(false);
   const [showCropModal, setShowCropModal] = useState(false);
   const [cropImageFile, setCropImageFile] = useState(null);
   const [cropImageType, setCropImageType] = useState(''); // 'banner' o 'perfil'
@@ -51,6 +55,8 @@ const Profile = () => {
       fetchProfile();
       fetchStats();
       fetchUserPublicaciones();
+      fetchUserEventos();
+      fetchUserProductos();
     }
   }, [user]);
 
@@ -194,15 +200,26 @@ const Profile = () => {
     try {
       const q = query(
         collection(db, 'publicaciones'),
-        where('autorUid', '==', user.uid),
-        orderBy('createdAt', 'desc')
+        where('autorUid', '==', user.uid)
       );
       const snapshot = await getDocs(q);
-      const pubs = snapshot.docs.map(doc => ({
+      let pubs = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      setUserPublicaciones(pubs.filter(p => !p.deleted));
+      
+      // Filtrar eliminadas
+      pubs = pubs.filter(p => !p.deleted);
+      
+      // Ordenar por fecha en el cliente
+      pubs.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB - dateA;
+      });
+      
+      console.log('Publicaciones cargadas:', pubs.length);
+      setUserPublicaciones(pubs);
     } catch (error) {
       console.error('Error cargando publicaciones:', error);
     } finally {
@@ -249,6 +266,95 @@ const Profile = () => {
     } catch (error) {
       console.error('Error eliminando publicación:', error);
       showToast('Error al eliminar la publicación', 'error');
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('¿Estás seguro de que quieres borrar tu cuenta? Esta acción no se puede deshacer.')) return;
+    try {
+      await auth.currentUser.delete();
+      showToast('Cuenta eliminada exitosamente', 'success');
+      navigate('/login');
+    } catch (error) {
+      console.error('Error al borrar cuenta:', error);
+      showToast('Error al borrar la cuenta. Intenta cerrar sesión y volver a iniciar sesión antes de eliminar tu cuenta.', 'error');
+    }
+  };
+
+  const fetchUserEventos = async () => {
+    if (!user) return;
+    setLoadingEventos(true);
+    try {
+      // Obtener eventos creados por el usuario
+      const qCreados = query(
+        collection(db, 'eventos'),
+        where('creadorUid', '==', user.uid)
+      );
+      const snapshotCreados = await getDocs(qCreados);
+      const eventosCreados = snapshotCreados.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        esCreador: true
+      }));
+
+      // Obtener todos los eventos para filtrar los que el usuario asistirá
+      const qTodos = query(collection(db, 'eventos'));
+      const snapshotTodos = await getDocs(qTodos);
+      const eventosAsistiendo = snapshotTodos.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          esCreador: false
+        }))
+        .filter(evento => 
+          evento.asistentes && 
+          Array.isArray(evento.asistentes) && 
+          evento.asistentes.includes(user.uid) &&
+          evento.creadorUid !== user.uid // Evitar duplicados
+        );
+
+      // Combinar ambos arrays
+      const todosLosEventos = [...eventosCreados, ...eventosAsistiendo];
+
+      // Ordenar por fecha del evento (no por createdAt)
+      todosLosEventos.sort((a, b) => {
+        const dateA = new Date(a.fecha);
+        const dateB = new Date(b.fecha);
+        return dateA - dateB; // Más próximos primero
+      });
+
+      setUserEventos(todosLosEventos);
+    } catch (error) {
+      console.error('Error cargando eventos:', error);
+    } finally {
+      setLoadingEventos(false);
+    }
+  };
+
+  const fetchUserProductos = async () => {
+    if (!user) return;
+    setLoadingProductos(true);
+    try {
+      const q = query(
+        collection(db, 'productos'),
+        where('vendedorUid', '==', user.uid)
+      );
+      const snapshot = await getDocs(q);
+      const productos = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      // Ordenar por fecha
+      productos.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(0);
+        const dateB = b.createdAt?.toDate?.() || new Date(0);
+        return dateB - dateA;
+      });
+      setUserProductos(productos);
+    } catch (error) {
+      console.error('Error cargando productos:', error);
+    } finally {
+      setLoadingProductos(false);
     }
   };
 
@@ -946,17 +1052,6 @@ const Profile = () => {
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             )}
-            {/* Degradado inferior para integración suave */}
-            <div style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: '120px',
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 40%, rgba(255,255,255,0.8) 80%, rgba(255,255,255,1) 100%)',
-              pointerEvents: 'none',
-              zIndex: 1
-            }} />
             <input
               type="file"
               id="input-portada"
@@ -1074,7 +1169,8 @@ const Profile = () => {
                       {initialValues?.type === 'banda' ? 'Banda de Rock Alternativo' : 'Músico Profesional'}
                     </p>
                     <p style={{ fontSize: 13, color: '#65676b', marginBottom: 0 }}>
-                      {typeof initialValues?.ciudad === 'object' ? initialValues?.ciudad?.label : initialValues?.ciudad || 'Los Angeles, CA'} • Miembro desde 2023
+                      {(typeof initialValues?.ciudad === 'object' ? initialValues?.ciudad?.label : initialValues?.ciudad) || 'Ciudad no especificada'}
+                      {initialValues?.createdAt && ` • Miembro desde ${new Date(initialValues.createdAt).getFullYear()}`}
                     </p>
                   </div>
                 </div>
@@ -1096,18 +1192,16 @@ const Profile = () => {
                     Editar Perfil
                   </Button>
                   <Button 
-                    variant="light"
+                    variant="danger"
+                    onClick={handleDeleteAccount}
                     style={{
                       borderRadius: '6px',
-                      padding: '8px 12px',
+                      padding: '8px 16px',
                       fontWeight: 600,
-                      background: '#e4e6eb',
-                      border: 'none',
-                      color: '#050505',
                       fontSize: '15px'
                     }}
                   >
-                    ⋯
+                    Borrar cuenta
                   </Button>
                 </div>
               </div>
@@ -1193,36 +1287,36 @@ const Profile = () => {
                   Acerca de
                 </button>
                 <button 
-                  onClick={() => setActiveTab('galeria')}
+                  onClick={() => setActiveTab('eventos')}
                   style={{ 
                     padding: '12px 16px', 
                     border: 'none', 
                     background: 'none', 
-                    borderBottom: activeTab === 'galeria' ? '3px solid #1877f2' : '3px solid transparent',
-                    color: activeTab === 'galeria' ? '#1877f2' : '#65676b',
-                    fontWeight: activeTab === 'galeria' ? 600 : 500,
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  Galería
-                </button>
-                <button 
-                  onClick={() => navigate('/eventos')}
-                  style={{ 
-                    padding: '12px 16px', 
-                    border: 'none', 
-                    background: 'none', 
-                    borderBottom: '3px solid transparent',
-                    color: '#65676b',
-                    fontWeight: 500,
+                    borderBottom: activeTab === 'eventos' ? '3px solid #1877f2' : '3px solid transparent',
+                    color: activeTab === 'eventos' ? '#1877f2' : '#65676b',
+                    fontWeight: activeTab === 'eventos' ? 600 : 500,
                     cursor: 'pointer',
                     fontSize: '15px',
                     transition: 'all 0.2s'
                   }}
                 >
                   Eventos
+                </button>
+                <button 
+                  onClick={() => setActiveTab('productos')}
+                  style={{ 
+                    padding: '12px 16px', 
+                    border: 'none', 
+                    background: 'none', 
+                    borderBottom: activeTab === 'productos' ? '3px solid #1877f2' : '3px solid transparent',
+                    color: activeTab === 'productos' ? '#1877f2' : '#65676b',
+                    fontWeight: activeTab === 'productos' ? 600 : 500,
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Productos
                 </button>
                 <button 
                   onClick={() => setActiveTab('musica')}
@@ -1314,34 +1408,84 @@ const Profile = () => {
                 </div>
                 
                 {/* Próximos Eventos */}
-                <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Próximos Eventos</h3>
-                  <div style={{ marginBottom: 12 }}>
-                    <div style={{ display: 'flex', gap: 12 }}>
-                      <div style={{ width: 48, height: 48, background: '#1877f2', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                        <div style={{ fontSize: 10, fontWeight: 600 }}>MAR</div>
-                        <div style={{ fontSize: 18, fontWeight: 700 }}>15</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 15, fontWeight: 600 }}>Rock Fest 2024</div>
-                        <div style={{ fontSize: 13, color: '#65676b' }}>The Roxy Theatre</div>
-                        <div style={{ fontSize: 13, color: '#65676b' }}>8:00 PM</div>
-                      </div>
+                <div style={{ background: 'var(--card-bg)', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px var(--card-shadow)' }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text-primary)' }}>Próximos Eventos</h3>
+                  {loadingEventos ? (
+                    <div className="text-center p-3">
+                      <div className="spinner-border spinner-border-sm" role="status"></div>
                     </div>
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <div style={{ display: 'flex', gap: 12 }}>
-                      <div style={{ width: 48, height: 48, background: '#1877f2', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                        <div style={{ fontSize: 10, fontWeight: 600 }}>ABR</div>
-                        <div style={{ fontSize: 18, fontWeight: 700 }}>22</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 15, fontWeight: 600 }}>Indie Night Live</div>
-                        <div style={{ fontSize: 13, color: '#65676b' }}>TRO Outdoor</div>
-                        <div style={{ fontSize: 13, color: '#65676b' }}>9:00 PM</div>
-                      </div>
+                  ) : userEventos.length > 0 ? (
+                    <>
+                      {userEventos.slice(0, 3).map(evento => {
+                        // Parsear la fecha del evento (formato YYYY-MM-DD desde input date)
+                        const meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+                        let mes = 'ENE';
+                        let dia = 1;
+                        
+                        if (evento.fecha) {
+                          if (typeof evento.fecha === 'string' && evento.fecha.includes('-')) {
+                            // Formato YYYY-MM-DD (del input date)
+                            const partes = evento.fecha.split('-');
+                            const year = parseInt(partes[0]);
+                            const month = parseInt(partes[1]) - 1; // 0-11
+                            const day = parseInt(partes[2]);
+                            mes = meses[month];
+                            dia = day;
+                          } else if (evento.fecha.toDate) {
+                            // Timestamp de Firestore
+                            const fechaObj = evento.fecha.toDate();
+                            mes = meses[fechaObj.getMonth()];
+                            dia = fechaObj.getDate();
+                          }
+                        }
+                        
+                        return (
+                          <div key={evento.id} style={{ marginBottom: 12 }}>
+                            <div style={{ display: 'flex', gap: 12 }}>
+                              <div style={{ width: 48, height: 48, background: '#1877f2', borderRadius: '8px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                                <div style={{ fontSize: 10, fontWeight: 600 }}>{mes}</div>
+                                <div style={{ fontSize: 18, fontWeight: 700 }}>{dia}</div>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{evento.titulo}</div>
+                                  {evento.esCreador ? (
+                                    <span style={{ 
+                                      fontSize: 10, 
+                                      fontWeight: 600, 
+                                      padding: '2px 6px', 
+                                      borderRadius: '4px', 
+                                      background: '#42b72a', 
+                                      color: '#fff' 
+                                    }}>
+                                      CREADOR
+                                    </span>
+                                  ) : (
+                                    <span style={{ 
+                                      fontSize: 10, 
+                                      fontWeight: 600, 
+                                      padding: '2px 6px', 
+                                      borderRadius: '4px', 
+                                      background: '#2d88ff', 
+                                      color: '#fff' 
+                                    }}>
+                                      ASISTIRÉ
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{evento.lugar}</div>
+                                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{evento.hora}</div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-secondary)' }}>
+                      <p>No tienes eventos próximos</p>
                     </div>
-                  </div>
+                  )}
                   <div 
                     onClick={() => navigate('/eventos')}
                     style={{ fontSize: 15, color: '#1877f2', cursor: 'pointer', fontWeight: 600, transition: 'opacity 0.2s' }}
@@ -1447,19 +1591,127 @@ const Profile = () => {
                   </div>
                 </div>
                 
-                {/* Publicación de ejemplo */}
-                <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
-                  <div className="d-flex align-items-center gap-2 mb-3">
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>
-                      {initialValues?.nombre?.charAt(0)?.toUpperCase() || 'T'}
+                {/* Contenido según tab activa */}
+                {activeTab === 'publicaciones' && (
+                  loadingPublicaciones ? (
+                    <div className="text-center p-4">
+                      <div className="spinner-border" role="status"></div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: '#050505' }}>
-                        {initialValues?.nombre || 'The Midnight Riders'}
+                  ) : userPublicaciones.length > 0 ? (
+                    userPublicaciones.map(pub => (
+                      <div key={pub.id} style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+                        <div className="d-flex justify-content-between align-items-start mb-3">
+                          <div className="d-flex align-items-center gap-2">
+                            <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>
+                              {initialValues?.nombre?.charAt(0)?.toUpperCase() || '?'}
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 15, fontWeight: 600 }}>{pub.autorNombre}</div>
+                              <div style={{ fontSize: 13, color: '#65676b' }}>
+                                {pub.createdAt?.toDate?.()?.toLocaleDateString() || 'Reciente'}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="d-flex gap-2">
+                            <Button size="sm" variant="outline-primary" onClick={() => handleEditPost(pub)}>Editar</Button>
+                            <Button size="sm" variant="outline-danger" onClick={() => handleDeletePost(pub.id)}>Eliminar</Button>
+                          </div>
+                        </div>
+                        <p style={{ fontSize: 15, marginBottom: 12 }}>{pub.descripcion}</p>
+                        {pub.imagenesUrl?.[0] && (
+                          <img src={pub.imagenesUrl[0]} alt="Publicación" style={{ width: '100%', borderRadius: '8px', marginBottom: 12 }} />
+                        )}
                       </div>
-                      <div style={{ fontSize: 13, color: '#65676b' }}>Hace 2 horas</div>
+                    ))
+                  ) : (
+                    <div className="text-center p-4" style={{ background: '#fff', borderRadius: '8px' }}>
+                      <p>No tienes publicaciones aún. ¡Crea tu primera publicación!</p>
                     </div>
-                  </div>
+                  )
+                )}
+
+                {activeTab === 'eventos' && (
+                  loadingEventos ? (
+                    <div className="text-center p-4">
+                      <div className="spinner-border" role="status"></div>
+                    </div>
+                  ) : userEventos.length > 0 ? (
+                    userEventos.map(evento => (
+                      <div key={evento.id} style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+                        <div className="d-flex gap-3">
+                          {evento.imagenesUrl?.[0] && (
+                            <img src={evento.imagenesUrl[0]} alt={evento.titulo} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: '8px' }} />
+                          )}
+                          <div style={{ flex: 1 }}>
+                            <h5 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{evento.titulo}</h5>
+                            <p style={{ fontSize: 14, color: '#65676b', marginBottom: 8 }}>{evento.descripcion}</p>
+                            <div style={{ fontSize: 13, color: '#65676b' }}>
+                              <div>📅 {evento.fecha} - {evento.hora}</div>
+                              <div>📍 {evento.lugar}, {evento.ciudad}</div>
+                              {evento.precio > 0 && <div>💵 ${evento.precio?.toLocaleString('es-CO')} COP</div>}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center p-4" style={{ background: '#fff', borderRadius: '8px' }}>
+                      <p>No tienes eventos creados. <a href="/eventos">Crear evento</a></p>
+                    </div>
+                  )
+                )}
+
+                {activeTab === 'productos' && (
+                  loadingProductos ? (
+                    <div className="text-center p-4">
+                      <div className="spinner-border" role="status"></div>
+                    </div>
+                  ) : userProductos.length > 0 ? (
+                    <div className="row">
+                      {userProductos.map(producto => (
+                        <div key={producto.id} className="col-md-6 mb-3">
+                          <div style={{ background: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                            {producto.imagenes?.[0] && (
+                              <img src={producto.imagenes[0]} alt={producto.nombre} style={{ width: '100%', height: 200, objectFit: 'cover' }} />
+                            )}
+                            <div style={{ padding: 16 }}>
+                              <h5 style={{ fontSize: 16, fontWeight: 700, marginBottom: 8 }}>{producto.nombre}</h5>
+                              <p style={{ fontSize: 14, color: '#65676b', marginBottom: 8 }}>{producto.descripcion}</p>
+                              <div className="d-flex justify-content-between align-items-center">
+                                <h5 style={{ fontSize: 18, fontWeight: 700, color: '#1877f2', marginBottom: 0 }}>
+                                  ${producto.precio?.toLocaleString('es-CO')} COP
+                                </h5>
+                                <span style={{ fontSize: 12, color: '#65676b' }}>{producto.estado}</span>
+                              </div>
+                              <div style={{ fontSize: 13, color: '#65676b', marginTop: 8 }}>
+                                📍 {producto.ubicacion}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center p-4" style={{ background: '#fff', borderRadius: '8px' }}>
+                      <p>No tienes productos publicados. <a href="/musicmarket">Publicar producto</a></p>
+                    </div>
+                  )
+                )}
+
+                {/* Publicación de ejemplo solo para otras tabs */}
+                {!['publicaciones', 'eventos', 'productos'].includes(activeTab) && (
+                  <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+                    <div className="d-flex align-items-center gap-2 mb-3">
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>
+                        {initialValues?.nombre?.charAt(0)?.toUpperCase() || 'T'}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: 600, color: '#050505' }}>
+                          {initialValues?.nombre || 'The Midnight Riders'}
+                        </div>
+                        <div style={{ fontSize: 13, color: '#65676b' }}>Hace 2 horas</div>
+                      </div>
+                    </div>
                   <p style={{ fontSize: 15, color: '#050505', marginBottom: 12 }}>
                     Increíble noche en The Roxy! Gracias a todos los que vinieron a apoyarnos. Aquí algunas fotos del show.
                   </p>
@@ -1544,6 +1796,7 @@ const Profile = () => {
                     </button>
                   </div>
                 </div>
+                )}
               </div>
             </div>
           </div>

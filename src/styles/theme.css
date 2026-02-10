@@ -1,0 +1,206 @@
+/* Variables de tema - Modo Claro */
+:root[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0f2f5;
+  --bg-tertiary: #e4e6eb;
+  --text-primary: #050505;
+  --text-secondary: #65676b;
+  --text-tertiary: #8a8d91;
+  --border-color: #e5e7eb;
+  --border-color-light: #dfe1e5;
+  --card-bg: #ffffff;
+  --card-shadow: rgba(0, 0, 0, 0.1);
+  --hover-bg: #f2f3f5;
+  --input-bg: #f0f2f5;
+  --input-border: #dfe1e5;
+  --navbar-bg: #ffffff;
+  --navbar-text: #050505;
+  --sidebar-bg: #ffffff;
+  --post-bg: #ffffff;
+  --button-primary: #1877f2;
+  --button-primary-hover: #166fe5;
+  --button-secondary: #e4e6eb;
+  --button-secondary-hover: #d8dadf;
+  --link-color: #1877f2;
+  --success-color: #42b72a;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+}
+
+/* Variables de tema - Modo Oscuro */
+:root[data-theme="dark"] {
+  --bg-primary: #18191a;
+  --bg-secondary: #18191a;
+  --bg-tertiary: #3a3b3c;
+  --text-primary: #f0f2f5;
+  --text-secondary: #b8bbbf;
+  --text-tertiary: #9ca3af;
+  --border-color: #3e4042;
+  --border-color-light: #4e4f50;
+  --card-bg: #242526;
+  --card-shadow: rgba(0, 0, 0, 0.5);
+  --hover-bg: #3a3b3c;
+  --input-bg: #3a3b3c;
+  --input-border: #4e4f50;
+  --input-text: #f0f2f5;
+  --navbar-bg: #242526;
+  --navbar-text: #f0f2f5;
+  --sidebar-bg: #242526;
+  --post-bg: #242526;
+  --button-primary: #2d88ff;
+  --button-primary-hover: #4e9eff;
+  --button-secondary: #3a3b3c;
+  --button-secondary-hover: #4e4f50;
+  --link-color: #5b9eff;
+  --success-color: #42b72a;
+  --danger-color: #f02849;
+  --warning-color: #ffc107;
+  --info-color: #17a2b8;
+  --comment-text: #e4e6eb;
+  --muted-text: #b0b3b8;
+}
+
+/* Aplicar tema al body */
+body {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Estilos base para componentes */
+.card,
+.profile-card,
+.post-card,
+.sidebar-card,
+.chats-activos,
+.sugerencias-card {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  box-shadow: 0 1px 2px var(--card-shadow);
+}
+
+/* Inputs y formularios */
+input,
+textarea,
+select,
+.form-control {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--input-border);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Botones */
+.btn-light {
+  background-color: var(--button-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn-light:hover {
+  background-color: var(--button-secondary-hover);
+}
+
+/* Links */
+a {
+  color: var(--link-color);
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--navbar-bg) !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.navbar .nav-link {
+  color: var(--navbar-text) !important;
+}
+
+/* Modales */
+.modal-content {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+}
+
+.modal-header {
+  border-bottom-color: var(--border-color);
+}
+
+.modal-footer {
+  border-top-color: var(--border-color);
+}
+
+/* Dropdowns */
+.dropdown-menu {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+  background-color: var(--hover-bg);
+}
+
+.dropdown-divider {
+  border-top-color: var(--border-color);
+}
+
+/* Textos y elementos específicos */
+.text-muted,
+.small,
+small {
+  color: var(--text-secondary) !important;
+}
+
+.card-text,
+.post-content,
+.comment-text {
+  color: var(--text-primary) !important;
+}
+
+/* Badges */
+.badge {
+  color: #ffffff !important;
+}
+
+/* Carousels */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: invert(1);
+}
+
+[data-theme="dark"] .carousel-control-prev-icon,
+[data-theme="dark"] .carousel-control-next-icon {
+  filter: invert(0);
+}
+
+/* Spinners y loaders */
+.spinner-border {
+  color: var(--button-primary) !important;
+}
+
+/* Tablas */
+table {
+  color: var(--text-primary);
+}
+
+/* Alertas */
+.alert {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+/* Transiciones suaves */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

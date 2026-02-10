@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
 import { doc, updateDoc, onSnapshot, getDoc } from 'firebase/firestore';
 import { Button } from 'react-bootstrap';
-import { enviarNotificacion } from '../services/notificaciones';
+import { notificarLike } from '../services/notificationService';
 
 const REACCIONES = [
   { tipo: 'love', emoji: '❤️' }
@@ -52,37 +52,38 @@ const ReaccionesPublicacion = ({ publicacionId, user }) => {
       const pubSnap = await getDoc(pubRef);
       if (pubSnap.exists()) {
         const pub = pubSnap.data();
-        if (pub.uid && pub.uid !== user.uid) {
-          // Buscar nombre del perfil
-          let nombre = 'Alguien';
-          try {
-            const perfilSnap = await getDoc(doc(db, 'perfiles', user.uid));
-            if (perfilSnap.exists()) {
-              const data = perfilSnap.data();
-              nombre = data.nombre || data.email || 'Alguien';
-            }
-          } catch {}
-          await enviarNotificacion(pub.uid, {
-            type: 'like',
-            text: `A ${nombre} le gustó tu publicación`,
-            link: `/publicaciones/${publicacionId}`
-          });
+        if (pub.autorUid && pub.autorUid !== user.uid) {
+          await notificarLike(user.uid, pub.autorUid, publicacionId);
         }
       }
     }
   };
 
   return (
-    <div style={{ marginTop: 8 }}>
-      <Button
-        variant={miReaccion === 'love' ? 'danger' : 'outline-secondary'}
-        size="sm"
-        style={{ fontSize: miReaccion === 'love' ? 24 : 18, borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-        onClick={() => handleReaccion(miReaccion === 'love' ? null : 'love')}
-      >
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '8px',
+      padding: '8px 12px',
+      borderRadius: '20px',
+      background: miReaccion === 'love' ? '#fee2e2' : '#f3f4f6',
+      transition: 'all 0.2s ease',
+      cursor: 'pointer'
+    }}
+    onClick={() => handleReaccion(miReaccion === 'love' ? null : 'love')}
+    >
+      <span style={{ 
+        fontSize: 20,
+        lineHeight: 1,
+        transition: 'transform 0.2s ease'
+      }}>
         ❤️
-      </Button>
-      <span style={{ marginLeft: 8, fontWeight: 600, color: '#d00', fontSize: 16 }}>
+      </span>
+      <span style={{ 
+        fontWeight: 600, 
+        color: miReaccion === 'love' ? '#dc2626' : '#6b7280',
+        fontSize: 14
+      }}>
         {reacciones['love'] ? reacciones['love'].length : 0}
       </span>
     </div>

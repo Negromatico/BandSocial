@@ -4,7 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { collection, getDocs, query, orderBy, doc, getDoc, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
 import { Modal, Button, Form } from 'react-bootstrap';
 import { FaImage, FaVideo, FaHeart, FaComment, FaShare, FaUser, FaTag, FaUsers, FaCalendarAlt, FaMusic } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import PublicacionForm from '../components/PublicacionForm';
 import ComentariosPublicacion from '../components/ComentariosPublicacion';
 import ReaccionesPublicacion from '../components/ReaccionesPublicacion';
@@ -19,6 +19,7 @@ const PublicacionesNuevo = () => {
   const guestContext = useContext(GuestContext);
   const isGuest = guestContext?.isGuest || false;
   const { openChat } = useChatDock();
+  const location = useLocation();
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
@@ -231,6 +232,20 @@ const PublicacionesNuevo = () => {
     fetchPublicaciones();
   }, []);
 
+  // Scroll automático a publicación específica desde notificación
+  useEffect(() => {
+    if (location.state?.scrollToPublicacion && publicaciones.length > 0) {
+      const publicacionId = location.state.scrollToPublicacion;
+      setTimeout(() => {
+        const element = document.getElementById(`publicacion-${publicacionId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.style.animation = 'highlight 2s ease-in-out';
+        }
+      }, 500);
+    }
+  }, [location.state, publicaciones]);
+
   const getInitials = (name) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -264,7 +279,7 @@ const PublicacionesNuevo = () => {
                 getInitials(userProfile?.nombre || user?.email)
               )}
             </div>
-            <div className="profile-name" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div className="profile-name" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', flexWrap: 'nowrap' }}>
               {userProfile?.nombre || 'Usuario'}
               {(userProfile?.planActual === 'premium' || userProfile?.membershipPlan === 'premium') && (
                 <span style={{
@@ -277,7 +292,8 @@ const PublicacionesNuevo = () => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   boxShadow: '0 2px 4px rgba(255, 215, 0, 0.3)',
-                  letterSpacing: '0.3px'
+                  letterSpacing: '0.3px',
+                  flexShrink: 0
                 }}>
                   PRO
                 </span>
@@ -366,7 +382,7 @@ const PublicacionesNuevo = () => {
         ) : (
           publicaciones.map((pub, index) => (
             <React.Fragment key={pub.id}>
-              <div className="post-card">
+              <div className="post-card" id={`publicacion-${pub.id}`}>
               <div className="post-header">
                 <Link to={`/profile/${pub.autorUid}`} className="post-avatar" style={{ textDecoration: 'none' }}>
                   {pub.autorFoto ? (

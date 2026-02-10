@@ -1,9 +1,11 @@
 import React, { Suspense, lazy } from 'react';
 import './global.css';
+import './styles/theme.css';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { auth } from './services/firebase';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ChatDockProvider } from './contexts/ChatDockContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 // Lazy loading de componentes para mejorar rendimiento
 const Login = lazy(() => import('./pages/Login'));
@@ -16,6 +18,7 @@ const ProfileView = lazy(() => import('./pages/ProfileViewNew'));
 const PublicacionesNuevo = lazy(() => import('./pages/PublicacionesNuevo'));
 const Posts = lazy(() => import('./pages/Posts'));
 const AppNavbar = lazy(() => import('./components/Navbar'));
+const Footer = lazy(() => import('./components/Footer'));
 const EventosNuevo = lazy(() => import('./pages/EventosNuevo'));
 const MusicmarketNuevo = lazy(() => import('./pages/MusicmarketNuevo'));
 const Membership = lazy(() => import('./pages/Membership'));
@@ -53,6 +56,7 @@ function MainLayout() {
   const location = useLocation();
   const hideNavbarPaths = ['/login', '/register', '/reset-password', '/membership', '/payment'];
   const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
+  const shouldShowFooter = !hideNavbarPaths.includes(location.pathname);
   
   return (
     <Suspense fallback={<LoadingSpinner />}>
@@ -78,6 +82,7 @@ function MainLayout() {
         <Route path="/mis-publicaciones" element={<MisPublicaciones />} />
         <Route path="/juego" element={<GamePage />} />
       </Routes>
+      {shouldShowFooter && <Footer />}
     </Suspense>
   );
 }
@@ -115,13 +120,15 @@ const App = () => {
 
   return (
     <ErrorBoundary>
-      <GuestContext.Provider value={{isGuest, activateGuest, deactivateGuest}}>
-        <ChatDockProvider>
-          <BrowserRouter>
-            <MainLayout />
-          </BrowserRouter>
-        </ChatDockProvider>
-      </GuestContext.Provider>
+      <ThemeProvider>
+        <GuestContext.Provider value={{isGuest, activateGuest, deactivateGuest}}>
+          <ChatDockProvider>
+            <BrowserRouter>
+              <MainLayout />
+            </BrowserRouter>
+          </ChatDockProvider>
+        </GuestContext.Provider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 };

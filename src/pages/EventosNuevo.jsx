@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { db, auth } from '../services/firebase';
-import { collection, getDocs, query, orderBy, doc, getDoc, updateDoc, arrayUnion, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, getDoc, updateDoc, arrayUnion, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { Button, Modal, Form } from 'react-bootstrap';
 import { GuestContext } from '../App';
 import { FaFilter, FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaClock, FaThLarge, FaList, FaImage } from 'react-icons/fa';
@@ -175,10 +175,30 @@ const EventosNuevo = () => {
       setShowAuthPrompt(true);
       return;
     }
-    const eventoRef = doc(db, 'eventos', eventoId);
-    await updateDoc(eventoRef, { asistentes: arrayUnion(user.uid) });
-    setAsistiendo(prev => ({ ...prev, [eventoId]: true }));
-    fetchEventos();
+
+    try {
+      const eventoRef = doc(db, 'eventos', eventoId);
+      await updateDoc(eventoRef, {
+        asistentes: arrayUnion(user.uid),
+      });
+      setAsistiendo((prev) => ({ ...prev, [eventoId]: true }));
+    } catch (err) {
+      console.error('Error al marcar asistencia:', err);
+      alert('Error al marcar asistencia');
+    }
+  };
+
+  const handleEliminarEvento = async (eventoId) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este evento?')) return;
+    
+    try {
+      await deleteDoc(doc(db, 'eventos', eventoId));
+      setEventos(prev => prev.filter(e => e.id !== eventoId));
+      alert('Evento eliminado exitosamente');
+    } catch (error) {
+      console.error('Error eliminando evento:', error);
+      alert('Error al eliminar el evento');
+    }
   };
 
   const toggleFiltroGenero = (genero) => {
@@ -499,18 +519,6 @@ const EventosNuevo = () => {
               <option value="price-low">Precio: Menor a Mayor</option>
               <option value="price-high">Precio: Mayor a Menor</option>
             </select>
-            <button
-              className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-              onClick={() => setViewMode('grid')}
-            >
-              <FaThLarge />
-            </button>
-            <button
-              className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-              onClick={() => setViewMode('list')}
-            >
-              <FaList />
-            </button>
             </div>
           </div>
         </div>
@@ -582,13 +590,23 @@ const EventosNuevo = () => {
                         <span className="attendee-count">+{numAsistentes - 3}</span>
                       )}
                     </div>
-                    <button
-                      className={`asistir-btn ${asistiendo[ev.id] ? 'asistiendo' : ''}`}
-                      onClick={() => handleAsistir(ev.id)}
-                      disabled={asistiendo[ev.id]}
-                    >
-                      {asistiendo[ev.id] ? 'Asistiendo' : 'Asistir'}
-                    </button>
+                    {user && ev.creadorUid === user.uid ? (
+                      <button
+                        className="asistir-btn"
+                        style={{ background: '#dc3545' }}
+                        onClick={() => handleEliminarEvento(ev.id)}
+                      >
+                        Eliminar
+                      </button>
+                    ) : (
+                      <button
+                        className={`asistir-btn ${asistiendo[ev.id] ? 'asistiendo' : ''}`}
+                        onClick={() => handleAsistir(ev.id)}
+                        disabled={asistiendo[ev.id]}
+                      >
+                        {asistiendo[ev.id] ? 'Asistiendo' : 'Asistir'}
+                      </button>
+                    )}
                   </div>
                 </div>
               </React.Fragment>

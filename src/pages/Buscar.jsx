@@ -23,39 +23,70 @@ const Buscar = () => {
     }
   }, [searchQuery]);
 
-  const performSearch = async (query) => {
+  const performSearch = async (searchQuery) => {
     setLoading(true);
-    const searchTerm = query.toLowerCase().trim();
+    const searchTerm = searchQuery.toLowerCase().trim();
 
     try {
-      // Realizar todas las búsquedas en paralelo para mejor rendimiento
+      // Realizar todas las búsquedas en paralelo sin orderBy para evitar índices
       const [usuariosSnap, publicacionesSnap, eventosSnap, productosSnap] = await Promise.all([
         getDocs(collection(db, 'perfiles')),
-        getDocs(query(collection(db, 'publicaciones'), orderBy('createdAt', 'desc'), limit(50))),
-        getDocs(query(collection(db, 'eventos'), orderBy('createdAt', 'desc'), limit(50))),
-        getDocs(query(collection(db, 'productos'), orderBy('createdAt', 'desc'), limit(50)))
+        getDocs(collection(db, 'publicaciones')),
+        getDocs(collection(db, 'eventos')),
+        getDocs(collection(db, 'productos'))
       ]);
 
       // Buscar usuarios
-      const usuarios = usuariosSnap.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(user => 
-          user.nombre?.toLowerCase().includes(searchTerm) ||
-          user.email?.toLowerCase().includes(searchTerm) ||
-          user.ciudad?.toLowerCase().includes(searchTerm) ||
-          user.generos?.some(g => g.toLowerCase().includes(searchTerm)) ||
-          user.instrumentos?.some(i => i.toLowerCase().includes(searchTerm))
-        )
+      const allUsers = usuariosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      console.log('Total usuarios en BD:', allUsers.length);
+      console.log('Término de búsqueda:', searchTerm);
+      
+      const usuarios = allUsers.filter(user => {
+        console.log('Revisando usuario:', user.nombre);
+          // Búsqueda en nombre
+          if (user.nombre?.toLowerCase().includes(searchTerm)) return true;
+          
+          // Búsqueda en email
+          if (user.email?.toLowerCase().includes(searchTerm)) return true;
+          
+          // Búsqueda en ciudad (manejar string u objeto)
+          const ciudad = typeof user.ciudad === 'object' ? user.ciudad?.label : user.ciudad;
+          if (ciudad?.toLowerCase().includes(searchTerm)) return true;
+          
+          // Búsqueda en géneros (manejar strings u objetos)
+          if (Array.isArray(user.generos)) {
+            const hasGenero = user.generos.some(g => {
+              const genero = typeof g === 'object' ? g.label || g.value : g;
+              return genero?.toLowerCase().includes(searchTerm);
+            });
+            if (hasGenero) return true;
+          }
+          
+          // Búsqueda en instrumentos (manejar strings u objetos)
+          if (Array.isArray(user.instrumentos)) {
+            const hasInstrumento = user.instrumentos.some(i => {
+              const instrumento = typeof i === 'object' ? i.label || i.value : i;
+              return instrumento?.toLowerCase().includes(searchTerm);
+            });
+            if (hasInstrumento) return true;
+          }
+          
+          // Búsqueda en bio
+          if (user.bio?.toLowerCase().includes(searchTerm)) return true;
+          
+          return false;
+        })
         .slice(0, 15);
 
-      // Buscar publicaciones
+      // Buscar publicaciones (excluir eliminadas)
       const publicaciones = publicacionesSnap.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(pub => 
-          pub.titulo?.toLowerCase().includes(searchTerm) ||
+          !pub.deleted &&
+          (pub.titulo?.toLowerCase().includes(searchTerm) ||
           pub.descripcion?.toLowerCase().includes(searchTerm) ||
           pub.tipo?.toLowerCase().includes(searchTerm) ||
-          pub.ciudad?.toLowerCase().includes(searchTerm)
+          pub.ciudad?.toLowerCase().includes(searchTerm))
         )
         .slice(0, 15);
 

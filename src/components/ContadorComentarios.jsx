@@ -20,9 +20,27 @@ const ContadorComentarios = ({ publicacionId }) => {
   }, [publicacionId]);
 
   return (
-    <div className="post-action">
-      <FaComment className="post-action-icon" />
-      <span>{count}</span>
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '8px',
+      padding: '8px 12px',
+      borderRadius: '20px',
+      background: '#f3f4f6',
+      transition: 'all 0.2s ease',
+      cursor: 'pointer'
+    }}>
+      <FaComment style={{ 
+        fontSize: 16,
+        color: '#6b7280'
+      }} />
+      <span style={{ 
+        fontWeight: 600, 
+        color: '#6b7280',
+        fontSize: 14
+      }}>
+        {count}
+      </span>
     </div>
   );
 };

@@ -8,12 +8,13 @@ import { collection, addDoc, Timestamp } from 'firebase/firestore';
  */
 export async function enviarNotificacion(userId, { type, text, link = '', extra = {} }) {
   if (!userId) return;
-  await addDoc(collection(db, 'users', userId, 'notificaciones'), {
-    type,
-    text,
+  await addDoc(collection(db, 'notificaciones'), {
+    usuarioId: userId,
+    tipo: type,
+    mensaje: text,
     link,
-    date: Timestamp.now(),
-    read: false,
+    createdAt: Timestamp.now(),
+    leida: false,
     ...extra,
   });
 }

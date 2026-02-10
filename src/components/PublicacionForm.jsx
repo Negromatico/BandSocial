@@ -6,6 +6,7 @@ import { collection, addDoc, serverTimestamp, query, where, getDocs, getDoc, doc
 import { uploadToCloudinary } from '../services/cloudinary';
 import UpgradePremiumModal from './UpgradePremiumModal';
 import { esPremium } from '../utils/premiumCheck';
+import { enviarNotificacion } from '../services/notificaciones';
 import '../styles/ModernModal.css';
 
 
@@ -113,16 +114,43 @@ const PublicacionForm = ({ onCreated }) => {
           imagenesUrl.push(url);
         }
       }
-      await addDoc(collection(db, 'publicaciones'), {
+      const autorNombre = await obtenerNombreUsuario(user);
+      const nuevaPublicacion = await addDoc(collection(db, 'publicaciones'), {
         titulo: titulo.trim(),
         descripcion: descripcion.trim(),
         tipo: tipo === 'otro' ? otroTipo.trim() : tipo,
         ciudad,
         autorUid: user.uid,
-        autorNombre: await obtenerNombreUsuario(user),
+        autorNombre,
         createdAt: serverTimestamp(),
         imagenesUrl,
       });
+
+      // Notificar a los seguidores
+      try {
+        const perfilSnap = await getDoc(doc(db, 'perfiles', user.uid));
+        if (perfilSnap.exists()) {
+          const perfil = perfilSnap.data();
+          const seguidores = perfil.seguidores || [];
+          
+          // Enviar notificación a cada seguidor
+          const notificacionesPromises = seguidores.map(seguidorUid => 
+            enviarNotificacion(seguidorUid, {
+              type: 'nueva_publicacion',
+              text: `${autorNombre} ha publicado algo nuevo`,
+              link: `/publicaciones`,
+              extra: {
+                autorUid: user.uid,
+                publicacionId: nuevaPublicacion.id
+              }
+            })
+          );
+          
+          await Promise.all(notificacionesPromises);
+        }
+      } catch (error) {
+        console.error('Error al notificar seguidores:', error);
+      }
       setTitulo('');
       setDescripcion('');
       setTipo(tipos[0].value);

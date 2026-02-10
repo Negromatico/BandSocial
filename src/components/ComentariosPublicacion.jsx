@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
 import { collection, addDoc, query, orderBy, onSnapshot, Timestamp, getDoc, doc as docFirestore } from 'firebase/firestore';
 import { Form, Button } from 'react-bootstrap';
-import { enviarNotificacion } from '../services/notificaciones';
+import { notificarComentario } from '../services/notificationService';
 
 const ComentariosPublicacion = ({ publicacionId, user }) => {
   const [comentarios, setComentarios] = useState([]);
@@ -46,12 +46,8 @@ const ComentariosPublicacion = ({ publicacionId, user }) => {
       const pubSnap = await getDoc(docFirestore(db, 'publicaciones', publicacionId));
       if (pubSnap.exists()) {
         const pub = pubSnap.data();
-        if (pub.uid && pub.uid !== user.uid) {
-          await enviarNotificacion(pub.uid, {
-            type: 'comment',
-            text: `${perfilNombre} comentó en tu publicación`,
-            link: `/publicaciones/${publicacionId}`
-          });
+        if (pub.autorUid && pub.autorUid !== user.uid) {
+          await notificarComentario(user.uid, pub.autorUid, publicacionId);
         }
       }
       setNuevoComentario('');
