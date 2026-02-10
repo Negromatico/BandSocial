@@ -67,7 +67,7 @@ const AppNavbar = () => {
   };
 
   return (
-    <Navbar bg="white" expand="lg" className="custom-navbar shadow-sm sticky-top">
+    <Navbar expand="lg" className="custom-navbar shadow-sm sticky-top">
       <Container fluid className="px-4">
         {/* Logo */}
         <Navbar.Brand as={Link} to="/publicaciones" className="brand-logo">

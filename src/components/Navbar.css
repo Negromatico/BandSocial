@@ -1,11 +1,11 @@
 .custom-navbar {
-  background: #f3f4f6 !important;
+  background: var(--navbar-bg) !important;
   border: none;
   border-radius: 0;
   padding: 1rem 0;
   z-index: 1030;
   margin: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px var(--card-shadow);
 }
 
 .navbar-logo {
@@ -34,13 +34,13 @@
 .brand-name {
   font-size: 24px;
   font-weight: 700;
-  color: #1e40af;
+  color: var(--button-primary);
   letter-spacing: -0.5px;
   transition: color 0.2s ease;
 }
 
 .brand-logo:hover .brand-name {
-  color: #1e3a8a;
+  color: var(--button-primary-hover);
 }
 
 .navbar-links {
@@ -53,7 +53,7 @@
 }
 
 .nav-link-custom {
-  color: #1e40af !important;
+  color: var(--navbar-text) !important;
   font-weight: 500;
   font-size: 1.1rem;
   padding: 0.5rem 1.2rem !important;
@@ -64,7 +64,7 @@
 
 .nav-link-custom:hover,
 .nav-link-custom.active {
-  color: #6366f1 !important;
+  color: var(--button-primary) !important;
 }
 
 .nav-link-custom:hover::after {
@@ -75,7 +75,7 @@
   transform: translateX(-50%);
   width: 80%;
   height: 2px;
-  background: #6366f1;
+  background: var(--button-primary);
 }
 
 .search-form {
@@ -85,25 +85,26 @@
 
 .search-input {
   border-radius: 8px 0 0 8px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-color);
   padding: 0.5rem 1rem;
   font-size: 0.9rem;
-  background: #ffffff;
+  background: var(--input-bg);
+  color: var(--text-primary);
 }
 
 .search-input:focus {
-  border-color: #9ca3af;
+  border-color: var(--button-primary);
   box-shadow: none;
-  background: #ffffff;
+  background: var(--input-bg);
   outline: none;
 }
 
 .search-icon {
-  background: #ffffff;
-  border: 1px solid #d1d5db;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
   border-left: none;
   border-radius: 0 8px 8px 0;
-  color: #6b7280;
+  color: var(--text-secondary);
   cursor: pointer;
 }
 
