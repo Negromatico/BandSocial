@@ -285,43 +285,37 @@ const Profile = () => {
     if (!user) return;
     setLoadingEventos(true);
     try {
-      // Obtener eventos creados por el usuario
-      const qCreados = query(
-        collection(db, 'eventos'),
-        where('creadorUid', '==', user.uid)
-      );
-      const snapshotCreados = await getDocs(qCreados);
-      const eventosCreados = snapshotCreados.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        esCreador: true
-      }));
-
-      // Obtener todos los eventos para filtrar los que el usuario asistirá
+      // Obtener todos los eventos de la base de datos
       const qTodos = query(collection(db, 'eventos'));
       const snapshotTodos = await getDocs(qTodos);
-      const eventosAsistiendo = snapshotTodos.docs
-        .map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          esCreador: false
-        }))
-        .filter(evento => 
-          evento.asistentes && 
-          Array.isArray(evento.asistentes) && 
-          evento.asistentes.includes(user.uid) &&
-          evento.creadorUid !== user.uid // Evitar duplicados
-        );
-
-      // Combinar ambos arrays
-      const todosLosEventos = [...eventosCreados, ...eventosAsistiendo];
-
-      // Ordenar por fecha del evento (no por createdAt)
-      todosLosEventos.sort((a, b) => {
-        const dateA = new Date(a.fecha);
-        const dateB = new Date(b.fecha);
-        return dateA - dateB; // Más próximos primero
-      });
+      
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      
+      const todosLosEventos = snapshotTodos.docs
+        .map(doc => {
+          const data = doc.data();
+          const esCreador = data.creadorUid === user.uid;
+          const estaAsistiendo = data.asistentes && Array.isArray(data.asistentes) && data.asistentes.includes(user.uid);
+          
+          return {
+            id: doc.id,
+            ...data,
+            esCreador,
+            estaAsistiendo
+          };
+        })
+        .filter(evento => {
+          // Filtrar solo eventos futuros
+          const fechaEvento = new Date(evento.fecha);
+          return fechaEvento >= hoy;
+        })
+        .sort((a, b) => {
+          // Ordenar por fecha del evento (más próximos primero)
+          const dateA = new Date(a.fecha);
+          const dateB = new Date(b.fecha);
+          return dateA - dateB;
+        });
 
       setUserEventos(todosLosEventos);
     } catch (error) {
@@ -1426,7 +1420,6 @@ const Profile = () => {
                           if (typeof evento.fecha === 'string' && evento.fecha.includes('-')) {
                             // Formato YYYY-MM-DD (del input date)
                             const partes = evento.fecha.split('-');
-                            const year = parseInt(partes[0]);
                             const month = parseInt(partes[1]) - 1; // 0-11
                             const day = parseInt(partes[2]);
                             mes = meses[month];
@@ -1449,7 +1442,7 @@ const Profile = () => {
                               <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                                   <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{evento.titulo}</div>
-                                  {evento.esCreador ? (
+                                  {evento.esCreador && (
                                     <span style={{ 
                                       fontSize: 10, 
                                       fontWeight: 600, 
@@ -1460,7 +1453,8 @@ const Profile = () => {
                                     }}>
                                       CREADOR
                                     </span>
-                                  ) : (
+                                  )}
+                                  {!evento.esCreador && evento.estaAsistiendo && (
                                     <span style={{ 
                                       fontSize: 10, 
                                       fontWeight: 600, 
