@@ -52,11 +52,11 @@ const Footer = () => {
           <Col md={4} className="footer-section">
             <h5 className="footer-title">Información</h5>
             <ul className="footer-links">
-              <li><a href="#about">Acerca de</a></li>
-              <li><a href="#terms">Términos y Condiciones</a></li>
-              <li><a href="#privacy">Política de Privacidad</a></li>
-              <li><a href="#contact">Contacto</a></li>
-              <li><a href="#help">Ayuda</a></li>
+              <li><Link to="/acerca-de">Acerca de</Link></li>
+              <li><Link to="/terminos">Términos y Condiciones</Link></li>
+              <li><Link to="/privacidad">Política de Privacidad</Link></li>
+              <li><Link to="/contacto">Contacto</Link></li>
+              <li><Link to="/ayuda">Ayuda</Link></li>
             </ul>
           </Col>
         </Row>

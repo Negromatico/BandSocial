@@ -29,6 +29,11 @@ const Buscar = lazy(() => import('./pages/Buscar'));
 const MisPublicaciones = lazy(() => import('./pages/MisPublicaciones'));
 const MisGrupos = lazy(() => import('./pages/MisGrupos'));
 const GamePage = lazy(() => import('./pages/GamePage'));
+const AcercaDe = lazy(() => import('./pages/AcercaDe'));
+const TerminosCondiciones = lazy(() => import('./pages/TerminosCondiciones'));
+const PoliticaPrivacidad = lazy(() => import('./pages/PoliticaPrivacidad'));
+const Contacto = lazy(() => import('./pages/Contacto'));
+const Ayuda = lazy(() => import('./pages/Ayuda'));
 
 // Componente de loading
 const LoadingSpinner = () => (
@@ -81,6 +86,11 @@ function MainLayout() {
         <Route path="/buscar" element={<Buscar />} />
         <Route path="/mis-publicaciones" element={<MisPublicaciones />} />
         <Route path="/juego" element={<GamePage />} />
+        <Route path="/acerca-de" element={<AcercaDe />} />
+        <Route path="/terminos" element={<TerminosCondiciones />} />
+        <Route path="/privacidad" element={<PoliticaPrivacidad />} />
+        <Route path="/contacto" element={<Contacto />} />
+        <Route path="/ayuda" element={<Ayuda />} />
       </Routes>
       {shouldShowFooter && <Footer />}
     </Suspense>
