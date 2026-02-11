@@ -1,0 +1,321 @@
+.admin-dashboard {
+  padding: 30px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* Tarjetas de estadísticas */
+.stat-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card .card-body {
+  display: flex;
+  align-items: center;
+  padding: 25px;
+}
+
+.stat-icon {
+  font-size: 48px;
+  margin-right: 20px;
+  opacity: 0.8;
+}
+
+.stat-info h3 {
+  font-size: 36px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+}
+
+.stat-info p {
+  font-size: 14px;
+  margin: 5px 0 0 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-info small {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+/* Colores específicos para cada stat */
+.stat-users {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.stat-users .stat-icon {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-posts {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.stat-posts .stat-icon {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-events {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.stat-events .stat-icon {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.stat-products {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+}
+
+.stat-products .stat-icon {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Tarjeta de contenido principal */
+.admin-content-card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.admin-content-card .card-body {
+  padding: 30px;
+}
+
+/* Tabs personalizados */
+.admin-content-card .nav-tabs {
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.admin-content-card .nav-tabs .nav-link {
+  color: #6b7280;
+  font-weight: 600;
+  border: none;
+  padding: 12px 24px;
+  transition: all 0.3s ease;
+}
+
+.admin-content-card .nav-tabs .nav-link:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px 8px 0 0;
+}
+
+.admin-content-card .nav-tabs .nav-link.active {
+  color: #667eea;
+  background: white;
+  border-bottom: 3px solid #667eea;
+  font-weight: 700;
+}
+
+/* Tablas */
+.table-responsive {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.admin-content-card table {
+  margin-top: 20px;
+}
+
+.admin-content-card table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.admin-content-card table thead th {
+  border: none;
+  padding: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+}
+
+.admin-content-card table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.admin-content-card table tbody tr:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.admin-content-card table tbody td {
+  padding: 15px;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Badges personalizados */
+.badge {
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Botones de acción */
+.admin-content-card .btn-danger {
+  padding: 6px 12px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.admin-content-card .btn-danger:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Modal de contraseña */
+.modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+  border: none;
+}
+
+.modal-header .btn-close {
+  filter: brightness(0) invert(1);
+}
+
+.modal-title {
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.modal-body {
+  padding: 30px;
+}
+
+.modal-body .form-label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.modal-body .form-control {
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  padding: 12px;
+  transition: all 0.3s ease;
+}
+
+.modal-body .form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .admin-title {
+    font-size: 24px;
+  }
+
+  .admin-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stat-card .card-body {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stat-icon {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+
+  .table-responsive {
+    font-size: 14px;
+  }
+
+  .admin-content-card table thead th,
+  .admin-content-card table tbody td {
+    padding: 10px;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-card {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.admin-content-card {
+  animation: fadeIn 0.6s ease-out 0.5s both;
+}

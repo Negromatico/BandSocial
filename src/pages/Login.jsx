@@ -26,12 +26,26 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
       
+      // Verificar si es el administrador
+      if (user.email === 'estebanber24@gmail.com') {
+        // Redirigir al panel de administrador
+        navigate('/admin');
+        return;
+      }
+      
       // Obtener el perfil del usuario para verificar su plan
       const perfilRef = doc(db, 'perfiles', user.uid);
       const perfilSnap = await getDoc(perfilRef);
       
       if (perfilSnap.exists()) {
         const perfil = perfilSnap.data();
+        
+        // Verificar si el usuario está baneado
+        if (perfil.banned) {
+          await auth.signOut();
+          setError('Tu cuenta ha sido suspendida. Contacta al administrador para más información.');
+          return;
+        }
         
         // Verificar si el usuario ya tiene plan premium
         const esPremium = perfil.planActual === 'premium' || perfil.membershipPlan === 'premium';

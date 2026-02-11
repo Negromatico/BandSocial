@@ -322,10 +322,6 @@ const PublicacionesNuevo = () => {
               <FaTag className="quick-access-icon" />
               <span>Mis Ventas</span>
             </Link>
-            <Link to="/grupos" className="quick-access-item">
-              <FaUsers className="quick-access-icon" />
-              <span>Mis Grupos</span>
-            </Link>
             <Link to="/eventos" className="quick-access-item">
               <FaCalendarAlt className="quick-access-icon" />
               <span>Eventos</span>

@@ -27,13 +27,13 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const Followers = lazy(() => import('./pages/Followers'));
 const Buscar = lazy(() => import('./pages/Buscar'));
 const MisPublicaciones = lazy(() => import('./pages/MisPublicaciones'));
-const MisGrupos = lazy(() => import('./pages/MisGrupos'));
 const GamePage = lazy(() => import('./pages/GamePage'));
 const AcercaDe = lazy(() => import('./pages/AcercaDe'));
 const TerminosCondiciones = lazy(() => import('./pages/TerminosCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./pages/PoliticaPrivacidad'));
 const Contacto = lazy(() => import('./pages/Contacto'));
 const Ayuda = lazy(() => import('./pages/Ayuda'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const ScrollToTop = lazy(() => import('./components/ScrollToTop'));
 
 // Componente de loading
@@ -82,7 +82,6 @@ function MainLayout() {
         <Route path="/musicmarket" element={<MusicmarketNuevo />} />
         <Route path="/posts" element={<Posts />} />
         <Route path="/prelanding" element={<PreLanding />} />
-        <Route path="/grupos" element={<MisGrupos />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/followers" element={<Followers />} />
         <Route path="/buscar" element={<Buscar />} />
@@ -93,6 +92,7 @@ function MainLayout() {
         <Route path="/privacidad" element={<PoliticaPrivacidad />} />
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/ayuda" element={<Ayuda />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
       {shouldShowFooter && <Footer />}
     </Suspense>

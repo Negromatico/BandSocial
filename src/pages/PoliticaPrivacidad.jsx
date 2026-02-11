@@ -107,7 +107,7 @@ const PoliticaPrivacidad = () => {
               <ul className="terms-list">
                 <li>Mensajes directos con usuarios específicos</li>
                 <li>Información de contacto cuando acepta conectar con alguien</li>
-                <li>Actividad en grupos y eventos</li>
+                <li>Actividad en eventos</li>
               </ul>
 
               <h3 className="subsection-title">3.3 Con Proveedores de Servicios</h3>

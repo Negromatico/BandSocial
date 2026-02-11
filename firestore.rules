@@ -28,6 +28,11 @@ service cloud.firestore {
         && value.size() <= maxLen;
     }
     
+    // Verificar si el usuario es administrador
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == 'estebanber24@gmail.com';
+    }
+    
     // ============================================
     // PERFILES
     // ============================================
@@ -40,14 +45,15 @@ service cloud.firestore {
         && request.auth.uid == userId
         && hasRequiredFields(['nombre', 'email', 'type', 'uid']);
       
-      // Actualizar: El propietario O actualización de seguidores/siguiendo
+      // Actualizar: El propietario O actualización de seguidores/siguiendo O el administrador
       allow update: if isOwner(userId) ||
                       (isAuthenticated() && 
                        request.resource.data.diff(resource.data).affectedKeys()
-                       .hasOnly(['seguidores', 'siguiendo']));
+                       .hasOnly(['seguidores', 'siguiendo'])) ||
+                      isAdmin();
       
-      // Eliminar: Solo el propietario
-      allow delete: if isOwner(userId);
+      // Eliminar: Solo el propietario o el administrador
+      allow delete: if isOwner(userId) || isAdmin();
     }
     
     // ============================================
@@ -62,9 +68,9 @@ service cloud.firestore {
         && request.resource.data.autorUid == request.auth.uid
         && hasRequiredFields(['titulo', 'descripcion', 'autorUid', 'createdAt']);
       
-      // Actualizar/Eliminar: Solo el autor
+      // Actualizar/Eliminar: Solo el autor o el administrador
       allow update, delete: if isAuthenticated() 
-        && resource.data.autorUid == request.auth.uid;
+        && (resource.data.autorUid == request.auth.uid || isAdmin());
       
       // Subcolección: Comentarios de publicaciones
       match /comentarios/{commentId} {
@@ -97,9 +103,14 @@ service cloud.firestore {
         && request.resource.data.precio is number
         && request.resource.data.precio > 0;
       
-      // Actualizar/Eliminar: Solo el vendedor
-      allow update, delete: if isAuthenticated() 
-        && resource.data.vendedorUid == request.auth.uid;
+      // Actualizar: El vendedor puede actualizar todo, otros usuarios solo rating y resenas
+      allow update: if isAuthenticated() && 
+        (resource.data.vendedorUid == request.auth.uid ||
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['rating', 'resenas']));
+      
+      // Eliminar: Solo el vendedor o el administrador
+      allow delete: if isAuthenticated() 
+        && (resource.data.vendedorUid == request.auth.uid || isAdmin());
     }
     
     // ============================================
@@ -119,9 +130,9 @@ service cloud.firestore {
         && (resource.data.creadorUid == request.auth.uid 
         || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['asistentes']));
       
-      // Eliminar: Solo el creador
+      // Eliminar: Solo el creador o el administrador
       allow delete: if isAuthenticated() 
-        && resource.data.creadorUid == request.auth.uid;
+        && (resource.data.creadorUid == request.auth.uid || isAdmin());
       
       // Subcolección: Comentarios de eventos
       match /comentarios/{commentId} {
@@ -197,20 +208,6 @@ service cloud.firestore {
       // Actualizar/Eliminar: Solo el autor
       allow update, delete: if isAuthenticated()
         && resource.data.usuarioId == request.auth.uid;
-    }
-    
-    // ============================================
-    // GRUPOS (Opcional - para futuro)
-    // ============================================
-    match /grupos/{groupId} {
-      allow read: if true;
-      allow create: if isAuthenticated() 
-        && request.resource.data.creadorUid == request.auth.uid;
-      allow update: if isAuthenticated() 
-        && (resource.data.creadorUid == request.auth.uid
-        || request.auth.uid in resource.data.miembros);
-      allow delete: if isAuthenticated() 
-        && resource.data.creadorUid == request.auth.uid;
     }
     
     // ============================================

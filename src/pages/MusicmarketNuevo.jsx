@@ -270,14 +270,23 @@ const MusicmarketNuevo = () => {
       return;
     }
 
+    if (!user) {
+      showToast('Debes iniciar sesión para valorar', 'warning');
+      return;
+    }
+
     setSubmittingRating(true);
     try {
+      console.log('Iniciando valoración para producto:', selectedProduct.id);
+      
       // Obtener el producto actual
       const productoRef = doc(db, 'productos', selectedProduct.id);
       const productoSnap = await getDoc(productoRef);
       
       if (!productoSnap.exists()) {
+        console.error('Producto no encontrado');
         showToast('Producto no encontrado', 'error');
+        setSubmittingRating(false);
         return;
       }
 
@@ -285,10 +294,14 @@ const MusicmarketNuevo = () => {
       const ratingActual = productoData.rating || 0;
       const resenasActuales = productoData.resenas || 0;
 
+      console.log('Datos actuales del producto:', { ratingActual, resenasActuales });
+
       // Calcular nuevo rating promedio
       const nuevoTotalRating = (ratingActual * resenasActuales) + userRating;
       const nuevasResenas = resenasActuales + 1;
       const nuevoRatingPromedio = nuevoTotalRating / nuevasResenas;
+
+      console.log('Nuevos valores calculados:', { nuevoRatingPromedio, nuevasResenas });
 
       // Actualizar producto
       await updateDoc(productoRef, {
@@ -296,14 +309,24 @@ const MusicmarketNuevo = () => {
         resenas: nuevasResenas
       });
 
+      console.log('Producto actualizado exitosamente');
+
       // Guardar reseña individual (opcional - para futuras funcionalidades)
-      await addDoc(collection(db, 'resenas'), {
-        productoId: selectedProduct.id,
-        usuarioId: user.uid,
-        rating: userRating,
-        comentario: comentarioResena,
-        createdAt: Timestamp.now()
-      });
+      try {
+        await addDoc(collection(db, 'resenas'), {
+          productoId: selectedProduct.id,
+          productoNombre: selectedProduct.nombre,
+          usuarioId: user.uid,
+          usuarioNombre: user.displayName || user.email,
+          rating: userRating,
+          comentario: comentarioResena,
+          createdAt: Timestamp.now()
+        });
+        console.log('Reseña individual guardada');
+      } catch (resenaError) {
+        console.error('Error guardando reseña individual (no crítico):', resenaError);
+        // No detenemos el proceso si falla guardar la reseña individual
+      }
 
       // Actualizar lista local
       setInstrumentos(prev => prev.map(inst => 
@@ -314,9 +337,18 @@ const MusicmarketNuevo = () => {
 
       showToast('¡Valoración enviada exitosamente!', 'success');
       setShowRatingModal(false);
+      setUserRating(0);
+      setComentarioResena('');
+      
+      console.log('Proceso de valoración completado exitosamente');
     } catch (error) {
-      console.error('Error submitting rating:', error);
-      showToast('Error al enviar la valoración', 'error');
+      console.error('Error completo al enviar valoración:', error);
+      console.error('Detalles del error:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
+      showToast(`Error al enviar la valoración: ${error.message}`, 'error');
     } finally {
       setSubmittingRating(false);
     }
