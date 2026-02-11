@@ -517,12 +517,14 @@ const MusicmarketNuevo = () => {
                       className="w-100 mt-2"
                       onClick={() => {
                         const chatId = [user.uid, instrumento.vendedorUid].sort().join('_');
+                        const mensajeInicial = `Hola, estoy interesado en tu producto:\n\nProducto: ${instrumento.nombre}\nPrecio: $${instrumento.precio?.toLocaleString()}\nUbicación: ${instrumento.ubicacion}\n\n${instrumento.descripcion ? instrumento.descripcion.substring(0, 100) + (instrumento.descripcion.length > 100 ? '...' : '') : ''}`;
                         openChat({
                           with: instrumento.vendedorUid,
                           withEmail: instrumento.vendedorEmail || instrumento.vendedorNombre || 'Vendedor',
                           withNombre: instrumento.vendedorNombre || 'Vendedor',
                           chatId: chatId,
-                          avatar: instrumento.vendedorFoto || ''
+                          avatar: instrumento.vendedorFoto || '',
+                          initialMessage: mensajeInicial
                         });
                       }}
                     >
@@ -930,12 +932,14 @@ const MusicmarketNuevo = () => {
                     variant="outline-primary"
                     onClick={() => {
                       const chatId = [user.uid, selectedProductDetails.vendedorUid].sort().join('_');
+                      const mensajeInicial = `Hola, estoy interesado en tu producto:\n\nProducto: ${selectedProductDetails.nombre}\nPrecio: $${selectedProductDetails.precio?.toLocaleString()}\nUbicación: ${selectedProductDetails.ubicacion}\n\n${selectedProductDetails.descripcion ? selectedProductDetails.descripcion.substring(0, 100) + (selectedProductDetails.descripcion.length > 100 ? '...' : '') : ''}`;
                       openChat({
                         with: selectedProductDetails.vendedorUid,
                         withEmail: selectedProductDetails.vendedorEmail || selectedProductDetails.vendedorNombre || 'Vendedor',
                         withNombre: selectedProductDetails.vendedorNombre || 'Vendedor',
                         chatId: chatId,
-                        avatar: selectedProductDetails.vendedorFoto || ''
+                        avatar: selectedProductDetails.vendedorFoto || '',
+                        initialMessage: mensajeInicial
                       });
                       setShowDetailsModal(false);
                     }}

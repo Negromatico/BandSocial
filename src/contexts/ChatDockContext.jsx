@@ -14,7 +14,8 @@ export const ChatDockProvider = ({ children }) => {
   const [chatToOpen, setChatToOpen] = useState(null);
 
   const openChat = (chatInfo) => {
-    // chatInfo debe tener: { with, withEmail, withNombre, chatId, avatar }
+    // chatInfo debe tener: { with, withEmail, withNombre, chatId, avatar, initialMessage }
+    // initialMessage es opcional y se enviará automáticamente al abrir el chat
     setChatToOpen(chatInfo);
   };
 

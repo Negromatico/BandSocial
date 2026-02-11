@@ -58,7 +58,7 @@ const ChatDock = () => {
         avatar: chat.avatar || '',
         chatId: chat.chatId,
       };
-      return [...prev, { user: userInfo, minimized: false }];
+      return [...prev, { user: userInfo, minimized: false, initialMessage: chat.initialMessage }];
     });
     setOpen(false);
   };
@@ -70,11 +70,12 @@ const ChatDock = () => {
   return (
     <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 2000, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
       {/* Ventanas de chat abiertas, apiladas horizontalmente */}
-      {openChats.map(({ user, minimized }) => (
+      {openChats.map(({ user, minimized, initialMessage }) => (
         <ChatWindow
           key={user.uid}
           user={user}
           minimized={minimized}
+          initialMessage={initialMessage}
           onMinimize={() => handleMinimize(user.uid)}
           onClose={() => handleClose(user.uid)}
           style={{ marginRight: 0 }}

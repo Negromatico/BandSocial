@@ -6,11 +6,12 @@ import { db, auth } from '../services/firebase';
 import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc as docFirestore, setDoc, where, getDocs, updateDoc } from 'firebase/firestore';
 import { notificarNuevoMensaje } from '../services/notificationService';
 
-const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props }) => {
+const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, initialMessage, ...props }) => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRead, setIsRead] = useState(false);
+  const [initialMessageSent, setInitialMessageSent] = useState(false);
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
   const me = auth.currentUser;
@@ -90,6 +91,53 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, minimized]);
+
+  // Enviar mensaje inicial automáticamente si se proporciona
+  useEffect(() => {
+    if (initialMessage && !initialMessageSent && !loading && me && user && chatId) {
+      const sendInitialMessage = async () => {
+        try {
+          await addDoc(collection(db, 'chats', chatId, 'messages'), {
+            text: initialMessage,
+            from: me.uid,
+            to: user.uid,
+            createdAt: serverTimestamp(),
+          });
+          // Actualiza metadatos para ambos usuarios
+          await Promise.all([
+            setDoc(docFirestore(db, 'userChats', me.uid, 'chats', chatId), {
+              chatId,
+              with: user.uid,
+              withEmail: user.email,
+              withNombre: user.nombre,
+              lastMsg: initialMessage,
+              lastAt: new Date().toISOString(),
+              lastFrom: me.uid,
+              lastRead: true
+            }, { merge: true }),
+            setDoc(docFirestore(db, 'userChats', user.uid, 'chats', chatId), {
+              chatId,
+              with: me.uid,
+              withEmail: me.email,
+              withNombre: me.displayName || me.email,
+              lastMsg: initialMessage,
+              lastAt: new Date().toISOString(),
+              lastFrom: me.uid,
+              lastRead: false
+            }, { merge: true }),
+          ]);
+          
+          // Enviar notificación al destinatario
+          await notificarNuevoMensaje(me.uid, user.uid, initialMessage);
+          setInitialMessageSent(true);
+        } catch (error) {
+          console.error('Error enviando mensaje inicial:', error);
+        }
+      };
+      
+      sendInitialMessage();
+    }
+  }, [initialMessage, initialMessageSent, loading, me, user, chatId]);
 
   const handleSend = async (e) => {
     e.preventDefault();

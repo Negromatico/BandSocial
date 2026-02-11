@@ -28,9 +28,9 @@ const AcercaDe = () => {
                   Nuestra Misión
                 </h3>
                 <p className="section-text">
-                  Crear un espacio digital donde músicos, bandas, productores y amantes de la música 
-                  puedan conectarse, colaborar y crecer juntos. BandSocial nace de la pasión por la 
-                  música y el deseo de fortalecer la comunidad musical colombiana.
+                  Facilitar la conexión, colaboración y crecimiento de músicos y bandas 
+                  en Colombia mediante una plataforma digital integral que transforma la 
+                  forma en que la comunidad musical interactúa y prospera.
                 </p>
               </Card.Body>
             </Card>
@@ -43,9 +43,9 @@ const AcercaDe = () => {
                   Nuestra Visión
                 </h3>
                 <p className="section-text">
-                  Ser la plataforma líder en Colombia para la conexión y desarrollo de talento musical, 
-                  facilitando oportunidades de colaboración, aprendizaje y crecimiento profesional para 
-                  todos los miembros de la comunidad musical.
+                  Consolidarnos como la plataforma líder en Latinoamérica para la 
+                  comunidad musical en los próximos 5 años, expandiendo las 
+                  oportunidades de crecimiento profesional para cada músico.
                 </p>
               </Card.Body>
             </Card>
