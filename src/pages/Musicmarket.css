@@ -1,27 +1,27 @@
 .musicmarket-page {
-  background: #f8f9fa;
+  background: var(--bg-secondary, #f8f9fa);
   min-height: 100vh;
   padding-bottom: 2rem;
 }
 
 .market-header {
-  background: white;
+  background: var(--card-bg, white);
   padding: 1.5rem;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px var(--card-shadow, rgba(0, 0, 0, 0.05));
 }
 
 .market-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #1e3a5f;
+  color: var(--text-primary, #1e3a5f);
   margin-bottom: 0.5rem;
 }
 
 .ordenar-select {
   max-width: 200px;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color, #e0e0e0);
 }
 
 .filtros-rapidos {
@@ -34,23 +34,24 @@
 .filtro-select {
   max-width: 180px;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-color, #e0e0e0);
 }
 
 .instrument-card {
   border: none;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px var(--card-shadow, rgba(0, 0, 0, 0.08));
   transition: all 0.3s ease;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   height: 100%;
+  background: var(--card-bg, white);
 }
 
 .instrument-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px var(--card-shadow, rgba(0, 0, 0, 0.12));
 }
 
 .instrument-image-container {
@@ -58,7 +59,7 @@
   overflow: hidden;
   height: 250px;
   width: 100%;
-  background: #f0f0f0;
+  background: var(--bg-tertiary, #f0f0f0);
 }
 
 .instrument-image-container .carousel {
@@ -144,7 +145,7 @@
 .instrument-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: #1e3a5f;
+  color: var(--text-primary, #1e3a5f);
   margin-bottom: 0.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -157,7 +158,7 @@
 
 .instrument-description {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-secondary, #666);
   margin-bottom: 0.75rem;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -187,7 +188,7 @@
 
 .resenas-count {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--text-secondary, #666);
 }
 
 .price-section {

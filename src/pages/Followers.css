@@ -48,9 +48,9 @@
 }
 
 .followers-tabs {
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid var(--border-color, #e5e7eb);
   padding: 0 20px;
-  background: #f9fafb;
+  background: var(--bg-secondary, #f9fafb);
 }
 
 .followers-tabs .nav-link {
@@ -69,7 +69,7 @@
 
 .followers-tabs .nav-link.active {
   color: #667eea;
-  background: white;
+  background: var(--card-bg, white);
   border-bottom-color: #667eea;
 }
 
@@ -85,8 +85,8 @@
 }
 
 .follower-card {
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--card-bg, white);
+  border: 2px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
   padding: 20px;
   display: flex;
