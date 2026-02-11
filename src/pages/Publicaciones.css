@@ -97,7 +97,7 @@
   display: flex;
   justify-content: space-around;
   padding-top: 12px;
-  border-top: 2px solid #f3f4f6;
+  border-top: 2px solid var(--border-color, #f3f4f6);
 }
 
 .stat-item {
@@ -142,13 +142,13 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #374151;
+  color: var(--text-primary, #374151);
   text-decoration: none;
   margin-bottom: 4px;
 }
 
 .quick-access-item:hover {
-  background: #f3f4f6;
+  background: var(--hover-bg, #f3f4f6);
   color: #6366f1;
 }
 
@@ -219,7 +219,7 @@
   gap: 12px;
   justify-content: center;
   padding-top: 12px;
-  border-top: 2px solid #f3f4f6;
+  border-top: 2px solid var(--border-color, #f3f4f6);
 }
 
 .post-action-btn {
@@ -240,7 +240,7 @@
 }
 
 .post-action-btn:hover {
-  background: #f3f4f6;
+  background: var(--hover-bg, #f3f4f6);
   color: #6366f1;
 }
 
@@ -324,7 +324,7 @@
 }
 
 .post-text {
-  color: #374151;
+  color: var(--text-primary, #374151);
   line-height: 1.5;
   margin-bottom: 12px;
   white-space: pre-line;
@@ -361,8 +361,8 @@
 }
 
 .post-action:hover {
-  background: #e5e7eb;
-  color: #4b5563;
+  background: var(--hover-bg, #e5e7eb);
+  color: var(--text-primary, #4b5563);
   transform: translateY(-1px);
 }
 
@@ -406,7 +406,7 @@
 }
 
 .chat-item:hover {
-  background: #f3f4f6;
+  background: var(--hover-bg, #f3f4f6);
 }
 
 .chat-avatar {
@@ -439,7 +439,7 @@
   height: 12px;
   border-radius: 50%;
   background: #10b981;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--card-bg, #ffffff);
 }
 
 .chat-info {
@@ -483,7 +483,7 @@
 }
 
 .sugerencia-item:hover {
-  background: #f9fafb;
+  background: var(--hover-bg, #f9fafb);
 }
 
 .sugerencia-item > a {

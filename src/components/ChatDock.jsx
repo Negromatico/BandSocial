@@ -138,18 +138,14 @@ const ChatDock = () => {
               </div>
               <Button 
                 variant="link" 
+                className="btn-close-modal"
                 style={{ 
-                  color: '#fff', 
                   fontSize: 28, 
                   padding: 0,
-                  opacity: 0.9,
-                  transition: 'opacity 0.2s',
                   lineHeight: 1,
                   textDecoration: 'none'
                 }} 
                 onClick={() => setOpen(false)}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '0.9'}
               >
                 ×
               </Button>

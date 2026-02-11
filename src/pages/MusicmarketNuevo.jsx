@@ -681,12 +681,12 @@ const MusicmarketNuevo = () => {
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(index)}
+                        className="btn-close-modal"
                         style={{
                           position: 'absolute',
                           top: '5px',
                           right: '5px',
                           background: 'var(--danger-color)',
-                          color: 'white',
                           border: 'none',
                           borderRadius: '50%',
                           width: '24px',

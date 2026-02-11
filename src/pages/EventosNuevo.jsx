@@ -406,10 +406,10 @@ const EventosNuevo = () => {
           </div>
           <button
             onClick={() => setMensajeExito('')}
+            className="btn-close-modal"
             style={{
               background: 'transparent',
               border: 'none',
-              color: 'var(--success-color)',
               fontSize: '24px',
               cursor: 'pointer',
               padding: '0 4px',

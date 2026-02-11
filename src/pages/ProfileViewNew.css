@@ -136,7 +136,7 @@
 }
 
 .separator {
-  color: #ccc;
+  color: var(--text-tertiary, #ccc);
 }
 
 /* Botones de Acción */
@@ -759,7 +759,7 @@
 .evento-descripcion {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #e4e6eb;
+  border-top: 1px solid var(--border-color, #e4e6eb);
 }
 
 .evento-footer {
@@ -768,7 +768,7 @@
   align-items: center;
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #e4e6eb;
+  border-top: 1px solid var(--border-color, #e4e6eb);
 }
 
 .evento-asistentes {
@@ -776,7 +776,7 @@
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  color: #65676b;
+  color: var(--text-secondary, #65676b);
   font-weight: 600;
 }
 
@@ -805,7 +805,7 @@
   align-items: center;
   min-height: 100vh;
   font-size: 18px;
-  color: #65676b;
+  color: var(--text-secondary, #65676b);
 }
 
 /* Galería */
