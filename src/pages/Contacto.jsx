@@ -215,8 +215,8 @@ const Contacto = () => {
                   </div>
                   <div>
                     <h5>Ubicación</h5>
-                    <p className="mb-0">Bogotá, Colombia</p>
-                    <p className="mb-0 text-muted small">Calle 123 #45-67</p>
+                    <p className="mb-0">Medellín, Itagüí - Colombia</p>
+                    <p className="mb-0 text-muted small">Complejo Sur SENA</p>
                   </div>
                 </div>
 

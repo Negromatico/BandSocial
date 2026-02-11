@@ -34,6 +34,7 @@ const TerminosCondiciones = lazy(() => import('./pages/TerminosCondiciones'));
 const PoliticaPrivacidad = lazy(() => import('./pages/PoliticaPrivacidad'));
 const Contacto = lazy(() => import('./pages/Contacto'));
 const Ayuda = lazy(() => import('./pages/Ayuda'));
+const ScrollToTop = lazy(() => import('./components/ScrollToTop'));
 
 // Componente de loading
 const LoadingSpinner = () => (
@@ -65,6 +66,7 @@ function MainLayout() {
   
   return (
     <Suspense fallback={<LoadingSpinner />}>
+      <ScrollToTop />
       {shouldShowNavbar && <AppNavbar />}
       <Routes>
         <Route path="/" element={<PublicacionesNuevo />} />
