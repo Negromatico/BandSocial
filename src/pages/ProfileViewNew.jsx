@@ -22,8 +22,15 @@ const ProfileViewNew = () => {
   const [eventos, setEventos] = useState([]);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
-  const currentUser = auth.currentUser;
+  const [currentUser, setCurrentUser] = useState(null);
   const { openChat } = useChatDock();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -604,7 +611,11 @@ const ProfileViewNew = () => {
                     <div className="post-actions-new">
                       <button 
                         className="action-btn-new"
-                        onClick={() => handleLike(pub.id)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleLike(pub.id);
+                        }}
                         style={{
                           color: pub.likes?.includes(currentUser?.uid) ? '#1877f2' : 'inherit',
                           fontWeight: pub.likes?.includes(currentUser?.uid) ? '600' : 'normal'

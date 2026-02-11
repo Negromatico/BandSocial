@@ -115,9 +115,9 @@ const ChatDock = () => {
         {open && (
           <div style={{ 
             width: 420, 
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%)',
+            background: 'var(--card-bg, #ffffff)',
             backdropFilter: 'blur(10px)',
-            color: '#1f2937', 
+            color: 'var(--text-primary, #1f2937)', 
             borderRadius: 20, 
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(102, 126, 234, 0.1)', 
             overflow: 'hidden', 
@@ -169,8 +169,8 @@ const ChatDock = () => {
                     cursor: 'pointer', 
                     transition: 'all 0.2s ease', 
                     marginBottom: 6, 
-                    background: 'rgba(255, 255, 255, 0.7)',
-                    border: '1px solid rgba(102, 126, 234, 0.1)',
+                    background: 'var(--bg-secondary, rgba(255, 255, 255, 0.7))',
+                    border: '1px solid var(--border-color, rgba(102, 126, 234, 0.1))',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)'
                   }} 
                   onClick={() => handleOpenChat(chat)}
@@ -180,7 +180,7 @@ const ChatDock = () => {
                     e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.15)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.7)';
+                    e.currentTarget.style.background = 'var(--bg-secondary, rgba(255, 255, 255, 0.7))';
                     e.currentTarget.style.transform = 'translateX(0)';
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.05)';
                   }}
@@ -206,11 +206,11 @@ const ChatDock = () => {
                     )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600, fontSize: 15, color: '#1f2937', marginBottom: 4 }}>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #1f2937)', marginBottom: 4 }}>
                       {chat.withNombre || chat.withEmail}
                     </div>
                     <div style={{ 
-                      color: '#6b7280', 
+                      color: 'var(--text-secondary, #6b7280)', 
                       fontSize: 13, 
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -222,7 +222,7 @@ const ChatDock = () => {
                 </div>
               )) : (
                 <div style={{ 
-                  color: '#9ca3af', 
+                  color: 'var(--text-secondary, #9ca3af)', 
                   textAlign: 'center', 
                   marginTop: 60,
                   marginBottom: 60,
