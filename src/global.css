@@ -16,8 +16,8 @@
 }
 
 body {
-  background: #f9fafb;
-  color: var(--color-black);
+  background: var(--bg-secondary, #f9fafb);
+  color: var(--text-primary, var(--color-black));
   font-family: var(--font-web), Arial, sans-serif;
   margin: 0;
   padding: 0;
@@ -29,17 +29,18 @@ html {
   padding: 0;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  background: var(--bg-secondary, #f9fafb);
 }
 
 /* Selección de texto personalizada */
 ::selection {
   background-color: rgba(139, 92, 246, 0.3);
-  color: #1F2937;
+  color: var(--text-primary, #1F2937);
 }
 
 ::-moz-selection {
   background-color: rgba(139, 92, 246, 0.3);
-  color: #1F2937;
+  color: var(--text-primary, #1F2937);
 }
 
 h1, h2, h3, h4, h5, h6, .logo {
@@ -67,12 +68,34 @@ a, .btn-primary, .btn-link {
 }
 
 .card, .evento-card, .modal-content {
-  background: #fff;
+  background: var(--card-bg, #fff);
+  color: var(--text-primary, #000);
   border-radius: 12px;
-  border: 2px solid var(--color-border);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 2px solid var(--border-color, var(--color-border));
+  box-shadow: 0 1px 3px var(--card-shadow, rgba(0, 0, 0, 0.05));
 }
 
 input, textarea, select {
   font-family: var(--font-web), Arial, sans-serif;
+  background-color: var(--input-bg, #fff);
+  color: var(--text-primary, #000);
+  border-color: var(--input-border, var(--color-border));
+}
+
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.btn-close-modal {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  opacity: 0.9 !important;
+  transition: opacity 0.2s, transform 0.2s !important;
+}
+
+.btn-close-modal:hover {
+  opacity: 1 !important;
+  transform: scale(1.1);
 }

@@ -30,8 +30,8 @@
 }
 
 .info-card {
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--card-bg, white);
+  border: 2px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
@@ -120,8 +120,8 @@
 .feature-box {
   text-align: center;
   padding: 30px 20px;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--card-bg, white);
+  border: 2px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
   transition: all 0.3s ease;
   height: 100%;
@@ -201,10 +201,10 @@
 }
 
 .cta-section {
-  background: white;
+  background: var(--card-bg, white);
   padding: 50px 30px;
   border-radius: 12px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--border-color, #e5e7eb);
   margin-top: 40px;
 }
 
@@ -337,8 +337,8 @@
 
 .accordion-button {
   font-weight: 600;
-  color: #1f2937;
-  background: white;
+  color: var(--text-primary, #1f2937);
+  background: var(--card-bg, white);
 }
 
 .accordion-button:not(.collapsed) {
@@ -359,15 +359,15 @@
 .resource-box {
   text-align: center;
   padding: 30px 20px;
-  background: #f9fafb;
+  background: var(--bg-secondary, #f9fafb);
   border-radius: 12px;
   height: 100%;
   transition: all 0.3s ease;
 }
 
 .resource-box:hover {
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: var(--card-bg, white);
+  box-shadow: 0 4px 12px var(--card-shadow, rgba(0, 0, 0, 0.1));
 }
 
 .resource-icon {

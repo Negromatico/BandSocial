@@ -492,8 +492,8 @@ const Profile = () => {
         <Modal.Header 
           closeButton 
           style={{ 
-            background: '#fff', 
-            borderBottom: '1px solid #e4e6eb',
+            background: 'var(--card-bg, #fff)', 
+            borderBottom: '1px solid var(--border-color, #e4e6eb)',
             padding: '16px 20px'
           }}
         >
@@ -501,7 +501,7 @@ const Profile = () => {
             Editar Perfil
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: '20px', background: '#fff', maxHeight: '70vh', overflowY: 'auto' }}>
+        <Modal.Body style={{ padding: '20px', background: 'var(--card-bg, #fff)', maxHeight: '70vh', overflowY: 'auto' }}>
           <Form onSubmit={handleSaveEdit}>
             <Form.Group className="mb-4">
               <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
@@ -794,8 +794,8 @@ const Profile = () => {
         <Modal.Header 
           closeButton 
           style={{ 
-            background: '#fff', 
-            borderBottom: '1px solid #e4e6eb',
+            background: 'var(--card-bg, #fff)', 
+            borderBottom: '1px solid var(--border-color, #e4e6eb)',
             padding: '16px 20px'
           }}
         >
@@ -803,7 +803,7 @@ const Profile = () => {
             Crear Publicación
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: '0', background: '#fff' }}>
+        <Modal.Body style={{ padding: '0', background: 'var(--card-bg, #fff)' }}>
           {/* Información del usuario */}
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #e4e6eb' }}>
             <div className="d-flex align-items-center gap-3">
@@ -1075,7 +1075,7 @@ const Profile = () => {
           </div>
           
           {/* Contenedor blanco centrado */}
-          <div style={{ maxWidth: '940px', margin: '0 auto', background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+          <div style={{ maxWidth: '940px', margin: '0 auto', background: 'var(--card-bg, #fff)', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
             {/* Sección de información del perfil */}
             <div style={{ padding: '20px 20px 0 20px', position: 'relative' }}>
               <div className="d-flex align-items-end justify-content-between" style={{ marginBottom: '16px' }}>
@@ -1336,7 +1336,7 @@ const Profile = () => {
               {/* Sidebar izquierdo */}
               <div style={{ width: '360px', flexShrink: 0 }}>
                 {/* Acerca de */}
-                <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                <div style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
                   <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Acerca de</h3>
                   <p style={{ fontSize: 15, color: '#050505', marginBottom: 12 }}>
                     {initialValues?.bio || 'Agrega una biografía para que otros conozcan más sobre ti.'}
@@ -1359,7 +1359,7 @@ const Profile = () => {
                 </div>
                 
                 {/* Redes Sociales */}
-                <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                <div style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
                   <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Redes Sociales</h3>
                   {initialValues?.spotify && (
                     <div 
@@ -1494,7 +1494,7 @@ const Profile = () => {
               {/* Feed central */}
               <div style={{ flex: 1 }}>
                 {/* Crear publicación */}
-                <div style={{ background: '#fff', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                <div style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
                   <div className="d-flex align-items-center gap-2 mb-3">
                     <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>
                       {initialValues?.nombre?.charAt(0)?.toUpperCase() || '?'}
@@ -1593,7 +1593,7 @@ const Profile = () => {
                     </div>
                   ) : userPublicaciones.length > 0 ? (
                     userPublicaciones.map(pub => (
-                      <div key={pub.id} style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+                      <div key={pub.id} style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))', marginBottom: '16px' }}>
                         <div className="d-flex justify-content-between align-items-start mb-3">
                           <div className="d-flex align-items-center gap-2">
                             <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>
@@ -1618,7 +1618,7 @@ const Profile = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center p-4" style={{ background: '#fff', borderRadius: '8px' }}>
+                    <div className="text-center p-4" style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px' }}>
                       <p>No tienes publicaciones aún. ¡Crea tu primera publicación!</p>
                     </div>
                   )
@@ -1631,7 +1631,7 @@ const Profile = () => {
                     </div>
                   ) : userEventos.length > 0 ? (
                     userEventos.map(evento => (
-                      <div key={evento.id} style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
+                      <div key={evento.id} style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))', marginBottom: '16px' }}>
                         <div className="d-flex gap-3">
                           {evento.imagenesUrl?.[0] && (
                             <img src={evento.imagenesUrl[0]} alt={evento.titulo} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: '8px' }} />
@@ -1649,7 +1649,7 @@ const Profile = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="text-center p-4" style={{ background: '#fff', borderRadius: '8px' }}>
+                    <div className="text-center p-4" style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px' }}>
                       <p>No tienes eventos creados. <a href="/eventos">Crear evento</a></p>
                     </div>
                   )

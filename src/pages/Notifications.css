@@ -6,9 +6,9 @@
 }
 
 .notifications-container {
-  background: white;
+  background: var(--card-bg, white);
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px var(--card-shadow, rgba(0, 0, 0, 0.08));
   overflow: hidden;
 }
 
@@ -18,8 +18,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #e5e7eb;
-  background: white;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  background: var(--card-bg, white);
 }
 
 .header-left {
@@ -61,14 +61,14 @@
   display: flex;
   gap: 8px;
   padding: 16px 28px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f8f9fa;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  background: var(--bg-secondary, #f8f9fa);
 }
 
 .tab-button {
-  background: white;
-  border: 1px solid #d1d5db;
-  color: #65676b;
+  background: var(--card-bg, white);
+  border: 1px solid var(--border-color, #d1d5db);
+  color: var(--text-secondary, #65676b);
   padding: 8px 20px;
   border-radius: 20px;
   font-size: 14px;
@@ -154,7 +154,7 @@
 }
 
 .notification-item-new:hover {
-  background: #f8f9fa;
+  background: var(--hover-bg, #f8f9fa);
 }
 
 .notification-item-new.unread {

@@ -135,9 +135,9 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
       style={{
         width: 380,
         height: minimized ? 56 : 520,
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(249, 250, 251, 0.95) 100%)',
+        background: 'var(--card-bg, #ffffff)',
         backdropFilter: 'blur(10px)',
-        color: '#1f2937',
+        color: 'var(--text-primary, #1f2937)',
         borderRadius: 20,
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(102, 126, 234, 0.1)',
         overflow: 'hidden',
@@ -234,9 +234,8 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
         <div style={{ 
           flex: 1, 
           overflowY: 'auto', 
-          background: 'linear-gradient(to bottom, rgba(249, 250, 251, 0.5), rgba(255, 255, 255, 0.8))', 
-          padding: 16,
-          backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.03) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.03) 0%, transparent 50%)'
+          background: 'var(--bg-secondary, #f9fafb)', 
+          padding: 16
         }}>
           {loading ? (
             <div className="text-center my-4">
@@ -254,8 +253,8 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
                   maxWidth: '75%',
                   background: msg.from === me?.uid 
                     ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-                    : 'rgba(255, 255, 255, 0.9)',
-                  color: msg.from === me?.uid ? '#fff' : '#1f2937',
+                    : 'var(--card-bg, #ffffff)',
+                  color: msg.from === me?.uid ? '#fff' : 'var(--text-primary, #1f2937)',
                   borderRadius: 16,
                   padding: '10px 16px',
                   fontSize: 14,
@@ -265,7 +264,7 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
                     : '0 2px 8px rgba(0, 0, 0, 0.08)',
                   border: msg.from === me?.uid 
                     ? 'none' 
-                    : '1px solid rgba(102, 126, 234, 0.1)',
+                    : '1px solid var(--border-color, rgba(102, 126, 234, 0.1))',
                   wordWrap: 'break-word',
                   lineHeight: 1.4
                 }}>
@@ -287,7 +286,7 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
               </div>
             )) : (
               <div style={{ 
-                color: '#9ca3af', 
+                color: 'var(--text-secondary, #9ca3af)', 
                 textAlign: 'center', 
                 marginTop: 80,
                 fontSize: 14
@@ -305,9 +304,9 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
       {!minimized && (
         <Form 
           style={{ 
-            background: 'rgba(255, 255, 255, 0.9)', 
+            background: 'var(--card-bg, #ffffff)', 
             padding: 12, 
-            borderTop: '1px solid rgba(102, 126, 234, 0.1)',
+            borderTop: '1px solid var(--border-color, rgba(102, 126, 234, 0.1))',
             backdropFilter: 'blur(10px)'
           }} 
           onSubmit={handleSend}
@@ -319,9 +318,9 @@ const ChatWindow = ({ user, onClose, onMinimize, minimized, style = {}, ...props
               onChange={e => setInput(e.target.value)}
               placeholder="Escribe un mensaje..."
               style={{ 
-                background: 'rgba(249, 250, 251, 0.8)', 
-                color: '#1f2937', 
-                border: '1px solid rgba(102, 126, 234, 0.2)',
+                background: 'var(--input-bg, #f9fafb)', 
+                color: 'var(--text-primary, #1f2937)', 
+                border: '1px solid var(--border-color, rgba(102, 126, 234, 0.2))',
                 borderRadius: 12,
                 padding: '10px 14px',
                 fontSize: 14,

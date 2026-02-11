@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { db, auth } from '../services/firebase';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { Button, Spinner } from 'react-bootstrap';
+import { Button, Spinner, Modal, Form } from 'react-bootstrap';
 import { FaUserPlus, FaUserMinus, FaEnvelope, FaEllipsisH, FaMapMarkerAlt, FaCalendar, FaGuitar, FaUsers, FaMusic, FaExternalLinkAlt } from 'react-icons/fa';
 import ChatModal from '../components/ChatModal';
 import { notificarNuevoSeguidor } from '../services/notificationService';
@@ -20,8 +20,17 @@ const ProfileViewNew = () => {
   const [stats, setStats] = useState({ seguidores: 0, siguiendo: 0, eventos: 0, publicaciones: 0 });
   const [publicaciones, setPublicaciones] = useState([]);
   const [eventos, setEventos] = useState([]);
-  const currentUser = auth.currentUser;
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const { openChat } = useChatDock();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchPerfil = async () => {
@@ -156,6 +165,56 @@ const ProfileViewNew = () => {
     } finally {
       setLoadingFollow(false);
     }
+  };
+
+  const handleLike = async (postId) => {
+    if (!currentUser) {
+      alert('Debes iniciar sesión para dar me gusta');
+      return;
+    }
+
+    try {
+      const postRef = doc(db, 'publicaciones', postId);
+      const postSnap = await getDoc(postRef);
+      
+      if (postSnap.exists()) {
+        const postData = postSnap.data();
+        const likes = postData.likes || [];
+        const hasLiked = likes.includes(currentUser.uid);
+
+        if (hasLiked) {
+          await updateDoc(postRef, {
+            likes: arrayRemove(currentUser.uid)
+          });
+        } else {
+          await updateDoc(postRef, {
+            likes: arrayUnion(currentUser.uid)
+          });
+        }
+
+        // Actualizar estado local
+        setPublicaciones(prev => prev.map(pub => {
+          if (pub.id === postId) {
+            const newLikes = hasLiked 
+              ? likes.filter(id => id !== currentUser.uid)
+              : [...likes, currentUser.uid];
+            return { ...pub, likes: newLikes };
+          }
+          return pub;
+        }));
+      }
+    } catch (error) {
+      console.error('Error al dar like:', error);
+    }
+  };
+
+  const handleComment = (post) => {
+    if (!currentUser) {
+      alert('Debes iniciar sesión para comentar');
+      return;
+    }
+    setSelectedPost(post);
+    setShowCommentModal(true);
   };
 
   const formatNumber = (num) => {
@@ -550,10 +609,24 @@ const ProfileViewNew = () => {
                     </div>
 
                     <div className="post-actions-new">
-                      <button className="action-btn-new">
+                      <button 
+                        className="action-btn-new"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleLike(pub.id);
+                        }}
+                        style={{
+                          color: pub.likes?.includes(currentUser?.uid) ? '#1877f2' : 'inherit',
+                          fontWeight: pub.likes?.includes(currentUser?.uid) ? '600' : 'normal'
+                        }}
+                      >
                         ❤️ Me gusta
                       </button>
-                      <button className="action-btn-new">
+                      <button 
+                        className="action-btn-new"
+                        onClick={() => handleComment(pub)}
+                      >
                         💬 Comentar
                       </button>
                       <button className="action-btn-new">
@@ -682,6 +755,26 @@ const ProfileViewNew = () => {
           otherUserPhoto={perfil.fotoPerfil}
         />
       )}
+
+      {/* Modal de Comentarios */}
+      <Modal show={showCommentModal} onHide={() => setShowCommentModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Comentarios</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '20px' }}>
+            Sistema de comentarios próximamente disponible.
+          </p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', textAlign: 'center' }}>
+            Por ahora puedes dar "Me gusta" a las publicaciones.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCommentModal(false)}>
+            Cerrar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

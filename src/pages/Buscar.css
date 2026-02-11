@@ -10,7 +10,7 @@
 }
 
 .no-results {
-  background: #f9fafb;
+  background: var(--bg-secondary, #f9fafb);
   border-radius: 12px;
   padding: 3rem 2rem;
 }
