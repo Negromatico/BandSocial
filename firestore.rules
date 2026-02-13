@@ -37,7 +37,7 @@ service cloud.firestore {
     // PERFILES
     // ============================================
     match /perfiles/{userId} {
-      // Lectura: Pública (permite modo invitado)
+      // Lectura: Pública (permite modo invitado) o Administrador
       allow read: if true;
       
       // Crear: Solo el usuario correspondiente
@@ -60,7 +60,7 @@ service cloud.firestore {
     // PUBLICACIONES
     // ============================================
     match /publicaciones/{postId} {
-      // Lectura: Pública (permite modo invitado)
+      // Lectura: Pública (permite modo invitado) o Administrador
       allow read: if true;
       
       // Crear: Usuario autenticado, debe ser el autor
@@ -93,7 +93,7 @@ service cloud.firestore {
     // PRODUCTOS (MusicMarket)
     // ============================================
     match /productos/{productId} {
-      // Lectura: Pública (permite modo invitado)
+      // Lectura: Pública (permite modo invitado) o Administrador
       allow read: if true;
       
       // Crear: Usuario autenticado, debe ser el vendedor
@@ -117,7 +117,7 @@ service cloud.firestore {
     // EVENTOS
     // ============================================
     match /eventos/{eventId} {
-      // Lectura: Pública (permite modo invitado)
+      // Lectura: Pública (permite modo invitado) o Administrador
       allow read: if true;
       
       // Crear: Usuario autenticado, debe ser el creador
@@ -244,6 +244,43 @@ service cloud.firestore {
         allow write: if isAuthenticated() 
           && request.resource.data.from == request.auth.uid;
       }
+    }
+    
+    // ============================================
+    // USUARIOS (Colección alternativa para estadísticas)
+    // ============================================
+    match /usuarios/{userId} {
+      // Lectura: Pública o Administrador (para estadísticas)
+      allow read: if true;
+      
+      // Crear: Solo el usuario correspondiente
+      allow create: if isAuthenticated() 
+        && request.auth.uid == userId;
+      
+      // Actualizar: El propietario o el administrador
+      allow update: if isOwner(userId) || isAdmin();
+      
+      // Eliminar: Solo el propietario o el administrador
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // ============================================
+    // SESIONES (Tracking de inicio/cierre de sesión)
+    // ============================================
+    match /sesiones/{sessionId} {
+      // Lectura: Solo administradores (para estadísticas)
+      allow read: if isAdmin();
+      
+      // Crear: Usuario autenticado puede registrar su propia sesión
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'tipo', 'timestamp']);
+      
+      // Actualizar: No permitido (sesiones son inmutables)
+      allow update: if false;
+      
+      // Eliminar: Solo administrador
+      allow delete: if isAdmin();
     }
     
     // ============================================

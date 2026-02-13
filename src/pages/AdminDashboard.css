@@ -1,7 +1,8 @@
 .admin-dashboard {
   padding: 30px 20px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: var(--body-bg, #f9fafb);
   min-height: 100vh;
+  font-family: var(--font-web), Arial, sans-serif;
 }
 
 .admin-header {
@@ -10,18 +11,20 @@
   align-items: center;
   margin-bottom: 30px;
   padding: 20px;
-  background: white;
+  background: var(--card-bg, #fff);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--border-color, #e5e7eb);
+  box-shadow: 0 1px 3px var(--card-shadow, rgba(0, 0, 0, 0.05));
 }
 
 .admin-title {
   font-size: 32px;
   font-weight: 700;
-  color: #2c3e50;
+  color: var(--text-primary, #000);
   margin: 0;
   display: flex;
   align-items: center;
+  font-family: var(--font-logo), serif;
 }
 
 .admin-actions {
@@ -76,9 +79,9 @@
   font-size: 12px;
 }
 
-/* Colores específicos para cada stat */
+/* Colores específicos para cada stat - usando el color morado de la página */
 .stat-users {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
 }
 
@@ -87,7 +90,7 @@
 }
 
 .stat-posts {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
   color: white;
 }
 
@@ -96,7 +99,7 @@
 }
 
 .stat-events {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
   color: white;
 }
 
@@ -105,7 +108,7 @@
 }
 
 .stat-products {
-  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
   color: white;
 }
 
@@ -115,10 +118,10 @@
 
 /* Tarjeta de contenido principal */
 .admin-content-card {
-  border: none;
+  border: 2px solid var(--border-color, #e5e7eb);
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  background: white;
+  box-shadow: 0 1px 3px var(--card-shadow, rgba(0, 0, 0, 0.05));
+  background: var(--card-bg, #fff);
 }
 
 .admin-content-card .card-body {
@@ -127,27 +130,28 @@
 
 /* Tabs personalizados */
 .admin-content-card .nav-tabs {
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid var(--border-color, #e5e7eb);
 }
 
 .admin-content-card .nav-tabs .nav-link {
-  color: #6b7280;
+  color: var(--text-secondary, #6b7280);
   font-weight: 600;
   border: none;
   padding: 12px 24px;
   transition: all 0.3s ease;
+  font-family: var(--font-web), Arial, sans-serif;
 }
 
 .admin-content-card .nav-tabs .nav-link:hover {
-  color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
+  color: var(--color-purple, #6366f1);
+  background: rgba(99, 102, 241, 0.1);
   border-radius: 8px 8px 0 0;
 }
 
 .admin-content-card .nav-tabs .nav-link.active {
-  color: #667eea;
-  background: white;
-  border-bottom: 3px solid #667eea;
+  color: var(--color-purple, #6366f1);
+  background: var(--card-bg, #fff);
+  border-bottom: 3px solid var(--color-purple, #6366f1);
   font-weight: 700;
 }
 
@@ -162,7 +166,7 @@
 }
 
 .admin-content-card table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   position: sticky;
   top: 0;
@@ -176,6 +180,7 @@
   text-transform: uppercase;
   font-size: 13px;
   letter-spacing: 0.5px;
+  font-family: var(--font-web), Arial, sans-serif;
 }
 
 .admin-content-card table tbody tr {
@@ -183,13 +188,14 @@
 }
 
 .admin-content-card table tbody tr:hover {
-  background: rgba(102, 126, 234, 0.05);
+  background: rgba(99, 102, 241, 0.05);
 }
 
 .admin-content-card table tbody td {
   padding: 15px;
   vertical-align: middle;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  color: var(--text-primary, #000);
 }
 
 /* Badges personalizados */
@@ -216,12 +222,13 @@
 /* Modal de contraseña */
 .modal-content {
   border-radius: 12px;
-  border: none;
+  border: 2px solid var(--border-color, #e5e7eb);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  background: var(--card-bg, #fff);
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   border-radius: 12px 12px 0 0;
   border: none;
@@ -234,28 +241,34 @@
 .modal-title {
   font-weight: 700;
   font-size: 20px;
+  font-family: var(--font-logo), serif;
 }
 
 .modal-body {
   padding: 30px;
+  background: var(--card-bg, #fff);
 }
 
 .modal-body .form-label {
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary, #000);
   margin-bottom: 8px;
+  font-family: var(--font-web), Arial, sans-serif;
 }
 
 .modal-body .form-control {
   border-radius: 8px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--border-color, #e5e7eb);
   padding: 12px;
   transition: all 0.3s ease;
+  background: var(--input-bg, #fff);
+  color: var(--text-primary, #000);
+  font-family: var(--font-web), Arial, sans-serif;
 }
 
 .modal-body .form-control:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-purple, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 /* Responsive */

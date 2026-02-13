@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge, Tabs, Tab } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge, Tabs, Tab, Spinner, Alert } from 'react-bootstrap';
 import { FaUsers, FaFileAlt, FaCalendar, FaShoppingBag, FaTrash, FaBan, FaCheck, FaChartLine, FaKey } from 'react-icons/fa';
 import { db, auth } from '../services/firebase';
 import { collection, getDocs, deleteDoc, doc, updateDoc, query, orderBy, limit, getDoc } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/Toast';
+import EstadisticasCard from '../components/Estadisticas/EstadisticasCard';
+import GraficoBarras from '../components/Estadisticas/GraficoBarras';
+import TablaEstadisticas from '../components/Estadisticas/TablaEstadisticas';
+import EstadisticasAvanzadas from '../components/EstadisticasAvanzadas';
+import estadisticasService from '../services/estadisticasService';
+import colombiaAPI from '../services/colombiaAPI';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -30,6 +36,22 @@ const AdminDashboard = () => {
   });
   const [changingPassword, setChangingPassword] = useState(false);
   
+  const [departamentos, setDepartamentos] = useState([]);
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState('');
+  const [ciudades, setCiudades] = useState([]);
+  const [ciudadSeleccionada, setCiudadSeleccionada] = useState('');
+  
+  const [statsGenerales, setStatsGenerales] = useState(null);
+  const [statsDepartamento, setStatsDepartamento] = useState(null);
+  const [statsMunicipio, setStatsMunicipio] = useState(null);
+  const [statsInstrumentos, setStatsInstrumentos] = useState(null);
+  const [statsGeneros, setStatsGeneros] = useState(null);
+  const [statsEventos, setStatsEventos] = useState(null);
+  const [statsPublicaciones, setStatsPublicaciones] = useState(null);
+  const [statsProductos, setStatsProductos] = useState(null);
+  const [loadingEstadisticas, setLoadingEstadisticas] = useState(false);
+  const [errorEstadisticas, setErrorEstadisticas] = useState(null);
+  
   const navigate = useNavigate();
   const { showToast, ToastContainer } = useToast();
   const currentUser = auth.currentUser;
@@ -37,7 +59,22 @@ const AdminDashboard = () => {
   useEffect(() => {
     checkAdminAccess();
     fetchAllData();
+    cargarDepartamentos();
+    cargarEstadisticasGenerales();
   }, []);
+
+  useEffect(() => {
+    if (departamentoSeleccionado) {
+      cargarCiudadesPorDepartamento(departamentoSeleccionado);
+      cargarEstadisticasDepartamento(departamentoSeleccionado);
+    }
+  }, [departamentoSeleccionado]);
+
+  useEffect(() => {
+    if (ciudadSeleccionada) {
+      cargarEstadisticasMunicipio(ciudadSeleccionada);
+    }
+  }, [ciudadSeleccionada]);
 
   const checkAdminAccess = () => {
     if (!currentUser || currentUser.email !== 'estebanber24@gmail.com') {
@@ -226,6 +263,68 @@ const AdminDashboard = () => {
     }
   };
 
+  const cargarDepartamentos = async () => {
+    try {
+      const data = await colombiaAPI.getDepartamentos();
+      setDepartamentos(colombiaAPI.getDepartamentosFormateados(data));
+    } catch (err) {
+      console.error('Error al cargar departamentos:', err);
+    }
+  };
+
+  const cargarCiudadesPorDepartamento = async (deptId) => {
+    try {
+      const data = await colombiaAPI.getCiudadesByDepartamento(deptId);
+      setCiudades(colombiaAPI.getCiudadesFormateadas(data));
+    } catch (err) {
+      console.error('Error al cargar ciudades:', err);
+    }
+  };
+
+  const cargarEstadisticasGenerales = async () => {
+    try {
+      setLoadingEstadisticas(true);
+      const [general, instrumentos, generos, eventos, publicaciones, productos] = await Promise.all([
+        estadisticasService.getEstadisticasGenerales(),
+        estadisticasService.getEstadisticasPorInstrumento(),
+        estadisticasService.getEstadisticasPorGeneroMusical(),
+        estadisticasService.getEstadisticasEventos(),
+        estadisticasService.getEstadisticasPublicaciones(),
+        estadisticasService.getEstadisticasProductos()
+      ]);
+      
+      setStatsGenerales(general);
+      setStatsInstrumentos(instrumentos);
+      setStatsGeneros(generos);
+      setStatsEventos(eventos);
+      setStatsPublicaciones(publicaciones);
+      setStatsProductos(productos);
+      setErrorEstadisticas(null);
+    } catch (err) {
+      setErrorEstadisticas('Error al cargar estadísticas: ' + err.message);
+    } finally {
+      setLoadingEstadisticas(false);
+    }
+  };
+
+  const cargarEstadisticasDepartamento = async (deptId) => {
+    try {
+      const stats = await estadisticasService.getEstadisticasPorDepartamento(deptId);
+      setStatsDepartamento(stats);
+    } catch (err) {
+      console.error('Error al cargar estadísticas del departamento:', err);
+    }
+  };
+
+  const cargarEstadisticasMunicipio = async (munId) => {
+    try {
+      const stats = await estadisticasService.getEstadisticasPorMunicipio(munId);
+      setStatsMunicipio(stats);
+    } catch (err) {
+      console.error('Error al cargar estadísticas del municipio:', err);
+    }
+  };
+
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -343,7 +442,8 @@ const AdminDashboard = () => {
                       <th>Plan</th>
                       <th>Estado</th>
                       <th>Fecha Registro</th>
-                      <th>Ciudad</th>
+                      <th>Departamento</th>
+                      <th>Municipio</th>
                       <th>Acciones</th>
                     </tr>
                   </thead>
@@ -371,7 +471,14 @@ const AdminDashboard = () => {
                         </td>
                         <td>{formatDate(user.fechaRegistro)}</td>
                         <td>
-                          {typeof user.ciudad === 'object' ? user.ciudad?.label || user.ciudad?.value || 'N/A' : user.ciudad || 'N/A'}
+                          {typeof user.departamento === 'object' 
+                            ? (user.departamento?.label || user.departamento?.value || 'N/A')
+                            : (user.departamento || 'N/A')}
+                        </td>
+                        <td>
+                          {typeof user.municipio === 'object' 
+                            ? (user.municipio?.label || user.municipio?.value || 'N/A')
+                            : (user.municipio || (typeof user.ciudad === 'object' ? user.ciudad?.label || user.ciudad?.value : user.ciudad) || 'N/A')}
                         </td>
                         <td>
                           <div className="d-flex gap-2">
@@ -514,6 +621,11 @@ const AdminDashboard = () => {
                   </tbody>
                 </Table>
               </div>
+            </Tab>
+
+            {/* Tab Estadísticas Avanzadas */}
+            <Tab eventKey="estadisticas" title="Estadísticas">
+              <EstadisticasAvanzadas />
             </Tab>
           </Tabs>
         </Card.Body>

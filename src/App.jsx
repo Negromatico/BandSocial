@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import './global.css';
 import './styles/theme.css';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { auth } from './services/firebase';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ChatDockProvider } from './contexts/ChatDockContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import EmailVerificationPrompt from './components/EmailVerificationPrompt';
 
 // Lazy loading de componentes para mejorar rendimiento
 const Login = lazy(() => import('./pages/Login'));
@@ -34,6 +35,7 @@ const PoliticaPrivacidad = lazy(() => import('./pages/PoliticaPrivacidad'));
 const Contacto = lazy(() => import('./pages/Contacto'));
 const Ayuda = lazy(() => import('./pages/Ayuda'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const EmailVerificationHandler = lazy(() => import('./pages/EmailVerificationHandler'));
 const ScrollToTop = lazy(() => import('./components/ScrollToTop'));
 
 // Componente de loading
@@ -64,9 +66,34 @@ function MainLayout() {
   const shouldShowNavbar = !hideNavbarPaths.includes(location.pathname);
   const shouldShowFooter = !hideNavbarPaths.includes(location.pathname);
   
+  const [user, setUser] = useState(null);
+  const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
+      setUser(currentUser);
+      
+      // Mostrar prompt de verificación si el usuario está autenticado pero no ha verificado su email
+      // y no está en las páginas de login/register
+      if (currentUser && !currentUser.emailVerified && !hideNavbarPaths.includes(location.pathname)) {
+        setShowVerificationPrompt(true);
+      } else {
+        setShowVerificationPrompt(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [location.pathname]);
+
+  const handleVerified = () => {
+    setShowVerificationPrompt(false);
+    window.location.reload(); // Recargar para actualizar el estado
+  };
+  
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <ScrollToTop />
+      {showVerificationPrompt && <EmailVerificationPrompt user={user} onVerified={handleVerified} />}
       {shouldShowNavbar && <AppNavbar />}
       <Routes>
         <Route path="/" element={<PublicacionesNuevo />} />
@@ -93,6 +120,7 @@ function MainLayout() {
         <Route path="/contacto" element={<Contacto />} />
         <Route path="/ayuda" element={<Ayuda />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/__/auth/action" element={<EmailVerificationHandler />} />
       </Routes>
       {shouldShowFooter && <Footer />}
     </Suspense>

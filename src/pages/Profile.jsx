@@ -5,7 +5,8 @@ import { Container, Modal, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { uploadToCloudinary } from '../services/cloudinary';
 import Select from 'react-select';
-import { instrumentos } from '../data/opciones';
+import { instrumentos, generosMusicales } from '../data/opciones';
+import { useDepartamentos, useCiudades } from '../hooks/useColombia';
 import { useToast } from '../components/Toast';
 import ImageCropModal from '../components/ImageCropModal';
 import './Profile.css';
@@ -39,8 +40,13 @@ const Profile = () => {
   const [showCropModal, setShowCropModal] = useState(false);
   const [cropImageFile, setCropImageFile] = useState(null);
   const [cropImageType, setCropImageType] = useState(''); // 'banner' o 'perfil'
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState('');
+  const [municipioSeleccionado, setMunicipioSeleccionado] = useState('');
   const navigate = useNavigate();
   const { showToast, ToastContainer } = useToast();
+  
+  const { departamentos } = useDepartamentos();
+  const { ciudades } = useCiudades(departamentoSeleccionado);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => {
@@ -60,10 +66,20 @@ const Profile = () => {
     }
   }, [user]);
 
+  // Abrir modal de edición automáticamente si es un perfil nuevo
+  useEffect(() => {
+    if (initialValues && initialValues.perfilCompletado === false && !showEditModal) {
+      setShowEditModal(true);
+    }
+  }, [initialValues]);
+
   useEffect(() => {
     if (showEditModal) {
       setEditDraft({
         nombre: initialValues?.nombre || '',
+        type: initialValues?.type || 'musico',
+        departamento: initialValues?.departamento || '',
+        municipio: initialValues?.municipio || '',
         ciudad: initialValues?.ciudad || '',
         bio: initialValues?.bio || '',
         generos: Array.isArray(initialValues?.generos) ? initialValues.generos : [],
@@ -73,6 +89,8 @@ const Profile = () => {
         youtube: initialValues?.youtube || '',
         instagram: initialValues?.instagram || '',
       });
+      setDepartamentoSeleccionado(initialValues?.departamento || '');
+      setMunicipioSeleccionado(initialValues?.municipio || '');
       setEditStatus('');
     }
   }, [showEditModal, initialValues]);
@@ -122,10 +140,15 @@ const Profile = () => {
     }
     
     try {
+      const esPrimeraVez = initialValues.perfilCompletado === false;
+      
       const dataToSave = {
         ...initialValues,
         nombre: editDraft.nombre.trim(),
+        type: editDraft.type || 'musico',
         ciudad: editDraft.ciudad,
+        departamento: editDraft.departamento,
+        municipio: editDraft.municipio,
         bio: editDraft.bio?.trim() || '',
         generos: Array.isArray(editDraft.generos) ? editDraft.generos : [],
         instrumentos: Array.isArray(editDraft.instrumentos) ? editDraft.instrumentos : [],
@@ -135,6 +158,7 @@ const Profile = () => {
         instagram: editDraft.instagram || '',
         uid: user.uid,
         email: user.email,
+        perfilCompletado: true,
         updatedAt: new Date().toISOString(),
       };
       
@@ -142,6 +166,11 @@ const Profile = () => {
       setInitialValues(dataToSave);
       setShowEditModal(false);
       setEditStatus('');
+      
+      // Si es la primera vez que completa el perfil, redirigir a selección de plan
+      if (esPrimeraVez) {
+        navigate('/membership');
+      }
     } catch (err) {
       setEditStatus('Error actualizando perfil: ' + err.message);
     }
@@ -496,6 +525,7 @@ const Profile = () => {
             borderBottom: '1px solid var(--border-color, #e4e6eb)',
             padding: '16px 20px'
           }}
+          className="modal-header-custom"
         >
           <Modal.Title style={{ fontSize: 20, fontWeight: 700, color: '#050505' }}>
             Editar Perfil
@@ -503,6 +533,28 @@ const Profile = () => {
         </Modal.Header>
         <Modal.Body style={{ padding: '20px', background: 'var(--card-bg, #fff)', maxHeight: '70vh', overflowY: 'auto' }}>
           <Form onSubmit={handleSaveEdit}>
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                Tipo de Perfil
+              </Form.Label>
+              <Form.Select
+                value={editDraft.type || 'musico'}
+                onChange={(e) => setEditDraft({ ...editDraft, type: e.target.value })}
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  fontSize: 15,
+                  border: '1px solid #e4e6eb',
+                  transition: 'border-color 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
+                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+              >
+                <option value="musico">Músico</option>
+                <option value="banda">Banda</option>
+              </Form.Select>
+            </Form.Group>
+
             <Form.Group className="mb-4">
               <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
                 Nombre
@@ -526,13 +578,22 @@ const Profile = () => {
 
             <Form.Group className="mb-4">
               <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Ciudad
+                Departamento
               </Form.Label>
-              <Form.Control
-                type="text"
-                value={typeof editDraft.ciudad === 'object' ? editDraft.ciudad?.label : editDraft.ciudad || ''}
-                onChange={(e) => setEditDraft({ ...editDraft, ciudad: e.target.value })}
-                placeholder="Ej: Medellín, Bogotá, Cali..."
+              <Form.Select
+                value={departamentoSeleccionado}
+                onChange={(e) => {
+                  const deptId = e.target.value;
+                  setDepartamentoSeleccionado(deptId);
+                  setMunicipioSeleccionado('');
+                  const deptNombre = departamentos.find(d => d.value === deptId)?.label || '';
+                  setEditDraft({ 
+                    ...editDraft, 
+                    departamento: deptId,
+                    municipio: '',
+                    ciudad: deptNombre
+                  });
+                }}
                 style={{ 
                   borderRadius: '8px', 
                   padding: '12px', 
@@ -542,7 +603,47 @@ const Profile = () => {
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#1877f2'}
                 onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
-              />
+              >
+                <option value="">Seleccionar departamento</option>
+                {departamentos.map(dept => (
+                  <option key={dept.value} value={dept.value}>{dept.label}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+                Municipio/Ciudad
+              </Form.Label>
+              <Form.Select
+                value={municipioSeleccionado}
+                onChange={(e) => {
+                  const munId = e.target.value;
+                  setMunicipioSeleccionado(munId);
+                  const munNombre = ciudades.find(c => c.value === munId)?.label || '';
+                  setEditDraft({ 
+                    ...editDraft, 
+                    municipio: munId,
+                    ciudad: munNombre
+                  });
+                }}
+                disabled={!departamentoSeleccionado}
+                style={{ 
+                  borderRadius: '8px', 
+                  padding: '12px', 
+                  fontSize: 15,
+                  border: '1px solid var(--border-color, #e4e6eb)',
+                  transition: 'border-color 0.2s',
+                  backgroundColor: !departamentoSeleccionado ? 'var(--input-bg, #f5f5f5)' : 'var(--card-bg, white)'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
+                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+              >
+                <option value="">Seleccionar municipio</option>
+                {ciudades.map(city => (
+                  <option key={city.value} value={city.value}>{city.label}</option>
+                ))}
+              </Form.Select>
             </Form.Group>
 
             <Form.Group className="mb-4">
@@ -575,25 +676,13 @@ const Profile = () => {
               <Select
                 isMulti
                 value={(editDraft.generos || []).map(g => {
-                  // Si g ya es un objeto, retornarlo; si es string, convertirlo
                   if (typeof g === 'object' && g.value && g.label) {
                     return g;
                   }
                   return { value: g, label: g };
                 })}
                 onChange={(selected) => setEditDraft({ ...editDraft, generos: (selected || []).map(s => s.value) })}
-                options={[
-                  { value: 'Rock', label: 'Rock' },
-                  { value: 'Pop', label: 'Pop' },
-                  { value: 'Jazz', label: 'Jazz' },
-                  { value: 'Blues', label: 'Blues' },
-                  { value: 'Metal', label: 'Metal' },
-                  { value: 'Punk', label: 'Punk' },
-                  { value: 'Indie', label: 'Indie' },
-                  { value: 'Alternativo', label: 'Alternativo' },
-                  { value: 'Electrónica', label: 'Electrónica' },
-                  { value: 'Reggae', label: 'Reggae' },
-                ]}
+                options={generosMusicales}
                 placeholder="Selecciona géneros..."
               />
             </Form.Group>
@@ -798,6 +887,7 @@ const Profile = () => {
             borderBottom: '1px solid var(--border-color, #e4e6eb)',
             padding: '16px 20px'
           }}
+          className="modal-header-custom"
         >
           <Modal.Title style={{ fontSize: 20, fontWeight: 700, color: '#050505' }}>
             Crear Publicación
@@ -805,7 +895,7 @@ const Profile = () => {
         </Modal.Header>
         <Modal.Body style={{ padding: '0', background: 'var(--card-bg, #fff)' }}>
           {/* Información del usuario */}
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e4e6eb' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color, #e4e6eb)' }}>
             <div className="d-flex align-items-center gap-3">
               <div style={{ 
                 width: 40, 
@@ -1036,7 +1126,7 @@ const Profile = () => {
       </Modal>
 
       {user && (
-        <Container fluid className="p-0" style={{ maxWidth: '100%', margin: '0 auto', marginTop: 0, background: '#f0f2f5', minHeight: '100vh' }}>
+        <Container fluid className="p-0" style={{ maxWidth: '100%', margin: '0 auto', marginTop: 0, background: 'var(--body-bg, #f0f2f5)', minHeight: '100vh' }}>
           {/* Banner/Portada */}
           <div style={{ position: 'relative', width: '100%', height: 350, background: '#000', overflow: 'hidden' }}>
             {initialValues?.fotoPortada && (
@@ -1094,7 +1184,7 @@ const Profile = () => {
                         width: 168,
                         height: 168,
                         borderRadius: '50%',
-                        border: '4px solid #fff',
+                        border: '4px solid var(--card-bg, #fff)',
                         background: '#1877f2',
                         display: 'flex',
                         alignItems: 'center',
@@ -1125,7 +1215,7 @@ const Profile = () => {
                       height: 36,
                       borderRadius: '50%',
                       background: '#1877f2',
-                      border: '3px solid #fff',
+                      border: '3px solid var(--card-bg, #fff)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1139,7 +1229,7 @@ const Profile = () => {
                   
                   {/* Nombre y descripción */}
                   <div style={{ paddingBottom: '8px' }}>
-                    <h1 style={{ fontSize: 32, fontWeight: 700, color: '#050505', marginBottom: 4, lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary, #050505)', marginBottom: 4, lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                       {initialValues?.nombre || 'Mi perfil'}
                       {(initialValues?.planActual === 'premium' || initialValues?.membershipPlan === 'premium') && (
                         <span style={{
@@ -1159,7 +1249,7 @@ const Profile = () => {
                         </span>
                       )}
                     </h1>
-                    <p style={{ fontSize: 15, color: '#65676b', marginBottom: 4 }}>
+                    <p style={{ fontSize: 15, color: 'var(--text-secondary, #65676b)', marginBottom: 4 }}>
                       {initialValues?.type === 'banda' ? 'Banda de Rock Alternativo' : 'Músico Profesional'}
                     </p>
                     <p style={{ fontSize: 13, color: '#65676b', marginBottom: 0 }}>
@@ -1332,13 +1422,13 @@ const Profile = () => {
             </div>
             
             {/* Contenido con sidebar y feed */}
-            <div className="d-flex gap-3" style={{ padding: '16px', background: '#f0f2f5' }}>
+            <div className="d-flex gap-3" style={{ padding: '16px', background: 'var(--body-bg, #f0f2f5)' }}>
               {/* Sidebar izquierdo */}
               <div style={{ width: '360px', flexShrink: 0 }}>
                 {/* Acerca de */}
                 <div style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Acerca de</h3>
-                  <p style={{ fontSize: 15, color: '#050505', marginBottom: 12 }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text-primary, #050505)' }}>Acerca de</h3>
+                  <p style={{ fontSize: 15, color: 'var(--text-primary, #050505)', marginBottom: 12 }}>
                     {initialValues?.bio || 'Agrega una biografía para que otros conozcan más sobre ti.'}
                   </p>
                   {initialValues?.miembros && (
@@ -1360,7 +1450,7 @@ const Profile = () => {
                 
                 {/* Redes Sociales */}
                 <div style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Redes Sociales</h3>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text-primary, #050505)' }}>Redes Sociales</h3>
                   {initialValues?.spotify && (
                     <div 
                       onClick={() => window.open(initialValues.spotify, '_blank')}
@@ -1369,7 +1459,7 @@ const Profile = () => {
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                     >
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>S</div>
-                      <span style={{ fontSize: 15 }}>Spotify</span>
+                      <span style={{ fontSize: 15, color: 'var(--text-primary, #050505)' }}>Spotify</span>
                     </div>
                   )}
                   {initialValues?.youtube && (
@@ -1380,7 +1470,7 @@ const Profile = () => {
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                     >
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>Y</div>
-                      <span style={{ fontSize: 15 }}>YouTube</span>
+                      <span style={{ fontSize: 15, color: 'var(--text-primary, #050505)' }}>YouTube</span>
                     </div>
                   )}
                   {initialValues?.instagram && (
@@ -1391,7 +1481,7 @@ const Profile = () => {
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                     >
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>I</div>
-                      <span style={{ fontSize: 15 }}>Instagram</span>
+                      <span style={{ fontSize: 15, color: 'var(--text-primary, #050505)' }}>Instagram</span>
                     </div>
                   )}
                   {!initialValues?.spotify && !initialValues?.youtube && !initialValues?.instagram && (
@@ -1619,7 +1709,7 @@ const Profile = () => {
                     ))
                   ) : (
                     <div className="text-center p-4" style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px' }}>
-                      <p>No tienes publicaciones aún. ¡Crea tu primera publicación!</p>
+                      <p style={{ color: 'var(--text-secondary, #65676b)' }}>No tienes publicaciones aún. ¡Crea tu primera publicación!</p>
                     </div>
                   )
                 )}

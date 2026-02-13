@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { Button, Form, Alert, ProgressBar } from 'react-bootstrap';
 import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
@@ -52,6 +52,15 @@ const Register = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
       
+      // Configurar el enlace de verificación
+      const actionCodeSettings = {
+        url: window.location.origin + '/__/auth/action',
+        handleCodeInApp: false
+      };
+      
+      // Enviar email de verificación con la configuración correcta
+      await sendEmailVerification(user, actionCodeSettings);
+      
       await setDoc(doc(db, 'perfiles', user.uid), {
         uid: user.uid,
         email: user.email,
@@ -61,6 +70,8 @@ const Register = () => {
         fotos: [],
         videoUrl: '',
         ciudad: null,
+        departamento: null,
+        municipio: null,
         generos: [],
         instrumentos: [],
         buscan: [],
@@ -77,11 +88,18 @@ const Register = () => {
         horarios: [],
         planActual: 'free',
         membershipPlan: 'free',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        perfilCompletado: false,
+        emailVerified: false,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
       
-      navigate('/membership');
+      // Mostrar mensaje de verificación y redirigir
+      setError('');
+      alert('¡Cuenta creada exitosamente! Hemos enviado un correo de verificación a ' + user.email + '. Por favor, verifica tu correo antes de continuar.');
+      
+      // Redirigir primero al perfil para completar información
+      navigate('/profile');
     } catch (err) {
       console.error('Error al registrar:', err);
       if (err.code === 'auth/email-already-in-use') {
