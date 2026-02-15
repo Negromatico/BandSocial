@@ -47,6 +47,13 @@ const Login = () => {
           return;
         }
         
+        // Verificar si el perfil está completado
+        if (!perfil.perfilCompletado) {
+          // Si el perfil no está completado, redirigir al perfil para completarlo
+          navigate('/profile');
+          return;
+        }
+        
         // Verificar si el usuario ya tiene plan premium
         const esPremium = perfil.planActual === 'premium' || perfil.membershipPlan === 'premium';
         

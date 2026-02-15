@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification, signOut } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { Button, Form, Alert, ProgressBar } from 'react-bootstrap';
-import { FaUser, FaLock, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Button, Form, Alert, ProgressBar, Modal } from 'react-bootstrap';
+import { FaUser, FaLock, FaEye, FaEyeSlash, FaCheckCircle, FaEnvelope } from 'react-icons/fa';
 import logo from '../assets/logo.png';
 import './Login.css';
 
@@ -15,6 +15,8 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
   const navigate = useNavigate();
 
   const passwordValue = watch('password');
@@ -69,9 +71,9 @@ const Register = () => {
         fotoPerfil: '',
         fotos: [],
         videoUrl: '',
-        ciudad: null,
-        departamento: null,
-        municipio: null,
+        ciudad: '',
+        departamento: '',
+        municipio: '',
         generos: [],
         instrumentos: [],
         buscan: [],
@@ -94,12 +96,13 @@ const Register = () => {
         updatedAt: serverTimestamp(),
       });
       
-      // Mostrar mensaje de verificación y redirigir
-      setError('');
-      alert('¡Cuenta creada exitosamente! Hemos enviado un correo de verificación a ' + user.email + '. Por favor, verifica tu correo antes de continuar.');
+      // Cerrar sesión para que el usuario no quede autenticado
+      await signOut(auth);
       
-      // Redirigir primero al perfil para completar información
-      navigate('/profile');
+      // Mostrar mensaje de verificación
+      setError('');
+      setUserEmail(user.email);
+      setShowSuccessModal(true);
     } catch (err) {
       console.error('Error al registrar:', err);
       if (err.code === 'auth/email-already-in-use') {
@@ -190,6 +193,83 @@ const Register = () => {
           </Form>
         </div>
       </div>
+
+      {/* Modal de Éxito */}
+      <Modal 
+        show={showSuccessModal} 
+        onHide={() => {
+          setShowSuccessModal(false);
+          navigate('/');
+        }}
+        centered
+        backdrop="static"
+        className="modern-modal"
+      >
+        <Modal.Body className="text-center p-5" style={{
+          background: 'linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(75, 0, 130, 0.1) 100%)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: '15px',
+          border: '1px solid rgba(138, 43, 226, 0.3)'
+        }}>
+          <div className="mb-4">
+            <FaCheckCircle size={80} style={{ color: '#8a2be2' }} />
+          </div>
+          <h3 style={{ color: '#8a2be2', fontWeight: 'bold', marginBottom: '20px' }}>
+            ¡Cuenta creada exitosamente!
+          </h3>
+          <div className="mb-4" style={{
+            background: 'rgba(138, 43, 226, 0.1)',
+            padding: '20px',
+            borderRadius: '10px',
+            border: '1px solid rgba(138, 43, 226, 0.2)'
+          }}>
+            <FaEnvelope size={30} style={{ color: '#8a2be2', marginBottom: '10px' }} />
+            <p style={{ color: 'var(--text-primary)', marginBottom: '10px' }}>
+              Hemos enviado un correo de verificación a:
+            </p>
+            <p style={{ 
+              color: '#8a2be2', 
+              fontWeight: 'bold',
+              fontSize: '1.1rem',
+              wordBreak: 'break-word'
+            }}>
+              {userEmail}
+            </p>
+          </div>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '10px' }}>
+            Por favor, verifica tu correo antes de iniciar sesión.
+          </p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '30px' }}>
+            Una vez verificado, podrás iniciar sesión y completar tu perfil.
+          </p>
+          <Button 
+            onClick={() => {
+              setShowSuccessModal(false);
+              navigate('/');
+            }}
+            style={{
+              background: 'linear-gradient(135deg, #8a2be2 0%, #4b0082 100%)',
+              border: 'none',
+              padding: '12px 40px',
+              fontSize: '1.1rem',
+              fontWeight: 'bold',
+              borderRadius: '25px',
+              boxShadow: '0 4px 15px rgba(138, 43, 226, 0.4)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 6px 20px rgba(138, 43, 226, 0.6)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 4px 15px rgba(138, 43, 226, 0.4)';
+            }}
+          >
+            Continuar
+          </Button>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

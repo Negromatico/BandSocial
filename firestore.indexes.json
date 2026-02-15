@@ -63,6 +63,63 @@
         { "fieldPath": "type", "order": "ASCENDING" },
         { "fieldPath": "ciudad", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "perfiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "departamento", "order": "ASCENDING" },
+        { "fieldPath": "ciudad", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "perfiles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "departamento", "order": "ASCENDING" },
+        { "fieldPath": "planActual", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "eventos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "departamento", "order": "ASCENDING" },
+        { "fieldPath": "fecha", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "eventos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "departamento", "order": "ASCENDING" },
+        { "fieldPath": "ciudad", "order": "ASCENDING" },
+        { "fieldPath": "fecha", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "publicaciones",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "autorUid", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "productos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "vendedorUid", "order": "ASCENDING" },
+        { "fieldPath": "estado", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "analytics_ciudades",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "departamento", "order": "ASCENDING" },
+        { "fieldPath": "totalUsuarios", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

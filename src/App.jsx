@@ -70,12 +70,19 @@ function MainLayout() {
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      if (currentUser) {
+        // Recargar el usuario para obtener el estado más reciente de emailVerified
+        await currentUser.reload();
+        setUser(auth.currentUser);
+      } else {
+        setUser(null);
+      }
       
       // Mostrar prompt de verificación si el usuario está autenticado pero no ha verificado su email
       // y no está en las páginas de login/register
-      if (currentUser && !currentUser.emailVerified && !hideNavbarPaths.includes(location.pathname)) {
+      const updatedUser = auth.currentUser;
+      if (updatedUser && !updatedUser.emailVerified && !hideNavbarPaths.includes(location.pathname)) {
         setShowVerificationPrompt(true);
       } else {
         setShowVerificationPrompt(false);

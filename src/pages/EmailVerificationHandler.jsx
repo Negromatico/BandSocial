@@ -27,12 +27,17 @@ const EmailVerificationHandler = () => {
         // Aplicar el código de verificación
         await applyActionCode(auth, oobCode);
         
+        // Recargar el usuario para actualizar emailVerified
+        if (auth.currentUser) {
+          await auth.currentUser.reload();
+        }
+        
         setStatus('success');
         setMessage('¡Tu correo electrónico ha sido verificado exitosamente!');
         
-        // Redirigir al perfil después de 3 segundos
+        // Redirigir al login después de 3 segundos para que inicie sesión
         setTimeout(() => {
-          navigate('/profile');
+          navigate('/login');
         }, 3000);
       } catch (error) {
         console.error('Error al verificar email:', error);
@@ -133,10 +138,10 @@ const EmailVerificationHandler = () => {
                   color: '#6b7280',
                   marginBottom: '30px'
                 }}>
-                  Serás redirigido a tu perfil en unos segundos...
+                  Ahora puedes iniciar sesión y completar tu perfil. Serás redirigido en unos segundos...
                 </p>
                 <Button
-                  onClick={() => navigate('/profile')}
+                  onClick={() => navigate('/login')}
                   style={{
                     background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                     border: 'none',
@@ -150,7 +155,7 @@ const EmailVerificationHandler = () => {
                   onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
                   onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
                 >
-                  Ir a mi perfil ahora
+                  Iniciar sesión ahora
                 </Button>
               </>
             )}

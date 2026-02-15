@@ -9,6 +9,7 @@ import { instrumentos, generosMusicales } from '../data/opciones';
 import { useDepartamentos, useCiudades } from '../hooks/useColombia';
 import { useToast } from '../components/Toast';
 import ImageCropModal from '../components/ImageCropModal';
+import { formatearNombre } from '../utils/textFormatters';
 import './Profile.css';
 
 const Profile = () => {
@@ -433,7 +434,7 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f0f2f5' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-secondary)' }}>
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Cargando...</span>
         </div>
@@ -521,34 +522,49 @@ const Profile = () => {
         <Modal.Header 
           closeButton 
           style={{ 
-            background: 'var(--card-bg, #fff)', 
-            borderBottom: '1px solid var(--border-color, #e4e6eb)',
-            padding: '16px 20px'
+            background: 'rgba(255, 255, 255, 0.1)', 
+            backdropFilter: 'blur(10px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '20px 24px'
           }}
           className="modal-header-custom"
         >
-          <Modal.Title style={{ fontSize: 20, fontWeight: 700, color: '#050505' }}>
-            Editar Perfil
+          <Modal.Title style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary, #fff)' }}>
+            ✏️ Editar Perfil
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: '20px', background: 'var(--card-bg, #fff)', maxHeight: '70vh', overflowY: 'auto' }}>
+        <Modal.Body style={{ 
+          padding: '24px', 
+          background: 'rgba(255, 255, 255, 0.05)', 
+          backdropFilter: 'blur(10px)',
+          maxHeight: '70vh', 
+          overflowY: 'auto' 
+        }}>
           <Form onSubmit={handleSaveEdit}>
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Tipo de Perfil
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                🎭 Tipo de Perfil
               </Form.Label>
               <Form.Select
                 value={editDraft.type || 'musico'}
                 onChange={(e) => setEditDraft({ ...editDraft, type: e.target.value })}
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               >
                 <option value="musico">Músico</option>
                 <option value="banda">Banda</option>
@@ -556,29 +572,40 @@ const Profile = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Nombre
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                👤 Nombre
               </Form.Label>
               <Form.Control
                 type="text"
                 value={editDraft.nombre || ''}
-                onChange={(e) => setEditDraft({ ...editDraft, nombre: e.target.value })}
+                onChange={(e) => {
+                  const formattedName = formatearNombre(e.target.value);
+                  setEditDraft({ ...editDraft, nombre: formattedName });
+                }}
                 placeholder="Nombre de la banda o músico"
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Departamento
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                📍 Departamento
               </Form.Label>
               <Form.Select
                 value={departamentoSeleccionado}
@@ -589,20 +616,28 @@ const Profile = () => {
                   const deptNombre = departamentos.find(d => d.value === deptId)?.label || '';
                   setEditDraft({ 
                     ...editDraft, 
-                    departamento: deptId,
+                    departamento: deptNombre,
                     municipio: '',
-                    ciudad: deptNombre
+                    ciudad: ''
                   });
                 }}
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               >
                 <option value="">Seleccionar departamento</option>
                 {departamentos.map(dept => (
@@ -612,8 +647,8 @@ const Profile = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Municipio/Ciudad
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                🏙️ Municipio/Ciudad
               </Form.Label>
               <Form.Select
                 value={municipioSeleccionado}
@@ -623,21 +658,29 @@ const Profile = () => {
                   const munNombre = ciudades.find(c => c.value === munId)?.label || '';
                   setEditDraft({ 
                     ...editDraft, 
-                    municipio: munId,
+                    municipio: munNombre,
                     ciudad: munNombre
                   });
                 }}
                 disabled={!departamentoSeleccionado}
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid var(--border-color, #e4e6eb)',
-                  transition: 'border-color 0.2s',
-                  backgroundColor: !departamentoSeleccionado ? 'var(--input-bg, #f5f5f5)' : 'var(--card-bg, white)'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: !departamentoSeleccionado ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease',
+                  opacity: !departamentoSeleccionado ? 0.6 : 1
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = !departamentoSeleccionado ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)';
+                }}
               >
                 <option value="">Seleccionar municipio</option>
                 {ciudades.map(city => (
@@ -647,8 +690,8 @@ const Profile = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Biografía
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                📝 Biografía
               </Form.Label>
               <Form.Control
                 as="textarea"
@@ -657,21 +700,29 @@ const Profile = () => {
                 onChange={(e) => setEditDraft({ ...editDraft, bio: e.target.value })}
                 placeholder="Cuéntanos sobre ti o tu banda..."
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease',
                   resize: 'vertical'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Géneros Musicales
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                🎵 Géneros Musicales
               </Form.Label>
               <Select
                 isMulti
@@ -688,8 +739,8 @@ const Profile = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Instrumentos
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                🎸 Instrumentos
               </Form.Label>
               <Select
                 isMulti
@@ -710,8 +761,8 @@ const Profile = () => {
 
             {initialValues?.type === 'banda' && (
               <Form.Group className="mb-4">
-                <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                  Número de Miembros
+                <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                  👥 Número de Miembros
                 </Form.Label>
                 <Form.Control
                   type="text"
@@ -719,29 +770,37 @@ const Profile = () => {
                   onChange={(e) => setEditDraft({ ...editDraft, miembros: e.target.value })}
                   placeholder="Ej: 4"
                   style={{ 
-                    borderRadius: '8px', 
-                    padding: '12px', 
+                    borderRadius: '10px', 
+                    padding: '14px', 
                     fontSize: 15,
-                    border: '1px solid #e4e6eb',
-                    transition: 'border-color 0.2s'
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    color: 'var(--text-primary, #fff)',
+                    transition: 'all 0.3s ease'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                  onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0d6efd';
+                    e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                    e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                  }}
                 />
               </Form.Group>
             )}
 
             {/* Separador visual */}
             <div style={{ 
-              borderTop: '1px solid #e4e6eb', 
+              borderTop: '1px solid rgba(255, 255, 255, 0.2)', 
               margin: '24px 0',
               paddingTop: 24
             }}>
               <h5 style={{ 
                 fontWeight: 700, 
-                fontSize: 17, 
+                fontSize: 18, 
                 marginBottom: 16, 
-                color: '#050505',
+                color: 'var(--text-primary, #fff)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8
@@ -751,7 +810,7 @@ const Profile = () => {
             </div>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
                 🎵 Spotify
               </Form.Label>
               <Form.Control
@@ -760,19 +819,27 @@ const Profile = () => {
                 onChange={(e) => setEditDraft({ ...editDraft, spotify: e.target.value })}
                 placeholder="https://open.spotify.com/artist/..."
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1DB954'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#1DB954';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
                 📺 YouTube
               </Form.Label>
               <Form.Control
@@ -781,19 +848,27 @@ const Profile = () => {
                 onChange={(e) => setEditDraft({ ...editDraft, youtube: e.target.value })}
                 placeholder="https://youtube.com/@..."
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#FF0000'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#FF0000';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
                 📸 Instagram
               </Form.Label>
               <Form.Control
@@ -802,14 +877,22 @@ const Profile = () => {
                 onChange={(e) => setEditDraft({ ...editDraft, instagram: e.target.value })}
                 placeholder="https://instagram.com/..."
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#E1306C'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#E1306C';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
             </Form.Group>
 
@@ -823,24 +906,30 @@ const Profile = () => {
             )}
 
             {/* Separador antes de botones */}
-            <div style={{ borderTop: '1px solid #e4e6eb', margin: '20px -20px 20px -20px' }}></div>
+            <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)', margin: '24px -24px 24px -24px' }}></div>
 
             <div className="d-flex gap-3 justify-content-end" style={{ padding: '0 0 0 0' }}>
               <Button 
                 variant="light" 
                 onClick={() => setShowEditModal(false)}
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '10px 24px', 
+                  borderRadius: '10px', 
+                  padding: '12px 28px', 
                   fontWeight: 600,
-                  background: '#e4e6eb',
-                  border: 'none',
-                  color: '#050505',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: '2px solid rgba(255, 255, 255, 0.5)',
+                  color: '#fff',
                   fontSize: 15,
-                  transition: 'background 0.2s'
+                  transition: 'all 0.3s ease'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#d8dadf'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#e4e6eb'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
               >
                 Cancelar
               </Button>
@@ -848,16 +937,25 @@ const Profile = () => {
                 type="submit" 
                 variant="primary"
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '10px 24px', 
+                  borderRadius: '10px', 
+                  padding: '12px 28px', 
                   fontWeight: 600,
-                  background: '#1877f2',
+                  background: '#0d6efd',
                   border: 'none',
                   fontSize: 15,
-                  transition: 'background 0.2s'
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(13, 110, 253, 0.4)'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#166fe5'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#1877f2'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#0b5ed7';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(13, 110, 253, 0.6)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#0d6efd';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(13, 110, 253, 0.4)';
+                }}
               >
                 Guardar Cambios
               </Button>
@@ -1053,7 +1151,7 @@ const Profile = () => {
                       fontSize: 20,
                       transition: 'background 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     📷
@@ -1075,7 +1173,7 @@ const Profile = () => {
                       fontSize: 20,
                       transition: 'background 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     📅
@@ -1126,7 +1224,7 @@ const Profile = () => {
       </Modal>
 
       {user && (
-        <Container fluid className="p-0" style={{ maxWidth: '100%', margin: '0 auto', marginTop: 0, background: 'var(--body-bg, #f0f2f5)', minHeight: '100vh' }}>
+        <Container fluid className="p-0" style={{ maxWidth: '100%', margin: '0 auto', marginTop: 0, background: 'var(--bg-secondary)', minHeight: '100vh' }}>
           {/* Banner/Portada */}
           <div style={{ position: 'relative', width: '100%', height: 350, background: '#000', overflow: 'hidden' }}>
             {initialValues?.fotoPortada && (
@@ -1253,8 +1351,12 @@ const Profile = () => {
                       {initialValues?.type === 'banda' ? 'Banda de Rock Alternativo' : 'Músico Profesional'}
                     </p>
                     <p style={{ fontSize: 13, color: '#65676b', marginBottom: 0 }}>
-                      {(typeof initialValues?.ciudad === 'object' ? initialValues?.ciudad?.label : initialValues?.ciudad) || 'Ciudad no especificada'}
-                      {initialValues?.createdAt && ` • Miembro desde ${new Date(initialValues.createdAt).getFullYear()}`}
+                      {(() => {
+                        const ciudad = typeof initialValues?.ciudad === 'object' ? initialValues?.ciudad?.label : initialValues?.ciudad;
+                        const municipio = typeof initialValues?.municipio === 'object' ? initialValues?.municipio?.label : initialValues?.municipio;
+                        return ciudad || municipio || 'Ciudad no especificada';
+                      })()}
+                      {initialValues?.createdAt && ` • Miembro desde ${initialValues.createdAt.toDate ? initialValues.createdAt.toDate().getFullYear() : new Date(initialValues.createdAt).getFullYear()}`}
                     </p>
                   </div>
                 </div>
@@ -1422,7 +1524,7 @@ const Profile = () => {
             </div>
             
             {/* Contenido con sidebar y feed */}
-            <div className="d-flex gap-3" style={{ padding: '16px', background: 'var(--body-bg, #f0f2f5)' }}>
+            <div className="d-flex gap-3" style={{ padding: '16px', background: 'var(--bg-secondary)' }}>
               {/* Sidebar izquierdo */}
               <div style={{ width: '360px', flexShrink: 0 }}>
                 {/* Acerca de */}
@@ -1596,11 +1698,12 @@ const Profile = () => {
                       readOnly
                       style={{ 
                         flex: 1, 
-                        border: 'none', 
-                        background: '#f0f2f5', 
+                        border: '1px solid var(--border-color)', 
+                        background: 'var(--input-bg)', 
                         borderRadius: '20px', 
                         padding: '8px 16px',
                         fontSize: 15,
+                        color: 'var(--text-primary)',
                         cursor: 'pointer'
                       }}
                     />
@@ -1623,7 +1726,7 @@ const Profile = () => {
                           transition: 'background 0.2s',
                           borderRadius: '6px'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                       >
                         📷 Foto
@@ -1641,7 +1744,7 @@ const Profile = () => {
                           transition: 'background 0.2s',
                           borderRadius: '6px'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                       >
                         🎥 Video
@@ -1659,7 +1762,7 @@ const Profile = () => {
                           transition: 'background 0.2s',
                           borderRadius: '6px'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                       >
                         📅 Evento
@@ -1782,105 +1885,6 @@ const Profile = () => {
                   )
                 )}
 
-                {/* Publicación de ejemplo solo para otras tabs */}
-                {!['publicaciones', 'eventos', 'productos'].includes(activeTab) && (
-                  <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
-                    <div className="d-flex align-items-center gap-2 mb-3">
-                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>
-                        {initialValues?.nombre?.charAt(0)?.toUpperCase() || 'T'}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 15, fontWeight: 600, color: '#050505' }}>
-                          {initialValues?.nombre || 'The Midnight Riders'}
-                        </div>
-                        <div style={{ fontSize: 13, color: '#65676b' }}>Hace 2 horas</div>
-                      </div>
-                    </div>
-                  <p style={{ fontSize: 15, color: '#050505', marginBottom: 12 }}>
-                    Increíble noche en The Roxy! Gracias a todos los que vinieron a apoyarnos. Aquí algunas fotos del show.
-                  </p>
-                  {initialValues?.fotoPortada && (
-                    <img 
-                      src={initialValues.fotoPortada} 
-                      alt="Publicación" 
-                      style={{ width: '100%', borderRadius: '8px', marginBottom: 12 }}
-                    />
-                  )}
-                  <div className="d-flex justify-content-between align-items-center" style={{ paddingTop: 8, borderTop: '1px solid #e4e6eb' }}>
-                    <div style={{ fontSize: 13, color: '#65676b' }}>1.2K Me gusta • 85 comentarios • 34 compartidos</div>
-                  </div>
-                  <div className="d-flex justify-content-around" style={{ paddingTop: 8, borderTop: '1px solid #e4e6eb', marginTop: 8 }}>
-                    <button 
-                      onClick={() => navigate('/publicaciones')}
-                      style={{ 
-                        border: 'none', 
-                        background: 'none', 
-                        color: '#65676b', 
-                        fontSize: 15, 
-                        fontWeight: 500, 
-                        cursor: 'pointer', 
-                        padding: '8px 12px', 
-                        flex: 1,
-                        transition: 'background 0.2s',
-                        borderRadius: '6px'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-                    >
-                      👍 Me gusta
-                    </button>
-                    <button 
-                      onClick={() => navigate('/publicaciones')}
-                      style={{ 
-                        border: 'none', 
-                        background: 'none', 
-                        color: '#65676b', 
-                        fontSize: 15, 
-                        fontWeight: 500, 
-                        cursor: 'pointer', 
-                        padding: '8px 12px', 
-                        flex: 1,
-                        transition: 'background 0.2s',
-                        borderRadius: '6px'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-                    >
-                      💬 Comentar
-                    </button>
-                    <button 
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({
-                            title: initialValues?.nombre || 'BandSocial',
-                            text: 'Mira mi perfil en BandSocial',
-                            url: window.location.href
-                          });
-                        } else {
-                          navigator.clipboard.writeText(window.location.href);
-                          alert('Link copiado al portapapeles');
-                        }
-                      }}
-                      style={{ 
-                        border: 'none', 
-                        background: 'none', 
-                        color: '#65676b', 
-                        fontSize: 15, 
-                        fontWeight: 500, 
-                        cursor: 'pointer', 
-                        padding: '8px 12px', 
-                        flex: 1,
-                        transition: 'background 0.2s',
-                        borderRadius: '6px'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-                    >
-                      🔗 Compartir
-                    </button>
-                  </div>
-                </div>
-                )}
               </div>
             </div>
           </div>
