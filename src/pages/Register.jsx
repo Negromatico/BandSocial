@@ -92,6 +92,11 @@ const Register = () => {
         membershipPlan: 'free',
         perfilCompletado: false,
         emailVerified: false,
+        historialCambiosNombre: [],
+        ultimoCambioNombre: null,
+        cuentaDesactivada: false,
+        fechaDesactivacion: null,
+        razonDesactivacion: '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });

@@ -47,6 +47,15 @@ const Login = () => {
           return;
         }
         
+        // Verificar si la cuenta está desactivada y reactivarla
+        if (perfil.cuentaDesactivada) {
+          const { updateDoc } = await import('firebase/firestore');
+          await updateDoc(perfilRef, {
+            cuentaDesactivada: false,
+            fechaReactivacion: new Date().toISOString()
+          });
+        }
+        
         // Verificar si el perfil está completado
         if (!perfil.perfilCompletado) {
           // Si el perfil no está completado, redirigir al perfil para completarlo

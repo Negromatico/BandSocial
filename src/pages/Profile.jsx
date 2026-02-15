@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../services/firebase';
 import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { Container, Modal, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { uploadToCloudinary } from '../services/cloudinary';
@@ -43,6 +44,12 @@ const Profile = () => {
   const [cropImageType, setCropImageType] = useState(''); // 'banner' o 'perfil'
   const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState('');
   const [municipioSeleccionado, setMunicipioSeleccionado] = useState('');
+  const [showDeleteSurveyModal, setShowDeleteSurveyModal] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteComments, setDeleteComments] = useState('');
+  const [deleteAction, setDeleteAction] = useState(''); // 'delete' o 'deactivate'
+  const [showReauthModal, setShowReauthModal] = useState(false);
+  const [reauthPassword, setReauthPassword] = useState('');
   const navigate = useNavigate();
   const { showToast, ToastContainer } = useToast();
   
@@ -142,6 +149,33 @@ const Profile = () => {
     
     try {
       const esPrimeraVez = initialValues.perfilCompletado === false;
+      const nombreCambio = editDraft.nombre.trim() !== initialValues.nombre;
+      
+      // Validar límite de cambios de nombre
+      if (nombreCambio && !esPrimeraVez) {
+        const historial = initialValues.historialCambiosNombre || [];
+        const ultimoCambio = initialValues.ultimoCambioNombre;
+        
+        // Verificar si ha alcanzado el límite de 2 cambios
+        if (historial.length >= 2) {
+          // Verificar si ha pasado 1 mes desde el último cambio
+          if (ultimoCambio) {
+            const fechaUltimoCambio = new Date(ultimoCambio);
+            const fechaActual = new Date();
+            const unMesEnMs = 30 * 24 * 60 * 60 * 1000; // 30 días
+            const diferencia = fechaActual - fechaUltimoCambio;
+            
+            if (diferencia < unMesEnMs) {
+              const diasRestantes = Math.ceil((unMesEnMs - diferencia) / (24 * 60 * 60 * 1000));
+              setEditStatus(`Has alcanzado el límite de cambios de nombre. Debes esperar ${diasRestantes} día(s) más para poder cambiarlo nuevamente.`);
+              return;
+            } else {
+              // Ha pasado 1 mes, reiniciar el contador
+              initialValues.historialCambiosNombre = [];
+            }
+          }
+        }
+      }
       
       const dataToSave = {
         ...initialValues,
@@ -163,10 +197,26 @@ const Profile = () => {
         updatedAt: new Date().toISOString(),
       };
       
+      // Si cambió el nombre, actualizar el historial
+      if (nombreCambio && !esPrimeraVez) {
+        const historial = initialValues.historialCambiosNombre || [];
+        dataToSave.historialCambiosNombre = [...historial, {
+          nombreAnterior: initialValues.nombre,
+          nombreNuevo: editDraft.nombre.trim(),
+          fecha: new Date().toISOString()
+        }];
+        dataToSave.ultimoCambioNombre = new Date().toISOString();
+      }
+      
       await setDoc(doc(db, 'perfiles', user.uid), dataToSave);
       setInitialValues(dataToSave);
       setShowEditModal(false);
       setEditStatus('');
+      
+      if (nombreCambio && !esPrimeraVez) {
+        const cambiosRestantes = 2 - (dataToSave.historialCambiosNombre?.length || 0);
+        showToast(`Nombre actualizado. Te quedan ${cambiosRestantes} cambio(s) de nombre disponibles.`, 'success');
+      }
       
       // Si es la primera vez que completa el perfil, redirigir a selección de plan
       if (esPrimeraVez) {
@@ -299,16 +349,80 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm('¿Estás seguro de que quieres borrar tu cuenta? Esta acción no se puede deshacer.')) return;
-    try {
-      await auth.currentUser.delete();
-      showToast('Cuenta eliminada exitosamente', 'success');
-      navigate('/login');
-    } catch (error) {
-      console.error('Error al borrar cuenta:', error);
-      showToast('Error al borrar la cuenta. Intenta cerrar sesión y volver a iniciar sesión antes de eliminar tu cuenta.', 'error');
+  const handleDeleteAccount = () => {
+    setShowDeleteSurveyModal(true);
+  };
+
+  const handleReauthenticate = async () => {
+    if (!reauthPassword) {
+      showToast('Por favor ingresa tu contraseña', 'error');
+      return;
     }
+
+    try {
+      const credential = EmailAuthProvider.credential(user.email, reauthPassword);
+      await reauthenticateWithCredential(user, credential);
+      setShowReauthModal(false);
+      setReauthPassword('');
+      // Después de reautenticar, proceder con la eliminación
+      await processAccountDeletion();
+    } catch (error) {
+      console.error('Error de reautenticación:', error);
+      showToast('Contraseña incorrecta. Por favor intenta nuevamente.', 'error');
+    }
+  };
+
+  const processAccountDeletion = async () => {
+    try {
+      // Guardar encuesta en Firestore para estadísticas
+      await addDoc(collection(db, 'encuestasEliminacion'), {
+        userId: user.uid,
+        userEmail: user.email,
+        razon: deleteReason,
+        comentarios: deleteComments,
+        accion: deleteAction,
+        fecha: serverTimestamp(),
+        perfilTipo: initialValues.type,
+        planActual: initialValues.planActual || 'free'
+      });
+
+      if (deleteAction === 'deactivate') {
+        // Desactivar cuenta temporalmente
+        await updateDoc(doc(db, 'perfiles', user.uid), {
+          cuentaDesactivada: true,
+          fechaDesactivacion: new Date().toISOString(),
+          razonDesactivacion: deleteReason
+        });
+        await auth.signOut();
+        showToast('Cuenta desactivada temporalmente. Puedes reactivarla iniciando sesión nuevamente.', 'success');
+        navigate('/login');
+      } else {
+        // Eliminar cuenta permanentemente
+        await auth.currentUser.delete();
+        showToast('Cuenta eliminada exitosamente', 'success');
+        navigate('/login');
+      }
+
+      setShowDeleteSurveyModal(false);
+    } catch (error) {
+      console.error('Error al procesar la cuenta:', error);
+      if (error.code === 'auth/requires-recent-login') {
+        // Si requiere reautenticación, mostrar modal
+        setShowDeleteSurveyModal(false);
+        setShowReauthModal(true);
+      } else {
+        showToast('Error al procesar la solicitud: ' + error.message, 'error');
+      }
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteReason) {
+      showToast('Por favor selecciona una razón', 'error');
+      return;
+    }
+
+    await processAccountDeletion();
   };
 
   const fetchUserEventos = async () => {
@@ -601,6 +715,37 @@ const Profile = () => {
                   e.target.style.background = 'rgba(255, 255, 255, 0.15)';
                 }}
               />
+              {initialValues.perfilCompletado && (
+                <small style={{ 
+                  display: 'block', 
+                  marginTop: '8px', 
+                  color: 'rgba(255, 255, 255, 0.7)', 
+                  fontSize: '13px' 
+                }}>
+                  {(() => {
+                    const historial = initialValues.historialCambiosNombre || [];
+                    const cambiosRestantes = 2 - historial.length;
+                    if (cambiosRestantes > 0) {
+                      return `💡 Te quedan ${cambiosRestantes} cambio(s) de nombre disponibles`;
+                    } else {
+                      const ultimoCambio = initialValues.ultimoCambioNombre;
+                      if (ultimoCambio) {
+                        const fechaUltimoCambio = new Date(ultimoCambio);
+                        const fechaActual = new Date();
+                        const unMesEnMs = 30 * 24 * 60 * 60 * 1000;
+                        const diferencia = fechaActual - fechaUltimoCambio;
+                        if (diferencia < unMesEnMs) {
+                          const diasRestantes = Math.ceil((unMesEnMs - diferencia) / (24 * 60 * 60 * 1000));
+                          return `⏳ Debes esperar ${diasRestantes} día(s) para cambiar tu nombre`;
+                        } else {
+                          return `✅ Puedes cambiar tu nombre nuevamente`;
+                        }
+                      }
+                    }
+                    return '';
+                  })()}
+                </small>
+              )}
             </Form.Group>
 
             <Form.Group className="mb-4">
@@ -1457,22 +1602,6 @@ const Profile = () => {
                   Publicaciones
                 </button>
                 <button 
-                  onClick={() => setActiveTab('acerca')}
-                  style={{ 
-                    padding: '12px 16px', 
-                    border: 'none', 
-                    background: 'none', 
-                    borderBottom: activeTab === 'acerca' ? '3px solid #1877f2' : '3px solid transparent',
-                    color: activeTab === 'acerca' ? '#1877f2' : '#65676b',
-                    fontWeight: activeTab === 'acerca' ? 600 : 500,
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  Acerca de
-                </button>
-                <button 
                   onClick={() => setActiveTab('eventos')}
                   style={{ 
                     padding: '12px 16px', 
@@ -1503,22 +1632,6 @@ const Profile = () => {
                   }}
                 >
                   Productos
-                </button>
-                <button 
-                  onClick={() => setActiveTab('musica')}
-                  style={{ 
-                    padding: '12px 16px', 
-                    border: 'none', 
-                    background: 'none', 
-                    borderBottom: activeTab === 'musica' ? '3px solid #1877f2' : '3px solid transparent',
-                    color: activeTab === 'musica' ? '#1877f2' : '#65676b',
-                    fontWeight: activeTab === 'musica' ? 600 : 500,
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  Música
                 </button>
               </div>
             </div>
@@ -1900,6 +2013,228 @@ const Profile = () => {
         aspectRatio={cropImageType === 'banner' ? 16 / 9 : 1}
         title={cropImageType === 'banner' ? 'Editar Banner' : 'Editar Foto de Perfil'}
       />
+
+      {/* Modal de Encuesta de Eliminación/Desactivación */}
+      <Modal 
+        show={showDeleteSurveyModal} 
+        onHide={() => setShowDeleteSurveyModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header 
+          closeButton
+          style={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '20px 24px'
+          }}
+        >
+          <Modal.Title style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>
+            Antes de continuar
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '24px', background: '#f8f9fa' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h5 style={{ fontSize: 18, fontWeight: 600, marginBottom: '12px', color: '#050505' }}>
+              Queremos entender tu decisión
+            </h5>
+            <p style={{ fontSize: 15, color: '#65676b', marginBottom: '20px' }}>
+              Tu opinión es muy importante para nosotros. Por favor, ayúdanos a mejorar seleccionando la razón principal:
+            </p>
+          </div>
+
+          <Form.Group className="mb-4">
+            <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 10 }}>
+              ¿Por qué quieres eliminar tu cuenta?
+            </Form.Label>
+            <Form.Select
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              style={{ 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: 15,
+                border: '2px solid #e0e0e0'
+              }}
+            >
+              <option value="">Selecciona una razón</option>
+              <option value="no_uso">No uso la plataforma con frecuencia</option>
+              <option value="encontre_alternativa">Encontré una alternativa mejor</option>
+              <option value="problemas_tecnicos">Problemas técnicos o errores</option>
+              <option value="falta_funciones">Falta de funciones que necesito</option>
+              <option value="privacidad">Preocupaciones de privacidad</option>
+              <option value="spam">Demasiado spam o contenido no deseado</option>
+              <option value="costo">Problemas con el costo o plan premium</option>
+              <option value="comunidad">No encontré la comunidad que buscaba</option>
+              <option value="temporal">Solo necesito un descanso temporal</option>
+              <option value="otro">Otra razón</option>
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-4">
+            <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 10 }}>
+              Comentarios adicionales (opcional)
+            </Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={deleteComments}
+              onChange={(e) => setDeleteComments(e.target.value)}
+              placeholder="Cuéntanos más sobre tu experiencia..."
+              style={{ 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: 15,
+                border: '2px solid #e0e0e0'
+              }}
+            />
+          </Form.Group>
+
+          <div style={{ 
+            background: 'linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%)', 
+            border: '2px solid #ffc107',
+            borderRadius: '12px', 
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
+            <h6 style={{ fontSize: 16, fontWeight: 600, color: '#856404', marginBottom: '12px' }}>
+              ¿Sabías que puedes desactivar tu cuenta temporalmente?
+            </h6>
+            <p style={{ fontSize: 14, color: '#856404', marginBottom: '12px' }}>
+              Si solo necesitas un descanso, puedes desactivar tu cuenta en lugar de eliminarla. 
+              Podrás reactivarla en cualquier momento iniciando sesión nuevamente.
+            </p>
+            <div className="d-flex gap-2">
+              <Button
+                variant="warning"
+                onClick={() => {
+                  setDeleteAction('deactivate');
+                  handleConfirmDelete();
+                }}
+                disabled={!deleteReason}
+                style={{
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontWeight: 600,
+                  fontSize: 15
+                }}
+              >
+                Desactivar temporalmente
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: '1px solid #e0e0e0', padding: '16px 24px' }}>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowDeleteSurveyModal(false)}
+            style={{
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 15
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            variant="danger"
+            onClick={() => {
+              setDeleteAction('delete');
+              handleConfirmDelete();
+            }}
+            disabled={!deleteReason}
+            style={{
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 15
+            }}
+          >
+            Eliminar permanentemente
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de Reautenticación */}
+      <Modal 
+        show={showReauthModal} 
+        onHide={() => {
+          setShowReauthModal(false);
+          setReauthPassword('');
+        }}
+        centered
+      >
+        <Modal.Header 
+          closeButton
+          style={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '20px 24px'
+          }}
+        >
+          <Modal.Title style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>
+            Confirma tu identidad
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '24px', background: '#f8f9fa' }}>
+          <p style={{ fontSize: 15, color: '#65676b', marginBottom: '20px' }}>
+            Por seguridad, necesitamos que confirmes tu contraseña antes de continuar.
+          </p>
+          <Form.Group>
+            <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 10 }}>
+              Contraseña
+            </Form.Label>
+            <Form.Control
+              type="password"
+              value={reauthPassword}
+              onChange={(e) => setReauthPassword(e.target.value)}
+              placeholder="Ingresa tu contraseña"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleReauthenticate();
+                }
+              }}
+              style={{ 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: 15,
+                border: '2px solid #e0e0e0'
+              }}
+              autoFocus
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: '1px solid #e0e0e0', padding: '16px 24px' }}>
+          <Button 
+            variant="secondary" 
+            onClick={() => {
+              setShowReauthModal(false);
+              setReauthPassword('');
+            }}
+            style={{
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 15
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            variant="primary"
+            onClick={handleReauthenticate}
+            style={{
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 15
+            }}
+          >
+            Confirmar
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <ToastContainer />
     </>

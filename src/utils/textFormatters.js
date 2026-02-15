@@ -8,8 +8,8 @@
 export const formatearNombre = (text) => {
   if (!text || typeof text !== 'string') return '';
   
+  // No aplicar trim mientras el usuario está escribiendo para permitir espacios
   return text
-    .trim()
     .toLowerCase()
     .split(' ')
     .map(word => {
