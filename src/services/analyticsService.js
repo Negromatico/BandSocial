@@ -415,17 +415,160 @@ class AnalyticsService {
   // DASHBOARD GENERAL CONSOLIDADO
   // ============================================
 
+  /**
+   * Analiza estadísticas de eliminación de cuentas
+   */
+  async analyzeDeletions() {
+    try {
+      const encuestasSnapshot = await getDocs(collection(db, 'encuestasEliminacion'));
+      const encuestas = encuestasSnapshot.docs.map(doc => doc.data());
+
+      if (encuestas.length === 0) {
+        return {
+          total: 0,
+          deleted: 0,
+          deactivated: 0,
+          reasonsChart: null,
+          actionChart: null,
+          profileTypeChart: null,
+          planChart: null,
+          topReasons: []
+        };
+      }
+
+      // Contadores
+      const deleted = encuestas.filter(e => e.accion === 'delete').length;
+      const deactivated = encuestas.filter(e => e.accion === 'deactivate').length;
+
+      // Mapeo de razones a etiquetas legibles
+      const reasonLabels = {
+        'no_uso': 'No uso la plataforma con frecuencia',
+        'encontre_alternativa': 'Encontré una alternativa mejor',
+        'problemas_tecnicos': 'Problemas técnicos o errores',
+        'falta_funciones': 'Falta de funciones que necesito',
+        'privacidad': 'Preocupaciones de privacidad',
+        'spam': 'Demasiado spam o contenido no deseado',
+        'costo': 'Problemas con el costo o plan premium',
+        'comunidad': 'No encontré la comunidad que buscaba',
+        'temporal': 'Solo necesito un descanso temporal',
+        'otro': 'Otra razón'
+      };
+
+      // Análisis por razón
+      const reasonCounts = {};
+      const reasonActions = {};
+      encuestas.forEach(e => {
+        const razon = e.razon || 'otro';
+        reasonCounts[razon] = (reasonCounts[razon] || 0) + 1;
+        if (!reasonActions[razon]) {
+          reasonActions[razon] = { delete: 0, deactivate: 0 };
+        }
+        reasonActions[razon][e.accion]++;
+      });
+
+      // Top razones
+      const topReasons = Object.entries(reasonCounts)
+        .map(([key, count]) => ({
+          label: reasonLabels[key] || key,
+          count,
+          percentage: ((count / encuestas.length) * 100).toFixed(1),
+          commonAction: reasonActions[key].delete > reasonActions[key].deactivate ? 'delete' : 'deactivate'
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+
+      // Gráfico de razones
+      const reasonsChart = {
+        labels: topReasons.map(r => r.label),
+        datasets: [{
+          label: 'Cantidad',
+          data: topReasons.map(r => r.count),
+          backgroundColor: [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384'
+          ]
+        }]
+      };
+
+      // Gráfico de acción
+      const actionChart = {
+        labels: ['Eliminación Permanente', 'Desactivación Temporal'],
+        datasets: [{
+          data: [deleted, deactivated],
+          backgroundColor: ['#dc3545', '#ffc107']
+        }]
+      };
+
+      // Análisis por tipo de perfil
+      const profileTypes = {};
+      encuestas.forEach(e => {
+        const tipo = e.perfilTipo || 'N/A';
+        profileTypes[tipo] = (profileTypes[tipo] || 0) + 1;
+      });
+
+      const profileTypeChart = {
+        labels: Object.keys(profileTypes),
+        datasets: [{
+          label: 'Cantidad',
+          data: Object.values(profileTypes),
+          backgroundColor: '#36A2EB'
+        }]
+      };
+
+      // Análisis por plan
+      const plans = {};
+      encuestas.forEach(e => {
+        const plan = e.planActual || 'free';
+        plans[plan] = (plans[plan] || 0) + 1;
+      });
+
+      const planChart = {
+        labels: Object.keys(plans).map(p => p === 'free' ? 'Gratis' : 'Premium'),
+        datasets: [{
+          label: 'Cantidad',
+          data: Object.values(plans),
+          backgroundColor: '#FFCE56'
+        }]
+      };
+
+      return {
+        total: encuestas.length,
+        deleted,
+        deactivated,
+        reasonsChart,
+        actionChart,
+        profileTypeChart,
+        planChart,
+        topReasons
+      };
+    } catch (error) {
+      console.error('Error analizando eliminaciones:', error);
+      return {
+        total: 0,
+        deleted: 0,
+        deactivated: 0,
+        reasonsChart: null,
+        actionChart: null,
+        profileTypeChart: null,
+        planChart: null,
+        topReasons: []
+      };
+    }
+  }
+
   async generateConsolidatedDashboard(users, publications, events, products) {
     const userAnalysis = await this.analyzeUsers(users);
     const pubAnalysis = await this.analyzePublications(publications);
     const eventAnalysis = await this.analyzeEvents(events);
     const productAnalysis = await this.analyzeProducts(products);
+    const deletionAnalysis = await this.analyzeDeletions();
 
     return {
       users: userAnalysis,
       publications: pubAnalysis,
       events: eventAnalysis,
       products: productAnalysis,
+      deletions: deletionAnalysis,
       summary: {
         totalUsers: userAnalysis.total,
         totalPublications: pubAnalysis.total,

@@ -302,6 +302,63 @@ service cloud.firestore {
     }
     
     // ============================================
+    // ENCUESTAS DE ELIMINACIÓN (Estadísticas)
+    // ============================================
+    match /encuestasEliminacion/{encuestaId} {
+      // Lectura: Solo administrador (para análisis estadístico)
+      allow read: if isAdmin();
+      
+      // Crear: Usuario autenticado antes de eliminar su cuenta
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'userEmail', 'razon', 'accion', 'fecha'])
+        && request.resource.data.accion in ['delete', 'deactivate'];
+      
+      // Actualizar/Eliminar: No permitido (datos inmutables para estadísticas)
+      allow update, delete: if false;
+    }
+    
+    // ============================================
+    // GRUPOS (Funcionalidad futura)
+    // ============================================
+    match /grupos/{grupoId} {
+      // Lectura: Pública
+      allow read: if true;
+      
+      // Crear: Usuario autenticado, debe ser el creador
+      allow create: if isAuthenticated()
+        && request.resource.data.creadorUid == request.auth.uid;
+      
+      // Actualizar: Solo el creador o admin
+      allow update: if isAuthenticated()
+        && (resource.data.creadorUid == request.auth.uid || isAdmin());
+      
+      // Eliminar: Solo el creador o admin
+      allow delete: if isAuthenticated()
+        && (resource.data.creadorUid == request.auth.uid || isAdmin());
+    }
+    
+    // ============================================
+    // PAGOS (Transacciones de membresía)
+    // ============================================
+    match /pagos/{pagoId} {
+      // Lectura: Solo el usuario o admin
+      allow read: if isAuthenticated()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Crear: Solo el propio usuario
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'monto', 'plan', 'createdAt']);
+      
+      // Actualizar: Solo admin (para cambiar estado)
+      allow update: if isAdmin();
+      
+      // Eliminar: Solo admin
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
     // DENEGAR TODO LO DEMÁS
     // ============================================
     match /{document=**} {

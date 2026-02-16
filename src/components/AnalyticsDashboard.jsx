@@ -755,6 +755,152 @@ const AnalyticsDashboard = ({ users, publications, events, products }) => {
           </Row>
         </Tab>
 
+        {/* ============================================ */}
+        {/* TAB: ESTADÍSTICAS DE ELIMINACIÓN */}
+        {/* ============================================ */}
+        <Tab eventKey="deletions" title="Eliminación de Cuentas">
+          <Row className="mb-4">
+            <Col md={12}>
+              <h4>Análisis de Eliminación y Desactivación de Cuentas</h4>
+            </Col>
+          </Row>
+
+          <Row className="mb-4">
+            <Col md={4}>
+              <Card className="kpi-card">
+                <Card.Body>
+                  <div className="kpi-icon">
+                    <FaUsers />
+                  </div>
+                  <div className="kpi-content">
+                    <h6>Total Encuestas</h6>
+                    <h3>{analytics?.deletions?.total || 0}</h3>
+                    <small>Respuestas registradas</small>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={4}>
+              <Card className="kpi-card">
+                <Card.Body>
+                  <div className="kpi-icon">
+                    <FaChartLine />
+                  </div>
+                  <div className="kpi-content">
+                    <h6>Eliminaciones</h6>
+                    <h3>{analytics?.deletions?.deleted || 0}</h3>
+                    <small>Cuentas eliminadas permanentemente</small>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={4}>
+              <Card className="kpi-card">
+                <Card.Body>
+                  <div className="kpi-icon">
+                    <FaClock />
+                  </div>
+                  <div className="kpi-content">
+                    <h6>Desactivaciones</h6>
+                    <h3>{analytics?.deletions?.deactivated || 0}</h3>
+                    <small>Cuentas desactivadas temporalmente</small>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          <Row className="mb-4">
+            <Col md={6}>
+              <Card>
+                <Card.Header>
+                  <h5>Razones de Eliminación</h5>
+                </Card.Header>
+                <Card.Body>
+                  {analytics?.deletions?.reasonsChart && (
+                    <Pie data={analytics.deletions.reasonsChart} />
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6}>
+              <Card>
+                <Card.Header>
+                  <h5>Eliminación vs Desactivación</h5>
+                </Card.Header>
+                <Card.Body>
+                  {analytics?.deletions?.actionChart && (
+                    <Doughnut data={analytics.deletions.actionChart} />
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          <Row className="mb-4">
+            <Col md={6}>
+              <Card>
+                <Card.Header>
+                  <h5>Por Tipo de Perfil</h5>
+                </Card.Header>
+                <Card.Body>
+                  {analytics?.deletions?.profileTypeChart && (
+                    <Bar data={analytics.deletions.profileTypeChart} />
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+            <Col md={6}>
+              <Card>
+                <Card.Header>
+                  <h5>Por Plan de Membresía</h5>
+                </Card.Header>
+                <Card.Body>
+                  {analytics?.deletions?.planChart && (
+                    <Bar data={analytics.deletions.planChart} />
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={12}>
+              <Card>
+                <Card.Header>
+                  <h5>Razones Más Comunes</h5>
+                </Card.Header>
+                <Card.Body>
+                  <Table striped bordered hover>
+                    <thead>
+                      <tr>
+                        <th>Razón</th>
+                        <th>Cantidad</th>
+                        <th>Porcentaje</th>
+                        <th>Acción Común</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analytics?.deletions?.topReasons?.map((reason, idx) => (
+                        <tr key={idx}>
+                          <td>{reason.label}</td>
+                          <td>{reason.count}</td>
+                          <td>{reason.percentage}%</td>
+                          <td>
+                            <Badge bg={reason.commonAction === 'delete' ? 'danger' : 'warning'}>
+                              {reason.commonAction === 'delete' ? 'Eliminar' : 'Desactivar'}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Tab>
+
       </Tabs>
     </Container>
   );

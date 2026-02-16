@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../services/firebase';
-import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { Container, Modal, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -398,6 +398,9 @@ const Profile = () => {
         navigate('/login');
       } else {
         // Eliminar cuenta permanentemente
+        // Primero eliminar el perfil de Firestore
+        await deleteDoc(doc(db, 'perfiles', user.uid));
+        // Luego eliminar la cuenta de Auth
         await auth.currentUser.delete();
         showToast('Cuenta eliminada exitosamente', 'success');
         navigate('/login');
