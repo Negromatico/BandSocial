@@ -160,6 +160,14 @@ const AppNavbar = () => {
                   <NavDropdown.Item as={Link} to="/profile">Mi Perfil</NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/mis-publicaciones">Mis Publicaciones</NavDropdown.Item>
                   <NavDropdown.Item as={Link} to="/followers">Seguidores y Siguiendo</NavDropdown.Item>
+                  {user?.email === 'estebanber24@gmail.com' && (
+                    <>
+                      <NavDropdown.Divider />
+                      <NavDropdown.Item as={Link} to="/admin" style={{ color: '#dc3545', fontWeight: 600 }}>
+                        Panel de Administrador
+                      </NavDropdown.Item>
+                    </>
+                  )}
                   <NavDropdown.Divider />
                   <NavDropdown.Item onClick={handleLogout}>Cerrar sesión</NavDropdown.Item>
                 </NavDropdown>
