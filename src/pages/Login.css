@@ -163,6 +163,20 @@
   transition: all 0.3s ease;
 }
 
+/* Ocultar el ojo nativo del navegador en campos de contraseña */
+.input-with-icon::-ms-reveal,
+.input-with-icon::-ms-clear {
+  display: none;
+}
+
+.input-with-icon::-webkit-credentials-auto-fill-button,
+.input-with-icon::-webkit-contacts-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+}
+
 [data-theme="dark"] .input-with-icon {
   background: rgba(58, 59, 60, 0.4);
   border-color: rgba(255, 255, 255, 0.2);

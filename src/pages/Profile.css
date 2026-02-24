@@ -38,12 +38,14 @@
 }
 
 .create-post-modal .modal-header .btn-close {
-  opacity: 0.5;
-  transition: opacity 0.2s;
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);
+  transition: opacity 0.2s, transform 0.2s;
 }
 
 .create-post-modal .modal-header .btn-close:hover {
-  opacity: 1;
+  opacity: 0.7;
+  transform: scale(1.1);
 }
 
 .create-post-modal textarea:focus {
@@ -75,12 +77,14 @@
 }
 
 .edit-profile-modal .modal-header .btn-close {
-  opacity: 0.5;
-  transition: opacity 0.2s;
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);
+  transition: opacity 0.2s, transform 0.2s;
 }
 
 .edit-profile-modal .modal-header .btn-close:hover {
-  opacity: 1;
+  opacity: 0.7;
+  transform: scale(1.1);
 }
 
 .edit-profile-modal .form-control:focus {

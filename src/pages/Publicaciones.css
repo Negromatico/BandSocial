@@ -41,6 +41,27 @@
   height: fit-content;
   min-width: 250px;
   max-width: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+.sidebar-left::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-left::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-left::-webkit-scrollbar-thumb {
+  background-color: rgba(99, 102, 241, 0.3);
+  border-radius: 3px;
+}
+
+.sidebar-left::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(99, 102, 241, 0.5);
 }
 
 .profile-card {
@@ -50,6 +71,8 @@
   padding: 20px;
   text-align: center;
   margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-avatar {
@@ -98,10 +121,14 @@
   justify-content: space-around;
   padding-top: 12px;
   border-top: 2px solid var(--border-color, #f3f4f6);
+  gap: 8px;
+  width: 100%;
 }
 
 .stat-item {
   text-align: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .stat-value {
@@ -112,10 +139,12 @@
 }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: visible;
 }
 
 .quick-access {
@@ -377,6 +406,27 @@
   height: fit-content;
   min-width: 300px;
   max-width: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+.sidebar-right::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-right::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-right::-webkit-scrollbar-thumb {
+  background-color: rgba(99, 102, 241, 0.3);
+  border-radius: 3px;
+}
+
+.sidebar-right::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(99, 102, 241, 0.5);
 }
 
 .chats-activos {

@@ -7,6 +7,7 @@ import { uploadToCloudinary } from '../services/cloudinary';
 import UpgradePremiumModal from './UpgradePremiumModal';
 import { esPremium } from '../utils/premiumCheck';
 import { enviarNotificacion } from '../services/notificaciones';
+import { useDepartamentos, useCiudades } from '../hooks/useColombia';
 import '../styles/ModernModal.css';
 
 
@@ -41,16 +42,12 @@ const PublicacionForm = ({ onCreated }) => {
   const [ciudad, setCiudad] = useState('');
   const [ciudadesOptions, setCiudadesOptions] = React.useState([]);
   const [otraCiudad, setOtraCiudad] = useState('');
-  React.useEffect(() => {
-    fetch('https://api-colombia.com/api/v1/City')
-      .then(res => res.json())
-      .then(data => {
-        // Eliminar duplicados usando Set y ordenar
-        const uniqueCities = [...new Set(data.map(city => city.name))].sort();
-        setCiudadesOptions(uniqueCities);
-      })
-      .catch(() => setCiudadesOptions([]));
-  }, []);
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState('');
+  const [municipioSeleccionado, setMunicipioSeleccionado] = useState('');
+  
+  const { departamentos } = useDepartamentos();
+  const { ciudades } = useCiudades(departamentoSeleccionado);
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -215,22 +212,42 @@ const PublicacionForm = ({ onCreated }) => {
         )}
       </div>
       <div className="mb-3">
-        <label className="form-label">Ciudad</label>
-        <select className="form-select" value={ciudad} onChange={e => setCiudad(e.target.value)}>
-          <option value="">Selecciona ciudad</option>
-          {ciudadesOptions.map(c => <option key={c} value={c}>{c}</option>)}
-          <option value="Otro (especificar)">Otro (especificar)</option>
+        <label className="form-label">Departamento</label>
+        <select 
+          className="form-select" 
+          value={departamentoSeleccionado} 
+          onChange={e => {
+            const deptId = e.target.value;
+            setDepartamentoSeleccionado(deptId);
+            setMunicipioSeleccionado('');
+            const deptNombre = departamentos.find(d => d.value === deptId)?.label || '';
+            setCiudad(deptNombre);
+          }}
+        >
+          <option value="">Selecciona departamento</option>
+          {departamentos.map(dept => (
+            <option key={dept.value} value={dept.value}>{dept.label}</option>
+          ))}
         </select>
-        {ciudad === 'Otro (especificar)' && (
-          <input
-            className="form-control mt-2"
-            placeholder="Especifica ciudad"
-            value={otraCiudad}
-            onChange={e => setOtraCiudad(e.target.value)}
-            maxLength={40}
-            required
-          />
-        )}
+      </div>
+      <div className="mb-3">
+        <label className="form-label">Municipio/Ciudad</label>
+        <select 
+          className="form-select" 
+          value={municipioSeleccionado} 
+          onChange={e => {
+            const munId = e.target.value;
+            setMunicipioSeleccionado(munId);
+            const munNombre = ciudades.find(c => c.value === munId)?.label || '';
+            setCiudad(munNombre);
+          }}
+          disabled={!departamentoSeleccionado}
+        >
+          <option value="">Selecciona municipio</option>
+          {ciudades.map(city => (
+            <option key={city.value} value={city.value}>{city.label}</option>
+          ))}
+        </select>
       </div>
       <div className="mb-3">
         <label className="form-label">Imágenes (opcional, puedes seleccionar varias)</label>

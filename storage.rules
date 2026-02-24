@@ -1,0 +1,148 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // FUNCIONES AUXILIARES
+    // ============================================
+    
+    // Verificar autenticación
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verificar tamaño de archivo (máximo 10MB)
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
+    // Verificar tipo de imagen
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    
+    // Verificar tipo de video
+    function isVideo() {
+      return request.resource.contentType.matches('video/.*');
+    }
+    
+    // Verificar tipo de audio
+    function isAudio() {
+      return request.resource.contentType.matches('audio/.*');
+    }
+    
+    // ============================================
+    // PERFILES - Fotos de perfil y banners
+    // ============================================
+    match /perfiles/{userId}/{allPaths=**} {
+      // Lectura: Pública (para mostrar fotos de perfil)
+      allow read: if true;
+      
+      // Escritura: Solo el propietario, máximo 10MB, solo imágenes
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId 
+        && isValidSize() 
+        && isImage();
+      
+      // Eliminación: Solo el propietario
+      allow delete: if isAuthenticated() 
+        && request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // PUBLICACIONES - Imágenes de publicaciones
+    // ============================================
+    match /publicaciones/{userId}/{allPaths=**} {
+      // Lectura: Pública
+      allow read: if true;
+      
+      // Escritura: Solo el propietario, máximo 10MB, solo imágenes
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId 
+        && isValidSize() 
+        && isImage();
+      
+      // Eliminación: Solo el propietario
+      allow delete: if isAuthenticated() 
+        && request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // EVENTOS - Imágenes de eventos
+    // ============================================
+    match /eventos/{userId}/{allPaths=**} {
+      // Lectura: Pública
+      allow read: if true;
+      
+      // Escritura: Solo el propietario, máximo 10MB, solo imágenes
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId 
+        && isValidSize() 
+        && isImage();
+      
+      // Eliminación: Solo el propietario
+      allow delete: if isAuthenticated() 
+        && request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // PRODUCTOS - Imágenes de productos
+    // ============================================
+    match /productos/{userId}/{allPaths=**} {
+      // Lectura: Pública
+      allow read: if true;
+      
+      // Escritura: Solo el propietario, máximo 10MB, solo imágenes
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId 
+        && isValidSize() 
+        && isImage();
+      
+      // Eliminación: Solo el propietario
+      allow delete: if isAuthenticated() 
+        && request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // CHAT - Archivos compartidos en conversaciones
+    // ============================================
+    match /chat/{conversacionId}/{allPaths=**} {
+      // Lectura: Solo usuarios autenticados
+      allow read: if isAuthenticated();
+      
+      // Escritura: Solo usuarios autenticados, máximo 10MB, imágenes/videos/audio
+      allow write: if isAuthenticated() 
+        && isValidSize() 
+        && (isImage() || isVideo() || isAudio());
+      
+      // Eliminación: Solo usuarios autenticados
+      allow delete: if isAuthenticated();
+    }
+    
+    // ============================================
+    // MÚSICA - Archivos de audio de músicos
+    // ============================================
+    match /musica/{userId}/{allPaths=**} {
+      // Lectura: Pública
+      allow read: if true;
+      
+      // Escritura: Solo el propietario, máximo 10MB, solo audio
+      allow write: if isAuthenticated() 
+        && request.auth.uid == userId 
+        && isValidSize() 
+        && isAudio();
+      
+      // Eliminación: Solo el propietario
+      allow delete: if isAuthenticated() 
+        && request.auth.uid == userId;
+    }
+    
+    // ============================================
+    // DENEGAR TODO LO DEMÁS
+    // ============================================
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

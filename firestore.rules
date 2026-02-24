@@ -37,7 +37,7 @@ service cloud.firestore {
     // PERFILES
     // ============================================
     match /perfiles/{userId} {
-      // Lectura: Pública (permite modo invitado)
+      // Lectura: Pública (permite modo invitado) o Administrador
       allow read: if true;
       
       // Crear: Solo el usuario correspondiente
@@ -60,7 +60,7 @@ service cloud.firestore {
     // PUBLICACIONES
     // ============================================
     match /publicaciones/{postId} {
-      // Lectura: Pública (permite modo invitado)
+      // Lectura: Pública (permite modo invitado) o Administrador
       allow read: if true;
       
       // Crear: Usuario autenticado, debe ser el autor
@@ -93,7 +93,7 @@ service cloud.firestore {
     // PRODUCTOS (MusicMarket)
     // ============================================
     match /productos/{productId} {
-      // Lectura: Pública (permite modo invitado)
+      // Lectura: Pública (permite modo invitado) o Administrador
       allow read: if true;
       
       // Crear: Usuario autenticado, debe ser el vendedor
@@ -117,7 +117,7 @@ service cloud.firestore {
     // EVENTOS
     // ============================================
     match /eventos/{eventId} {
-      // Lectura: Pública (permite modo invitado)
+      // Lectura: Pública (permite modo invitado) o Administrador
       allow read: if true;
       
       // Crear: Usuario autenticado, debe ser el creador
@@ -247,6 +247,43 @@ service cloud.firestore {
     }
     
     // ============================================
+    // USUARIOS (Colección alternativa para estadísticas)
+    // ============================================
+    match /usuarios/{userId} {
+      // Lectura: Pública o Administrador (para estadísticas)
+      allow read: if true;
+      
+      // Crear: Solo el usuario correspondiente
+      allow create: if isAuthenticated() 
+        && request.auth.uid == userId;
+      
+      // Actualizar: El propietario o el administrador
+      allow update: if isOwner(userId) || isAdmin();
+      
+      // Eliminar: Solo el propietario o el administrador
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+    
+    // ============================================
+    // SESIONES (Tracking de inicio/cierre de sesión)
+    // ============================================
+    match /sesiones/{sessionId} {
+      // Lectura: Solo administradores (para estadísticas)
+      allow read: if isAdmin();
+      
+      // Crear: Usuario autenticado puede registrar su propia sesión
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'tipo', 'timestamp']);
+      
+      // Actualizar: No permitido (sesiones son inmutables)
+      allow update: if false;
+      
+      // Eliminar: Solo administrador
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
     // PIANO TILES SCORES (Ranking del juego)
     // ============================================
     match /pianoTilesScores/{scoreId} {
@@ -262,6 +299,63 @@ service cloud.firestore {
       
       // Actualizar/Eliminar: No permitido (puntuaciones son inmutables)
       allow update, delete: if false;
+    }
+    
+    // ============================================
+    // ENCUESTAS DE ELIMINACIÓN (Estadísticas)
+    // ============================================
+    match /encuestasEliminacion/{encuestaId} {
+      // Lectura: Solo administrador (para análisis estadístico)
+      allow read: if isAdmin();
+      
+      // Crear: Usuario autenticado antes de eliminar su cuenta
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'userEmail', 'razon', 'accion', 'fecha'])
+        && request.resource.data.accion in ['delete', 'deactivate'];
+      
+      // Actualizar/Eliminar: No permitido (datos inmutables para estadísticas)
+      allow update, delete: if false;
+    }
+    
+    // ============================================
+    // GRUPOS (Funcionalidad futura)
+    // ============================================
+    match /grupos/{grupoId} {
+      // Lectura: Pública
+      allow read: if true;
+      
+      // Crear: Usuario autenticado, debe ser el creador
+      allow create: if isAuthenticated()
+        && request.resource.data.creadorUid == request.auth.uid;
+      
+      // Actualizar: Solo el creador o admin
+      allow update: if isAuthenticated()
+        && (resource.data.creadorUid == request.auth.uid || isAdmin());
+      
+      // Eliminar: Solo el creador o admin
+      allow delete: if isAuthenticated()
+        && (resource.data.creadorUid == request.auth.uid || isAdmin());
+    }
+    
+    // ============================================
+    // PAGOS (Transacciones de membresía)
+    // ============================================
+    match /pagos/{pagoId} {
+      // Lectura: Solo el usuario o admin
+      allow read: if isAuthenticated()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Crear: Solo el propio usuario
+      allow create: if isAuthenticated()
+        && request.resource.data.userId == request.auth.uid
+        && hasRequiredFields(['userId', 'monto', 'plan', 'createdAt']);
+      
+      // Actualizar: Solo admin (para cambiar estado)
+      allow update: if isAdmin();
+      
+      // Eliminar: Solo admin
+      allow delete: if isAdmin();
     }
     
     // ============================================

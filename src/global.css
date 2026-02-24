@@ -47,6 +47,31 @@ h1, h2, h3, h4, h5, h6, .logo {
   font-family: var(--font-logo), serif;
 }
 
+/* Estilo global para botones de cerrar en modales con fondo blanco */
+.modal-header .btn-close {
+  opacity: 1;
+  filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);
+  transition: opacity 0.2s, transform 0.2s;
+  background-size: 1.2em;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 0.7;
+  transform: scale(1.1);
+}
+
+/* Para modales con fondo oscuro (como el de autenticación) */
+.modal-header[style*="linear-gradient"] .btn-close,
+.modal-header[style*="background: linear-gradient"] .btn-close {
+  filter: brightness(0) invert(1) !important;
+  opacity: 1;
+}
+
+.modal-header[style*="linear-gradient"] .btn-close:hover,
+.modal-header[style*="background: linear-gradient"] .btn-close:hover {
+  opacity: 0.8;
+}
+
 a, .btn-primary, .btn-link {
   color: var(--color-purple) !important;
 }

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { db, auth } from '../services/firebase';
-import { doc, setDoc, getDoc, updateDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { Container, Modal, Button, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { uploadToCloudinary } from '../services/cloudinary';
 import Select from 'react-select';
-import { instrumentos } from '../data/opciones';
+import { instrumentos, generosMusicales } from '../data/opciones';
+import { useDepartamentos, useCiudades } from '../hooks/useColombia';
 import { useToast } from '../components/Toast';
 import ImageCropModal from '../components/ImageCropModal';
+import { formatearNombre } from '../utils/textFormatters';
 import './Profile.css';
 
 const Profile = () => {
@@ -39,8 +42,19 @@ const Profile = () => {
   const [showCropModal, setShowCropModal] = useState(false);
   const [cropImageFile, setCropImageFile] = useState(null);
   const [cropImageType, setCropImageType] = useState(''); // 'banner' o 'perfil'
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState('');
+  const [municipioSeleccionado, setMunicipioSeleccionado] = useState('');
+  const [showDeleteSurveyModal, setShowDeleteSurveyModal] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deleteComments, setDeleteComments] = useState('');
+  const [deleteAction, setDeleteAction] = useState(''); // 'delete' o 'deactivate'
+  const [showReauthModal, setShowReauthModal] = useState(false);
+  const [reauthPassword, setReauthPassword] = useState('');
   const navigate = useNavigate();
   const { showToast, ToastContainer } = useToast();
+  
+  const { departamentos } = useDepartamentos();
+  const { ciudades } = useCiudades(departamentoSeleccionado);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => {
@@ -60,10 +74,20 @@ const Profile = () => {
     }
   }, [user]);
 
+  // Abrir modal de edición automáticamente si es un perfil nuevo
+  useEffect(() => {
+    if (initialValues && initialValues.perfilCompletado === false && !showEditModal) {
+      setShowEditModal(true);
+    }
+  }, [initialValues]);
+
   useEffect(() => {
     if (showEditModal) {
       setEditDraft({
         nombre: initialValues?.nombre || '',
+        type: initialValues?.type || 'musico',
+        departamento: initialValues?.departamento || '',
+        municipio: initialValues?.municipio || '',
         ciudad: initialValues?.ciudad || '',
         bio: initialValues?.bio || '',
         generos: Array.isArray(initialValues?.generos) ? initialValues.generos : [],
@@ -73,6 +97,8 @@ const Profile = () => {
         youtube: initialValues?.youtube || '',
         instagram: initialValues?.instagram || '',
       });
+      setDepartamentoSeleccionado(initialValues?.departamento || '');
+      setMunicipioSeleccionado(initialValues?.municipio || '');
       setEditStatus('');
     }
   }, [showEditModal, initialValues]);
@@ -122,10 +148,42 @@ const Profile = () => {
     }
     
     try {
+      const esPrimeraVez = initialValues.perfilCompletado === false;
+      const nombreCambio = editDraft.nombre.trim() !== initialValues.nombre;
+      
+      // Validar límite de cambios de nombre
+      if (nombreCambio && !esPrimeraVez) {
+        const historial = initialValues.historialCambiosNombre || [];
+        const ultimoCambio = initialValues.ultimoCambioNombre;
+        
+        // Verificar si ha alcanzado el límite de 2 cambios
+        if (historial.length >= 2) {
+          // Verificar si ha pasado 1 mes desde el último cambio
+          if (ultimoCambio) {
+            const fechaUltimoCambio = new Date(ultimoCambio);
+            const fechaActual = new Date();
+            const unMesEnMs = 30 * 24 * 60 * 60 * 1000; // 30 días
+            const diferencia = fechaActual - fechaUltimoCambio;
+            
+            if (diferencia < unMesEnMs) {
+              const diasRestantes = Math.ceil((unMesEnMs - diferencia) / (24 * 60 * 60 * 1000));
+              setEditStatus(`Has alcanzado el límite de cambios de nombre. Debes esperar ${diasRestantes} día(s) más para poder cambiarlo nuevamente.`);
+              return;
+            } else {
+              // Ha pasado 1 mes, reiniciar el contador
+              initialValues.historialCambiosNombre = [];
+            }
+          }
+        }
+      }
+      
       const dataToSave = {
         ...initialValues,
         nombre: editDraft.nombre.trim(),
+        type: editDraft.type || 'musico',
         ciudad: editDraft.ciudad,
+        departamento: editDraft.departamento,
+        municipio: editDraft.municipio,
         bio: editDraft.bio?.trim() || '',
         generos: Array.isArray(editDraft.generos) ? editDraft.generos : [],
         instrumentos: Array.isArray(editDraft.instrumentos) ? editDraft.instrumentos : [],
@@ -135,13 +193,35 @@ const Profile = () => {
         instagram: editDraft.instagram || '',
         uid: user.uid,
         email: user.email,
+        perfilCompletado: true,
         updatedAt: new Date().toISOString(),
       };
+      
+      // Si cambió el nombre, actualizar el historial
+      if (nombreCambio && !esPrimeraVez) {
+        const historial = initialValues.historialCambiosNombre || [];
+        dataToSave.historialCambiosNombre = [...historial, {
+          nombreAnterior: initialValues.nombre,
+          nombreNuevo: editDraft.nombre.trim(),
+          fecha: new Date().toISOString()
+        }];
+        dataToSave.ultimoCambioNombre = new Date().toISOString();
+      }
       
       await setDoc(doc(db, 'perfiles', user.uid), dataToSave);
       setInitialValues(dataToSave);
       setShowEditModal(false);
       setEditStatus('');
+      
+      if (nombreCambio && !esPrimeraVez) {
+        const cambiosRestantes = 2 - (dataToSave.historialCambiosNombre?.length || 0);
+        showToast(`Nombre actualizado. Te quedan ${cambiosRestantes} cambio(s) de nombre disponibles.`, 'success');
+      }
+      
+      // Si es la primera vez que completa el perfil, redirigir a selección de plan
+      if (esPrimeraVez) {
+        navigate('/membership');
+      }
     } catch (err) {
       setEditStatus('Error actualizando perfil: ' + err.message);
     }
@@ -269,16 +349,83 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    if (!window.confirm('¿Estás seguro de que quieres borrar tu cuenta? Esta acción no se puede deshacer.')) return;
-    try {
-      await auth.currentUser.delete();
-      showToast('Cuenta eliminada exitosamente', 'success');
-      navigate('/login');
-    } catch (error) {
-      console.error('Error al borrar cuenta:', error);
-      showToast('Error al borrar la cuenta. Intenta cerrar sesión y volver a iniciar sesión antes de eliminar tu cuenta.', 'error');
+  const handleDeleteAccount = () => {
+    setShowDeleteSurveyModal(true);
+  };
+
+  const handleReauthenticate = async () => {
+    if (!reauthPassword) {
+      showToast('Por favor ingresa tu contraseña', 'error');
+      return;
     }
+
+    try {
+      const credential = EmailAuthProvider.credential(user.email, reauthPassword);
+      await reauthenticateWithCredential(user, credential);
+      setShowReauthModal(false);
+      setReauthPassword('');
+      // Después de reautenticar, proceder con la eliminación
+      await processAccountDeletion();
+    } catch (error) {
+      console.error('Error de reautenticación:', error);
+      showToast('Contraseña incorrecta. Por favor intenta nuevamente.', 'error');
+    }
+  };
+
+  const processAccountDeletion = async () => {
+    try {
+      // Guardar encuesta en Firestore para estadísticas
+      await addDoc(collection(db, 'encuestasEliminacion'), {
+        userId: user.uid,
+        userEmail: user.email,
+        razon: deleteReason,
+        comentarios: deleteComments,
+        accion: deleteAction,
+        fecha: serverTimestamp(),
+        perfilTipo: initialValues.type,
+        planActual: initialValues.planActual || 'free'
+      });
+
+      if (deleteAction === 'deactivate') {
+        // Desactivar cuenta temporalmente
+        await updateDoc(doc(db, 'perfiles', user.uid), {
+          cuentaDesactivada: true,
+          fechaDesactivacion: new Date().toISOString(),
+          razonDesactivacion: deleteReason
+        });
+        await auth.signOut();
+        showToast('Cuenta desactivada temporalmente. Puedes reactivarla iniciando sesión nuevamente.', 'success');
+        navigate('/login');
+      } else {
+        // Eliminar cuenta permanentemente
+        // Primero eliminar el perfil de Firestore
+        await deleteDoc(doc(db, 'perfiles', user.uid));
+        // Luego eliminar la cuenta de Auth
+        await auth.currentUser.delete();
+        showToast('Cuenta eliminada exitosamente', 'success');
+        navigate('/login');
+      }
+
+      setShowDeleteSurveyModal(false);
+    } catch (error) {
+      console.error('Error al procesar la cuenta:', error);
+      if (error.code === 'auth/requires-recent-login') {
+        // Si requiere reautenticación, mostrar modal
+        setShowDeleteSurveyModal(false);
+        setShowReauthModal(true);
+      } else {
+        showToast('Error al procesar la solicitud: ' + error.message, 'error');
+      }
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteReason) {
+      showToast('Por favor selecciona una razón', 'error');
+      return;
+    }
+
+    await processAccountDeletion();
   };
 
   const fetchUserEventos = async () => {
@@ -404,7 +551,7 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f0f2f5' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg-secondary)' }}>
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Cargando...</span>
         </div>
@@ -492,62 +639,207 @@ const Profile = () => {
         <Modal.Header 
           closeButton 
           style={{ 
-            background: 'var(--card-bg, #fff)', 
-            borderBottom: '1px solid var(--border-color, #e4e6eb)',
-            padding: '16px 20px'
+            background: 'rgba(255, 255, 255, 0.1)', 
+            backdropFilter: 'blur(10px)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '20px 24px'
           }}
+          className="modal-header-custom"
         >
-          <Modal.Title style={{ fontSize: 20, fontWeight: 700, color: '#050505' }}>
-            Editar Perfil
+          <Modal.Title style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary, #fff)' }}>
+            ✏️ Editar Perfil
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: '20px', background: 'var(--card-bg, #fff)', maxHeight: '70vh', overflowY: 'auto' }}>
+        <Modal.Body style={{ 
+          padding: '24px', 
+          background: 'rgba(255, 255, 255, 0.05)', 
+          backdropFilter: 'blur(10px)',
+          maxHeight: '70vh', 
+          overflowY: 'auto' 
+        }}>
           <Form onSubmit={handleSaveEdit}>
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Nombre
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                🎭 Tipo de Perfil
+              </Form.Label>
+              <Form.Select
+                value={editDraft.type || 'musico'}
+                onChange={(e) => setEditDraft({ ...editDraft, type: e.target.value })}
+                style={{ 
+                  borderRadius: '10px', 
+                  padding: '14px', 
+                  fontSize: 15,
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
+              >
+                <option value="musico">Músico</option>
+                <option value="banda">Banda</option>
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                👤 Nombre
               </Form.Label>
               <Form.Control
                 type="text"
                 value={editDraft.nombre || ''}
-                onChange={(e) => setEditDraft({ ...editDraft, nombre: e.target.value })}
+                onChange={(e) => {
+                  const formattedName = formatearNombre(e.target.value);
+                  setEditDraft({ ...editDraft, nombre: formattedName });
+                }}
                 placeholder="Nombre de la banda o músico"
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
+              {initialValues.perfilCompletado && (
+                <small style={{ 
+                  display: 'block', 
+                  marginTop: '8px', 
+                  color: 'rgba(255, 255, 255, 0.7)', 
+                  fontSize: '13px' 
+                }}>
+                  {(() => {
+                    const historial = initialValues.historialCambiosNombre || [];
+                    const cambiosRestantes = 2 - historial.length;
+                    if (cambiosRestantes > 0) {
+                      return `💡 Te quedan ${cambiosRestantes} cambio(s) de nombre disponibles`;
+                    } else {
+                      const ultimoCambio = initialValues.ultimoCambioNombre;
+                      if (ultimoCambio) {
+                        const fechaUltimoCambio = new Date(ultimoCambio);
+                        const fechaActual = new Date();
+                        const unMesEnMs = 30 * 24 * 60 * 60 * 1000;
+                        const diferencia = fechaActual - fechaUltimoCambio;
+                        if (diferencia < unMesEnMs) {
+                          const diasRestantes = Math.ceil((unMesEnMs - diferencia) / (24 * 60 * 60 * 1000));
+                          return `⏳ Debes esperar ${diasRestantes} día(s) para cambiar tu nombre`;
+                        } else {
+                          return `✅ Puedes cambiar tu nombre nuevamente`;
+                        }
+                      }
+                    }
+                    return '';
+                  })()}
+                </small>
+              )}
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Ciudad
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                📍 Departamento
               </Form.Label>
-              <Form.Control
-                type="text"
-                value={typeof editDraft.ciudad === 'object' ? editDraft.ciudad?.label : editDraft.ciudad || ''}
-                onChange={(e) => setEditDraft({ ...editDraft, ciudad: e.target.value })}
-                placeholder="Ej: Medellín, Bogotá, Cali..."
-                style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
-                  fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+              <Form.Select
+                value={departamentoSeleccionado}
+                onChange={(e) => {
+                  const deptId = e.target.value;
+                  setDepartamentoSeleccionado(deptId);
+                  setMunicipioSeleccionado('');
+                  const deptNombre = departamentos.find(d => d.value === deptId)?.label || '';
+                  setEditDraft({ 
+                    ...editDraft, 
+                    departamento: deptNombre,
+                    municipio: '',
+                    ciudad: ''
+                  });
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
-              />
+                style={{ 
+                  borderRadius: '10px', 
+                  padding: '14px', 
+                  fontSize: 15,
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
+              >
+                <option value="">Seleccionar departamento</option>
+                {departamentos.map(dept => (
+                  <option key={dept.value} value={dept.value}>{dept.label}</option>
+                ))}
+              </Form.Select>
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Biografía
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                🏙️ Municipio/Ciudad
+              </Form.Label>
+              <Form.Select
+                value={municipioSeleccionado}
+                onChange={(e) => {
+                  const munId = e.target.value;
+                  setMunicipioSeleccionado(munId);
+                  const munNombre = ciudades.find(c => c.value === munId)?.label || '';
+                  setEditDraft({ 
+                    ...editDraft, 
+                    municipio: munNombre,
+                    ciudad: munNombre
+                  });
+                }}
+                disabled={!departamentoSeleccionado}
+                style={{ 
+                  borderRadius: '10px', 
+                  padding: '14px', 
+                  fontSize: 15,
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: !departamentoSeleccionado ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease',
+                  opacity: !departamentoSeleccionado ? 0.6 : 1
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = !departamentoSeleccionado ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)';
+                }}
+              >
+                <option value="">Seleccionar municipio</option>
+                {ciudades.map(city => (
+                  <option key={city.value} value={city.value}>{city.label}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-4">
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                📝 Biografía
               </Form.Label>
               <Form.Control
                 as="textarea"
@@ -556,51 +848,47 @@ const Profile = () => {
                 onChange={(e) => setEditDraft({ ...editDraft, bio: e.target.value })}
                 placeholder="Cuéntanos sobre ti o tu banda..."
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease',
                   resize: 'vertical'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#0d6efd';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Géneros Musicales
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                🎵 Géneros Musicales
               </Form.Label>
               <Select
                 isMulti
                 value={(editDraft.generos || []).map(g => {
-                  // Si g ya es un objeto, retornarlo; si es string, convertirlo
                   if (typeof g === 'object' && g.value && g.label) {
                     return g;
                   }
                   return { value: g, label: g };
                 })}
                 onChange={(selected) => setEditDraft({ ...editDraft, generos: (selected || []).map(s => s.value) })}
-                options={[
-                  { value: 'Rock', label: 'Rock' },
-                  { value: 'Pop', label: 'Pop' },
-                  { value: 'Jazz', label: 'Jazz' },
-                  { value: 'Blues', label: 'Blues' },
-                  { value: 'Metal', label: 'Metal' },
-                  { value: 'Punk', label: 'Punk' },
-                  { value: 'Indie', label: 'Indie' },
-                  { value: 'Alternativo', label: 'Alternativo' },
-                  { value: 'Electrónica', label: 'Electrónica' },
-                  { value: 'Reggae', label: 'Reggae' },
-                ]}
+                options={generosMusicales}
                 placeholder="Selecciona géneros..."
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                Instrumentos
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                🎸 Instrumentos
               </Form.Label>
               <Select
                 isMulti
@@ -621,8 +909,8 @@ const Profile = () => {
 
             {initialValues?.type === 'banda' && (
               <Form.Group className="mb-4">
-                <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
-                  Número de Miembros
+                <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
+                  👥 Número de Miembros
                 </Form.Label>
                 <Form.Control
                   type="text"
@@ -630,29 +918,37 @@ const Profile = () => {
                   onChange={(e) => setEditDraft({ ...editDraft, miembros: e.target.value })}
                   placeholder="Ej: 4"
                   style={{ 
-                    borderRadius: '8px', 
-                    padding: '12px', 
+                    borderRadius: '10px', 
+                    padding: '14px', 
                     fontSize: 15,
-                    border: '1px solid #e4e6eb',
-                    transition: 'border-color 0.2s'
+                    border: '2px solid rgba(255, 255, 255, 0.3)',
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    color: 'var(--text-primary, #fff)',
+                    transition: 'all 0.3s ease'
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#1877f2'}
-                  onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0d6efd';
+                    e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                    e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                  }}
                 />
               </Form.Group>
             )}
 
             {/* Separador visual */}
             <div style={{ 
-              borderTop: '1px solid #e4e6eb', 
+              borderTop: '1px solid rgba(255, 255, 255, 0.2)', 
               margin: '24px 0',
               paddingTop: 24
             }}>
               <h5 style={{ 
                 fontWeight: 700, 
-                fontSize: 17, 
+                fontSize: 18, 
                 marginBottom: 16, 
-                color: '#050505',
+                color: 'var(--text-primary, #fff)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 8
@@ -662,7 +958,7 @@ const Profile = () => {
             </div>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
                 🎵 Spotify
               </Form.Label>
               <Form.Control
@@ -671,19 +967,27 @@ const Profile = () => {
                 onChange={(e) => setEditDraft({ ...editDraft, spotify: e.target.value })}
                 placeholder="https://open.spotify.com/artist/..."
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#1DB954'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#1DB954';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
                 📺 YouTube
               </Form.Label>
               <Form.Control
@@ -692,19 +996,27 @@ const Profile = () => {
                 onChange={(e) => setEditDraft({ ...editDraft, youtube: e.target.value })}
                 placeholder="https://youtube.com/@..."
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#FF0000'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#FF0000';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 8 }}>
+              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
                 📸 Instagram
               </Form.Label>
               <Form.Control
@@ -713,14 +1025,22 @@ const Profile = () => {
                 onChange={(e) => setEditDraft({ ...editDraft, instagram: e.target.value })}
                 placeholder="https://instagram.com/..."
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '12px', 
+                  borderRadius: '10px', 
+                  padding: '14px', 
                   fontSize: 15,
-                  border: '1px solid #e4e6eb',
-                  transition: 'border-color 0.2s'
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  color: 'var(--text-primary, #fff)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#E1306C'}
-                onBlur={(e) => e.target.style.borderColor = '#e4e6eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#E1306C';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                }}
               />
             </Form.Group>
 
@@ -734,24 +1054,30 @@ const Profile = () => {
             )}
 
             {/* Separador antes de botones */}
-            <div style={{ borderTop: '1px solid #e4e6eb', margin: '20px -20px 20px -20px' }}></div>
+            <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)', margin: '24px -24px 24px -24px' }}></div>
 
             <div className="d-flex gap-3 justify-content-end" style={{ padding: '0 0 0 0' }}>
               <Button 
                 variant="light" 
                 onClick={() => setShowEditModal(false)}
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '10px 24px', 
+                  borderRadius: '10px', 
+                  padding: '12px 28px', 
                   fontWeight: 600,
-                  background: '#e4e6eb',
-                  border: 'none',
-                  color: '#050505',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: '2px solid rgba(255, 255, 255, 0.5)',
+                  color: '#fff',
                   fontSize: 15,
-                  transition: 'background 0.2s'
+                  transition: 'all 0.3s ease'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#d8dadf'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#e4e6eb'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
               >
                 Cancelar
               </Button>
@@ -759,16 +1085,25 @@ const Profile = () => {
                 type="submit" 
                 variant="primary"
                 style={{ 
-                  borderRadius: '8px', 
-                  padding: '10px 24px', 
+                  borderRadius: '10px', 
+                  padding: '12px 28px', 
                   fontWeight: 600,
-                  background: '#1877f2',
+                  background: '#0d6efd',
                   border: 'none',
                   fontSize: 15,
-                  transition: 'background 0.2s'
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 15px rgba(13, 110, 253, 0.4)'
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = '#166fe5'}
-                onMouseLeave={(e) => e.currentTarget.style.background = '#1877f2'}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#0b5ed7';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(13, 110, 253, 0.6)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#0d6efd';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 15px rgba(13, 110, 253, 0.4)';
+                }}
               >
                 Guardar Cambios
               </Button>
@@ -798,6 +1133,7 @@ const Profile = () => {
             borderBottom: '1px solid var(--border-color, #e4e6eb)',
             padding: '16px 20px'
           }}
+          className="modal-header-custom"
         >
           <Modal.Title style={{ fontSize: 20, fontWeight: 700, color: '#050505' }}>
             Crear Publicación
@@ -805,7 +1141,7 @@ const Profile = () => {
         </Modal.Header>
         <Modal.Body style={{ padding: '0', background: 'var(--card-bg, #fff)' }}>
           {/* Información del usuario */}
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #e4e6eb' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color, #e4e6eb)' }}>
             <div className="d-flex align-items-center gap-3">
               <div style={{ 
                 width: 40, 
@@ -963,7 +1299,7 @@ const Profile = () => {
                       fontSize: 20,
                       transition: 'background 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     📷
@@ -985,7 +1321,7 @@ const Profile = () => {
                       fontSize: 20,
                       transition: 'background 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                    onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                   >
                     📅
@@ -1036,7 +1372,7 @@ const Profile = () => {
       </Modal>
 
       {user && (
-        <Container fluid className="p-0" style={{ maxWidth: '100%', margin: '0 auto', marginTop: 0, background: '#f0f2f5', minHeight: '100vh' }}>
+        <Container fluid className="p-0" style={{ maxWidth: '100%', margin: '0 auto', marginTop: 0, background: 'var(--bg-secondary)', minHeight: '100vh' }}>
           {/* Banner/Portada */}
           <div style={{ position: 'relative', width: '100%', height: 350, background: '#000', overflow: 'hidden' }}>
             {initialValues?.fotoPortada && (
@@ -1094,7 +1430,7 @@ const Profile = () => {
                         width: 168,
                         height: 168,
                         borderRadius: '50%',
-                        border: '4px solid #fff',
+                        border: '4px solid var(--card-bg, #fff)',
                         background: '#1877f2',
                         display: 'flex',
                         alignItems: 'center',
@@ -1125,7 +1461,7 @@ const Profile = () => {
                       height: 36,
                       borderRadius: '50%',
                       background: '#1877f2',
-                      border: '3px solid #fff',
+                      border: '3px solid var(--card-bg, #fff)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1139,7 +1475,7 @@ const Profile = () => {
                   
                   {/* Nombre y descripción */}
                   <div style={{ paddingBottom: '8px' }}>
-                    <h1 style={{ fontSize: 32, fontWeight: 700, color: '#050505', marginBottom: 4, lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary, #050505)', marginBottom: 4, lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                       {initialValues?.nombre || 'Mi perfil'}
                       {(initialValues?.planActual === 'premium' || initialValues?.membershipPlan === 'premium') && (
                         <span style={{
@@ -1159,12 +1495,16 @@ const Profile = () => {
                         </span>
                       )}
                     </h1>
-                    <p style={{ fontSize: 15, color: '#65676b', marginBottom: 4 }}>
+                    <p style={{ fontSize: 15, color: 'var(--text-secondary, #65676b)', marginBottom: 4 }}>
                       {initialValues?.type === 'banda' ? 'Banda de Rock Alternativo' : 'Músico Profesional'}
                     </p>
                     <p style={{ fontSize: 13, color: '#65676b', marginBottom: 0 }}>
-                      {(typeof initialValues?.ciudad === 'object' ? initialValues?.ciudad?.label : initialValues?.ciudad) || 'Ciudad no especificada'}
-                      {initialValues?.createdAt && ` • Miembro desde ${new Date(initialValues.createdAt).getFullYear()}`}
+                      {(() => {
+                        const ciudad = typeof initialValues?.ciudad === 'object' ? initialValues?.ciudad?.label : initialValues?.ciudad;
+                        const municipio = typeof initialValues?.municipio === 'object' ? initialValues?.municipio?.label : initialValues?.municipio;
+                        return ciudad || municipio || 'Ciudad no especificada';
+                      })()}
+                      {initialValues?.createdAt && ` • Miembro desde ${initialValues.createdAt.toDate ? initialValues.createdAt.toDate().getFullYear() : new Date(initialValues.createdAt).getFullYear()}`}
                     </p>
                   </div>
                 </div>
@@ -1265,22 +1605,6 @@ const Profile = () => {
                   Publicaciones
                 </button>
                 <button 
-                  onClick={() => setActiveTab('acerca')}
-                  style={{ 
-                    padding: '12px 16px', 
-                    border: 'none', 
-                    background: 'none', 
-                    borderBottom: activeTab === 'acerca' ? '3px solid #1877f2' : '3px solid transparent',
-                    color: activeTab === 'acerca' ? '#1877f2' : '#65676b',
-                    fontWeight: activeTab === 'acerca' ? 600 : 500,
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  Acerca de
-                </button>
-                <button 
                   onClick={() => setActiveTab('eventos')}
                   style={{ 
                     padding: '12px 16px', 
@@ -1312,33 +1636,17 @@ const Profile = () => {
                 >
                   Productos
                 </button>
-                <button 
-                  onClick={() => setActiveTab('musica')}
-                  style={{ 
-                    padding: '12px 16px', 
-                    border: 'none', 
-                    background: 'none', 
-                    borderBottom: activeTab === 'musica' ? '3px solid #1877f2' : '3px solid transparent',
-                    color: activeTab === 'musica' ? '#1877f2' : '#65676b',
-                    fontWeight: activeTab === 'musica' ? 600 : 500,
-                    cursor: 'pointer',
-                    fontSize: '15px',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  Música
-                </button>
               </div>
             </div>
             
             {/* Contenido con sidebar y feed */}
-            <div className="d-flex gap-3" style={{ padding: '16px', background: '#f0f2f5' }}>
+            <div className="d-flex gap-3" style={{ padding: '16px', background: 'var(--bg-secondary)' }}>
               {/* Sidebar izquierdo */}
               <div style={{ width: '360px', flexShrink: 0 }}>
                 {/* Acerca de */}
                 <div style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Acerca de</h3>
-                  <p style={{ fontSize: 15, color: '#050505', marginBottom: 12 }}>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text-primary, #050505)' }}>Acerca de</h3>
+                  <p style={{ fontSize: 15, color: 'var(--text-primary, #050505)', marginBottom: 12 }}>
                     {initialValues?.bio || 'Agrega una biografía para que otros conozcan más sobre ti.'}
                   </p>
                   {initialValues?.miembros && (
@@ -1360,7 +1668,7 @@ const Profile = () => {
                 
                 {/* Redes Sociales */}
                 <div style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
-                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Redes Sociales</h3>
+                  <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text-primary, #050505)' }}>Redes Sociales</h3>
                   {initialValues?.spotify && (
                     <div 
                       onClick={() => window.open(initialValues.spotify, '_blank')}
@@ -1369,7 +1677,7 @@ const Profile = () => {
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                     >
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#1DB954', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>S</div>
-                      <span style={{ fontSize: 15 }}>Spotify</span>
+                      <span style={{ fontSize: 15, color: 'var(--text-primary, #050505)' }}>Spotify</span>
                     </div>
                   )}
                   {initialValues?.youtube && (
@@ -1380,7 +1688,7 @@ const Profile = () => {
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                     >
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#FF0000', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>Y</div>
-                      <span style={{ fontSize: 15 }}>YouTube</span>
+                      <span style={{ fontSize: 15, color: 'var(--text-primary, #050505)' }}>YouTube</span>
                     </div>
                   )}
                   {initialValues?.instagram && (
@@ -1391,7 +1699,7 @@ const Profile = () => {
                       onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                     >
                       <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#E1306C', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700 }}>I</div>
-                      <span style={{ fontSize: 15 }}>Instagram</span>
+                      <span style={{ fontSize: 15, color: 'var(--text-primary, #050505)' }}>Instagram</span>
                     </div>
                   )}
                   {!initialValues?.spotify && !initialValues?.youtube && !initialValues?.instagram && (
@@ -1506,11 +1814,12 @@ const Profile = () => {
                       readOnly
                       style={{ 
                         flex: 1, 
-                        border: 'none', 
-                        background: '#f0f2f5', 
+                        border: '1px solid var(--border-color)', 
+                        background: 'var(--input-bg)', 
                         borderRadius: '20px', 
                         padding: '8px 16px',
                         fontSize: 15,
+                        color: 'var(--text-primary)',
                         cursor: 'pointer'
                       }}
                     />
@@ -1533,7 +1842,7 @@ const Profile = () => {
                           transition: 'background 0.2s',
                           borderRadius: '6px'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                       >
                         📷 Foto
@@ -1551,7 +1860,7 @@ const Profile = () => {
                           transition: 'background 0.2s',
                           borderRadius: '6px'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                       >
                         🎥 Video
@@ -1569,7 +1878,7 @@ const Profile = () => {
                           transition: 'background 0.2s',
                           borderRadius: '6px'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--hover-bg)'}
                         onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
                       >
                         📅 Evento
@@ -1619,7 +1928,7 @@ const Profile = () => {
                     ))
                   ) : (
                     <div className="text-center p-4" style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px' }}>
-                      <p>No tienes publicaciones aún. ¡Crea tu primera publicación!</p>
+                      <p style={{ color: 'var(--text-secondary, #65676b)' }}>No tienes publicaciones aún. ¡Crea tu primera publicación!</p>
                     </div>
                   )
                 )}
@@ -1692,105 +2001,6 @@ const Profile = () => {
                   )
                 )}
 
-                {/* Publicación de ejemplo solo para otras tabs */}
-                {!['publicaciones', 'eventos', 'productos'].includes(activeTab) && (
-                  <div style={{ background: '#fff', borderRadius: '8px', padding: '16px', boxShadow: '0 1px 2px rgba(0,0,0,0.1)', marginBottom: '16px' }}>
-                    <div className="d-flex align-items-center gap-2 mb-3">
-                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#1877f2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 18, fontWeight: 700 }}>
-                        {initialValues?.nombre?.charAt(0)?.toUpperCase() || 'T'}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 15, fontWeight: 600, color: '#050505' }}>
-                          {initialValues?.nombre || 'The Midnight Riders'}
-                        </div>
-                        <div style={{ fontSize: 13, color: '#65676b' }}>Hace 2 horas</div>
-                      </div>
-                    </div>
-                  <p style={{ fontSize: 15, color: '#050505', marginBottom: 12 }}>
-                    Increíble noche en The Roxy! Gracias a todos los que vinieron a apoyarnos. Aquí algunas fotos del show.
-                  </p>
-                  {initialValues?.fotoPortada && (
-                    <img 
-                      src={initialValues.fotoPortada} 
-                      alt="Publicación" 
-                      style={{ width: '100%', borderRadius: '8px', marginBottom: 12 }}
-                    />
-                  )}
-                  <div className="d-flex justify-content-between align-items-center" style={{ paddingTop: 8, borderTop: '1px solid #e4e6eb' }}>
-                    <div style={{ fontSize: 13, color: '#65676b' }}>1.2K Me gusta • 85 comentarios • 34 compartidos</div>
-                  </div>
-                  <div className="d-flex justify-content-around" style={{ paddingTop: 8, borderTop: '1px solid #e4e6eb', marginTop: 8 }}>
-                    <button 
-                      onClick={() => navigate('/publicaciones')}
-                      style={{ 
-                        border: 'none', 
-                        background: 'none', 
-                        color: '#65676b', 
-                        fontSize: 15, 
-                        fontWeight: 500, 
-                        cursor: 'pointer', 
-                        padding: '8px 12px', 
-                        flex: 1,
-                        transition: 'background 0.2s',
-                        borderRadius: '6px'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-                    >
-                      👍 Me gusta
-                    </button>
-                    <button 
-                      onClick={() => navigate('/publicaciones')}
-                      style={{ 
-                        border: 'none', 
-                        background: 'none', 
-                        color: '#65676b', 
-                        fontSize: 15, 
-                        fontWeight: 500, 
-                        cursor: 'pointer', 
-                        padding: '8px 12px', 
-                        flex: 1,
-                        transition: 'background 0.2s',
-                        borderRadius: '6px'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-                    >
-                      💬 Comentar
-                    </button>
-                    <button 
-                      onClick={() => {
-                        if (navigator.share) {
-                          navigator.share({
-                            title: initialValues?.nombre || 'BandSocial',
-                            text: 'Mira mi perfil en BandSocial',
-                            url: window.location.href
-                          });
-                        } else {
-                          navigator.clipboard.writeText(window.location.href);
-                          alert('Link copiado al portapapeles');
-                        }
-                      }}
-                      style={{ 
-                        border: 'none', 
-                        background: 'none', 
-                        color: '#65676b', 
-                        fontSize: 15, 
-                        fontWeight: 500, 
-                        cursor: 'pointer', 
-                        padding: '8px 12px', 
-                        flex: 1,
-                        transition: 'background 0.2s',
-                        borderRadius: '6px'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f0f2f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
-                    >
-                      🔗 Compartir
-                    </button>
-                  </div>
-                </div>
-                )}
               </div>
             </div>
           </div>
@@ -1806,6 +2016,228 @@ const Profile = () => {
         aspectRatio={cropImageType === 'banner' ? 16 / 9 : 1}
         title={cropImageType === 'banner' ? 'Editar Banner' : 'Editar Foto de Perfil'}
       />
+
+      {/* Modal de Encuesta de Eliminación/Desactivación */}
+      <Modal 
+        show={showDeleteSurveyModal} 
+        onHide={() => setShowDeleteSurveyModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header 
+          closeButton
+          style={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '20px 24px'
+          }}
+        >
+          <Modal.Title style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>
+            Antes de continuar
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '24px', background: '#f8f9fa' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h5 style={{ fontSize: 18, fontWeight: 600, marginBottom: '12px', color: '#050505' }}>
+              Queremos entender tu decisión
+            </h5>
+            <p style={{ fontSize: 15, color: '#65676b', marginBottom: '20px' }}>
+              Tu opinión es muy importante para nosotros. Por favor, ayúdanos a mejorar seleccionando la razón principal:
+            </p>
+          </div>
+
+          <Form.Group className="mb-4">
+            <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 10 }}>
+              ¿Por qué quieres eliminar tu cuenta?
+            </Form.Label>
+            <Form.Select
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+              style={{ 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: 15,
+                border: '2px solid #e0e0e0'
+              }}
+            >
+              <option value="">Selecciona una razón</option>
+              <option value="no_uso">No uso la plataforma con frecuencia</option>
+              <option value="encontre_alternativa">Encontré una alternativa mejor</option>
+              <option value="problemas_tecnicos">Problemas técnicos o errores</option>
+              <option value="falta_funciones">Falta de funciones que necesito</option>
+              <option value="privacidad">Preocupaciones de privacidad</option>
+              <option value="spam">Demasiado spam o contenido no deseado</option>
+              <option value="costo">Problemas con el costo o plan premium</option>
+              <option value="comunidad">No encontré la comunidad que buscaba</option>
+              <option value="temporal">Solo necesito un descanso temporal</option>
+              <option value="otro">Otra razón</option>
+            </Form.Select>
+          </Form.Group>
+
+          <Form.Group className="mb-4">
+            <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 10 }}>
+              Comentarios adicionales (opcional)
+            </Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={deleteComments}
+              onChange={(e) => setDeleteComments(e.target.value)}
+              placeholder="Cuéntanos más sobre tu experiencia..."
+              style={{ 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: 15,
+                border: '2px solid #e0e0e0'
+              }}
+            />
+          </Form.Group>
+
+          <div style={{ 
+            background: 'linear-gradient(135deg, #fff3cd 0%, #fff9e6 100%)', 
+            border: '2px solid #ffc107',
+            borderRadius: '12px', 
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
+            <h6 style={{ fontSize: 16, fontWeight: 600, color: '#856404', marginBottom: '12px' }}>
+              ¿Sabías que puedes desactivar tu cuenta temporalmente?
+            </h6>
+            <p style={{ fontSize: 14, color: '#856404', marginBottom: '12px' }}>
+              Si solo necesitas un descanso, puedes desactivar tu cuenta en lugar de eliminarla. 
+              Podrás reactivarla en cualquier momento iniciando sesión nuevamente.
+            </p>
+            <div className="d-flex gap-2">
+              <Button
+                variant="warning"
+                onClick={() => {
+                  setDeleteAction('deactivate');
+                  handleConfirmDelete();
+                }}
+                disabled={!deleteReason}
+                style={{
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontWeight: 600,
+                  fontSize: 15
+                }}
+              >
+                Desactivar temporalmente
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: '1px solid #e0e0e0', padding: '16px 24px' }}>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowDeleteSurveyModal(false)}
+            style={{
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 15
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            variant="danger"
+            onClick={() => {
+              setDeleteAction('delete');
+              handleConfirmDelete();
+            }}
+            disabled={!deleteReason}
+            style={{
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 15
+            }}
+          >
+            Eliminar permanentemente
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de Reautenticación */}
+      <Modal 
+        show={showReauthModal} 
+        onHide={() => {
+          setShowReauthModal(false);
+          setReauthPassword('');
+        }}
+        centered
+      >
+        <Modal.Header 
+          closeButton
+          style={{ 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '20px 24px'
+          }}
+        >
+          <Modal.Title style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>
+            Confirma tu identidad
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '24px', background: '#f8f9fa' }}>
+          <p style={{ fontSize: 15, color: '#65676b', marginBottom: '20px' }}>
+            Por seguridad, necesitamos que confirmes tu contraseña antes de continuar.
+          </p>
+          <Form.Group>
+            <Form.Label style={{ fontWeight: 600, fontSize: 15, color: '#050505', marginBottom: 10 }}>
+              Contraseña
+            </Form.Label>
+            <Form.Control
+              type="password"
+              value={reauthPassword}
+              onChange={(e) => setReauthPassword(e.target.value)}
+              placeholder="Ingresa tu contraseña"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleReauthenticate();
+                }
+              }}
+              style={{ 
+                borderRadius: '8px', 
+                padding: '12px', 
+                fontSize: 15,
+                border: '2px solid #e0e0e0'
+              }}
+              autoFocus
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: '1px solid #e0e0e0', padding: '16px 24px' }}>
+          <Button 
+            variant="secondary" 
+            onClick={() => {
+              setShowReauthModal(false);
+              setReauthPassword('');
+            }}
+            style={{
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 15
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            variant="primary"
+            onClick={handleReauthenticate}
+            style={{
+              borderRadius: '8px',
+              padding: '10px 20px',
+              fontWeight: 600,
+              fontSize: 15
+            }}
+          >
+            Confirmar
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <ToastContainer />
     </>

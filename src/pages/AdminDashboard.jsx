@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge, Tabs, Tab } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge, Tabs, Tab, Spinner, Alert } from 'react-bootstrap';
 import { FaUsers, FaFileAlt, FaCalendar, FaShoppingBag, FaTrash, FaBan, FaCheck, FaChartLine, FaKey } from 'react-icons/fa';
 import { db, auth } from '../services/firebase';
 import { collection, getDocs, deleteDoc, doc, updateDoc, query, orderBy, limit, getDoc } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/Toast';
+import colombiaAPI from '../services/colombiaAPI';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -29,6 +31,8 @@ const AdminDashboard = () => {
     confirmPassword: ''
   });
   const [changingPassword, setChangingPassword] = useState(false);
+  const [departamentosMap, setDepartamentosMap] = useState({});
+  const [ciudadesMap, setCiudadesMap] = useState({});
   
   const navigate = useNavigate();
   const { showToast, ToastContainer } = useToast();
@@ -37,7 +41,31 @@ const AdminDashboard = () => {
   useEffect(() => {
     checkAdminAccess();
     fetchAllData();
+    cargarDepartamentosYCiudades();
   }, []);
+
+  const cargarDepartamentosYCiudades = async () => {
+    try {
+      const [departamentos, ciudades] = await Promise.all([
+        colombiaAPI.getDepartamentos(),
+        colombiaAPI.getAllCiudades()
+      ]);
+
+      const deptMap = {};
+      departamentos.forEach(dept => {
+        deptMap[dept.id] = dept.name;
+      });
+      setDepartamentosMap(deptMap);
+
+      const cityMap = {};
+      ciudades.forEach(city => {
+        cityMap[city.id] = city.name;
+      });
+      setCiudadesMap(cityMap);
+    } catch (error) {
+      console.error('Error al cargar departamentos y ciudades:', error);
+    }
+  };
 
   const checkAdminAccess = () => {
     if (!currentUser || currentUser.email !== 'estebanber24@gmail.com') {
@@ -226,6 +254,7 @@ const AdminDashboard = () => {
     }
   };
 
+
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -234,6 +263,26 @@ const AdminDashboard = () => {
       month: 'short', 
       day: 'numeric' 
     });
+  };
+
+  const calcularTiempoEnPlataforma = (createdAt) => {
+    if (!createdAt) return 'N/A';
+    
+    const fechaRegistro = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
+    const ahora = new Date();
+    const diferenciaMilisegundos = ahora - fechaRegistro;
+    
+    const dias = Math.floor(diferenciaMilisegundos / (1000 * 60 * 60 * 24));
+    const horas = Math.floor((diferenciaMilisegundos % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutos = Math.floor((diferenciaMilisegundos % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (dias > 0) {
+      return `${dias}d ${horas}h`;
+    } else if (horas > 0) {
+      return `${horas}h ${minutos}m`;
+    } else {
+      return `${minutos}m`;
+    }
   };
 
   if (loading) {
@@ -341,9 +390,10 @@ const AdminDashboard = () => {
                       <th>Email</th>
                       <th>Tipo</th>
                       <th>Plan</th>
-                      <th>Estado</th>
+                      <th>Tiempo en la Página</th>
                       <th>Fecha Registro</th>
-                      <th>Ciudad</th>
+                      <th>Departamento</th>
+                      <th>Municipio</th>
                       <th>Acciones</th>
                     </tr>
                   </thead>
@@ -363,15 +413,37 @@ const AdminDashboard = () => {
                           </Badge>
                         </td>
                         <td>
-                          {user.banned ? (
-                            <Badge bg="danger">Baneado</Badge>
-                          ) : (
-                            <Badge bg="success">Activo</Badge>
-                          )}
+                          <Badge bg="info">
+                            {calcularTiempoEnPlataforma(user.createdAt || user.fechaRegistro)}
+                          </Badge>
                         </td>
-                        <td>{formatDate(user.fechaRegistro)}</td>
+                        <td>{formatDate(user.fechaRegistro || user.createdAt)}</td>
                         <td>
-                          {typeof user.ciudad === 'object' ? user.ciudad?.label || user.ciudad?.value || 'N/A' : user.ciudad || 'N/A'}
+                          {(() => {
+                            if (typeof user.departamento === 'object') {
+                              return user.departamento?.label || user.departamento?.value || 'N/A';
+                            } else if (typeof user.departamento === 'number') {
+                              return departamentosMap[user.departamento] || `ID: ${user.departamento}`;
+                            } else if (typeof user.departamento === 'string' && !isNaN(user.departamento)) {
+                              const deptId = parseInt(user.departamento);
+                              return departamentosMap[deptId] || `ID: ${user.departamento}`;
+                            }
+                            return user.departamento || 'N/A';
+                          })()}
+                        </td>
+                        <td>
+                          {(() => {
+                            const municipio = user.municipio || user.ciudad;
+                            if (typeof municipio === 'object') {
+                              return municipio?.label || municipio?.value || 'N/A';
+                            } else if (typeof municipio === 'number') {
+                              return ciudadesMap[municipio] || `ID: ${municipio}`;
+                            } else if (typeof municipio === 'string' && !isNaN(municipio)) {
+                              const cityId = parseInt(municipio);
+                              return ciudadesMap[cityId] || `ID: ${municipio}`;
+                            }
+                            return municipio || 'N/A';
+                          })()}
                         </td>
                         <td>
                           <div className="d-flex gap-2">
@@ -447,6 +519,7 @@ const AdminDashboard = () => {
                       <th>Título</th>
                       <th>Organizador</th>
                       <th>Fecha Evento</th>
+                      <th>Departamento</th>
                       <th>Ciudad</th>
                       <th>Asistentes</th>
                       <th>Acciones</th>
@@ -458,6 +531,19 @@ const AdminDashboard = () => {
                         <td>{event.titulo}</td>
                         <td>{event.creadorNombre || 'N/A'}</td>
                         <td>{event.fecha}</td>
+                        <td>
+                          {(() => {
+                            if (typeof event.departamento === 'object') {
+                              return event.departamento?.label || event.departamento?.value || 'N/A';
+                            } else if (typeof event.departamento === 'number') {
+                              return departamentosMap[event.departamento] || `ID: ${event.departamento}`;
+                            } else if (typeof event.departamento === 'string' && !isNaN(event.departamento)) {
+                              const deptId = parseInt(event.departamento);
+                              return departamentosMap[deptId] || `ID: ${event.departamento}`;
+                            }
+                            return event.departamento || 'N/A';
+                          })()}
+                        </td>
                         <td>{event.ciudad || 'N/A'}</td>
                         <td>{event.asistentes?.length || 0}</td>
                         <td>
@@ -483,6 +569,7 @@ const AdminDashboard = () => {
                   <thead>
                     <tr>
                       <th>Nombre</th>
+                      <th>Tipo</th>
                       <th>Vendedor</th>
                       <th>Precio</th>
                       <th>Estado</th>
@@ -495,6 +582,11 @@ const AdminDashboard = () => {
                     {products.map(product => (
                       <tr key={product.id}>
                         <td>{product.nombre}</td>
+                        <td>
+                          <Badge bg="info">
+                            {product.categoria || product.tipo || 'N/A'}
+                          </Badge>
+                        </td>
                         <td>{product.vendedorNombre || 'N/A'}</td>
                         <td>${product.precio?.toLocaleString()}</td>
                         <td><Badge bg="success">{product.estado}</Badge></td>
@@ -515,6 +607,17 @@ const AdminDashboard = () => {
                 </Table>
               </div>
             </Tab>
+
+            {/* Tab Analítica */}
+            <Tab eventKey="analytics" title="Analítica">
+              <AnalyticsDashboard 
+                users={users}
+                publications={posts}
+                events={events}
+                products={products}
+              />
+            </Tab>
+
           </Tabs>
         </Card.Body>
       </Card>

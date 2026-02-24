@@ -5,6 +5,8 @@ import { Button, Modal, Form } from 'react-bootstrap';
 import { GuestContext } from '../App';
 import { FaFilter, FaCalendarAlt, FaMapMarkerAlt, FaUsers, FaClock, FaThLarge, FaList, FaImage } from 'react-icons/fa';
 import { uploadToCloudinary } from '../services/cloudinary';
+import { useDepartamentos, useCiudades } from '../hooks/useColombia';
+import { generosMusicales } from '../data/opciones';
 import './Eventos.css';
 import '../styles/ModernModal.css';
 
@@ -43,11 +45,16 @@ const EventosNuevo = () => {
   const [imagenPreview, setImagenPreview] = useState('');
   const [uploadingImagen, setUploadingImagen] = useState(false);
   const [ciudadesOptions, setCiudadesOptions] = useState([]);
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState('');
+  const [municipioSeleccionado, setMunicipioSeleccionado] = useState('');
 
   // Filtros
   const [filtroGenero, setFiltroGenero] = useState([]);
   const [filtroCiudad, setFiltroCiudad] = useState('');
   const [filtroTipo, setFiltroTipo] = useState([]);
+  
+  const { departamentos } = useDepartamentos();
+  const { ciudades } = useCiudades(departamentoSeleccionado);
 
   const generos = [
     'Rock',
@@ -872,15 +879,41 @@ const EventosNuevo = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Ciudad *</Form.Label>
+              <Form.Label>Departamento *</Form.Label>
               <Form.Select
-                value={nuevoEvento.ciudad}
-                onChange={(e) => setNuevoEvento({...nuevoEvento, ciudad: e.target.value})}
+                value={departamentoSeleccionado}
+                onChange={(e) => {
+                  const deptId = e.target.value;
+                  setDepartamentoSeleccionado(deptId);
+                  setMunicipioSeleccionado('');
+                  const deptNombre = departamentos.find(d => d.value === deptId)?.label || '';
+                  setNuevoEvento({...nuevoEvento, departamento: deptId, municipio: '', ciudad: deptNombre});
+                }}
                 required
               >
-                <option value="">Selecciona una ciudad</option>
-                {ciudadesOptions.map(ciudad => (
-                  <option key={ciudad} value={ciudad}>{ciudad}</option>
+                <option value="">Selecciona un departamento</option>
+                {departamentos.map(dept => (
+                  <option key={dept.value} value={dept.value}>{dept.label}</option>
+                ))}
+              </Form.Select>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Municipio/Ciudad *</Form.Label>
+              <Form.Select
+                value={municipioSeleccionado}
+                onChange={(e) => {
+                  const munId = e.target.value;
+                  setMunicipioSeleccionado(munId);
+                  const munNombre = ciudades.find(c => c.value === munId)?.label || '';
+                  setNuevoEvento({...nuevoEvento, municipio: munId, ciudad: munNombre});
+                }}
+                disabled={!departamentoSeleccionado}
+                required
+              >
+                <option value="">Selecciona un municipio</option>
+                {ciudades.map(city => (
+                  <option key={city.value} value={city.value}>{city.label}</option>
                 ))}
               </Form.Select>
             </Form.Group>
