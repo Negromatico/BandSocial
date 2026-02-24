@@ -278,6 +278,11 @@ const EventosNuevo = () => {
       return;
     }
 
+    // Debug: verificar el estado actual
+    console.log('Estado nuevoEvento:', nuevoEvento);
+    console.log('Ciudad:', nuevoEvento.ciudad);
+    console.log('Municipio seleccionado:', municipioSeleccionado);
+
     // Validaciones detalladas
     const camposFaltantes = [];
     
@@ -354,6 +359,8 @@ const EventosNuevo = () => {
       });
       setImagenFile(null);
       setImagenPreview('');
+      setDepartamentoSeleccionado('');
+      setMunicipioSeleccionado('');
 
       // Recargar eventos
       fetchEventos();
@@ -887,7 +894,7 @@ const EventosNuevo = () => {
                   setDepartamentoSeleccionado(deptId);
                   setMunicipioSeleccionado('');
                   const deptNombre = departamentos.find(d => d.value === deptId)?.label || '';
-                  setNuevoEvento({...nuevoEvento, departamento: deptId, municipio: '', ciudad: deptNombre});
+                  setNuevoEvento(prev => ({...prev, departamento: deptId, municipio: '', ciudad: ''}));
                 }}
                 required
               >
@@ -904,9 +911,12 @@ const EventosNuevo = () => {
                 value={municipioSeleccionado}
                 onChange={(e) => {
                   const munId = e.target.value;
+                  console.log('munId seleccionado:', munId, 'tipo:', typeof munId);
+                  console.log('ciudades array:', ciudades);
                   setMunicipioSeleccionado(munId);
-                  const munNombre = ciudades.find(c => c.value === munId)?.label || '';
-                  setNuevoEvento({...nuevoEvento, municipio: munId, ciudad: munNombre});
+                  const munNombre = ciudades.find(c => c.value == munId)?.label || '';
+                  console.log('munNombre encontrado:', munNombre);
+                  setNuevoEvento(prev => ({...prev, municipio: munId, ciudad: munNombre}));
                 }}
                 disabled={!departamentoSeleccionado}
                 required
