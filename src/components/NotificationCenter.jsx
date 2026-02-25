@@ -11,6 +11,7 @@ const NotificationCenter = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('todas');
   const navigate = useNavigate();
   const { openChat } = useChatDock();
   const user = auth.currentUser;
@@ -113,23 +114,63 @@ const NotificationCenter = () => {
   const getNotificationIcon = (tipo) => {
     switch (tipo) {
       case 'seguidor':
-        return <FaUserPlus className="notif-icon" style={{ color: '#667eea' }} />;
+        return <FaUserPlus className="notif-icon" style={{ color: '#3b82f6' }} />;
       case 'like':
         return <FaHeart className="notif-icon" style={{ color: '#ef4444' }} />;
       case 'comentario':
-        return <FaComment className="notif-icon" style={{ color: '#10b981' }} />;
+        return <FaComment className="notif-icon" style={{ color: '#3b82f6' }} />;
       case 'nueva_publicacion':
         return <FaBell className="notif-icon" style={{ color: '#3b82f6' }} />;
       case 'producto':
-        return <FaMusic className="notif-icon" style={{ color: '#f59e0b' }} />;
+        return <FaMusic className="notif-icon" style={{ color: '#3b82f6' }} />;
       case 'evento':
-        return <FaCalendar className="notif-icon" style={{ color: '#8b5cf6' }} />;
+        return <FaCalendar className="notif-icon" style={{ color: '#3b82f6' }} />;
       case 'mensaje':
         return <FaEnvelope className="notif-icon" style={{ color: '#3b82f6' }} />;
       default:
         return <FaBell className="notif-icon" style={{ color: '#6b7280' }} />;
     }
   };
+
+  const getNotificationCategory = (tipo) => {
+    if (tipo === 'evento') return 'eventos';
+    if (['seguidor', 'like', 'comentario', 'nueva_publicacion'].includes(tipo)) return 'sociales';
+    return 'todas';
+  };
+
+  const getActionButtons = (notification) => {
+    switch (notification.tipo) {
+      case 'evento':
+        return [
+          { label: 'Ver evento', action: () => handleNotificationClick(notification) },
+          { label: 'Descartar', action: () => markAsRead(notification.id), secondary: true }
+        ];
+      case 'seguidor':
+        return [
+          { label: 'Ver perfil', action: () => handleNotificationClick(notification) },
+          { label: 'Seguir de vuelta', action: () => handleNotificationClick(notification), secondary: true }
+        ];
+      case 'comentario':
+        return [
+          { label: 'Responder', action: () => handleNotificationClick(notification) },
+          { label: 'Ver publicación', action: () => handleNotificationClick(notification), secondary: true }
+        ];
+      case 'like':
+        return [
+          { label: 'Ver publicación', action: () => handleNotificationClick(notification) }
+        ];
+      default:
+        return [
+          { label: 'Ver detalles', action: () => handleNotificationClick(notification) },
+          { label: 'Descartar', action: () => markAsRead(notification.id), secondary: true }
+        ];
+    }
+  };
+
+  const filteredNotifications = notifications.filter(notif => {
+    if (activeTab === 'todas') return true;
+    return getNotificationCategory(notif.tipo) === activeTab;
+  });
 
   const formatTime = (timestamp) => {
     if (!timestamp || !timestamp.toDate) return '';
@@ -165,15 +206,40 @@ const NotificationCenter = () => {
 
       <Dropdown.Menu className="notification-menu">
         <div className="notification-header">
-          <h6 className="mb-0">Notificaciones</h6>
-          {unreadCount > 0 && (
+          <div className="notification-header-top">
+            <div className="notification-title">
+              <FaBell className="title-icon" />
+              <h6 className="mb-0">Notificaciones</h6>
+            </div>
+            {unreadCount > 0 && (
+              <button 
+                className="mark-all-read-btn"
+                onClick={markAllAsRead}
+              >
+                Marcar todas como leídas
+              </button>
+            )}
+          </div>
+          <div className="notification-tabs">
             <button 
-              className="mark-all-read-btn"
-              onClick={markAllAsRead}
+              className={`tab-btn ${activeTab === 'todas' ? 'active' : ''}`}
+              onClick={() => setActiveTab('todas')}
             >
-              Marcar todas como leídas
+              Todas ({notifications.length})
             </button>
-          )}
+            <button 
+              className={`tab-btn ${activeTab === 'eventos' ? 'active' : ''}`}
+              onClick={() => setActiveTab('eventos')}
+            >
+              Eventos ({notifications.filter(n => getNotificationCategory(n.tipo) === 'eventos').length})
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'sociales' ? 'active' : ''}`}
+              onClick={() => setActiveTab('sociales')}
+            >
+              Sociales ({notifications.filter(n => getNotificationCategory(n.tipo) === 'sociales').length})
+            </button>
+          </div>
         </div>
 
         <div className="notification-list">
@@ -189,22 +255,43 @@ const NotificationCenter = () => {
               <p>No tienes notificaciones</p>
             </div>
           ) : (
-            notifications.slice(0, 10).map(notif => (
-              <div
-                key={notif.id}
-                className={`notification-item ${!notif.leida ? 'unread' : ''}`}
-                onClick={() => handleNotificationClick(notif)}
-              >
-                <div className="notification-icon-wrapper">
-                  {getNotificationIcon(notif.tipo)}
+            filteredNotifications.slice(0, 10).map(notif => {
+              const actionButtons = getActionButtons(notif);
+              return (
+                <div
+                  key={notif.id}
+                  className={`notification-item ${!notif.leida ? 'unread' : ''}`}
+                >
+                  <div className="notification-icon-wrapper">
+                    {getNotificationIcon(notif.tipo)}
+                  </div>
+                  <div className="notification-content">
+                    <div className="notification-header-row">
+                      <p className="notification-title">{notif.mensaje.split('.')[0]}</p>
+                      <span className="notification-time">{formatTime(notif.createdAt)}</span>
+                      {!notif.leida && <div className="notification-dot" />}
+                    </div>
+                    <p className="notification-description">
+                      {notif.mensaje.split('.').slice(1).join('.').trim()}
+                    </p>
+                    <div className="notification-actions">
+                      {actionButtons.map((btn, idx) => (
+                        <button
+                          key={idx}
+                          className={`action-btn ${btn.secondary ? 'secondary' : 'primary'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            btn.action();
+                          }}
+                        >
+                          {btn.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="notification-content">
-                  <p className="notification-text">{notif.mensaje}</p>
-                  <span className="notification-time">{formatTime(notif.createdAt)}</span>
-                </div>
-                {!notif.leida && <div className="notification-dot" />}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
