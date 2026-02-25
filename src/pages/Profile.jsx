@@ -636,52 +636,20 @@ const Profile = () => {
         size="lg"
         className="edit-profile-modal"
       >
-        <Modal.Header 
-          closeButton 
-          style={{ 
-            background: 'rgba(255, 255, 255, 0.1)', 
-            backdropFilter: 'blur(10px)',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-            padding: '20px 24px'
-          }}
-          className="modal-header-custom"
-        >
-          <Modal.Title style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary, #fff)' }}>
-            ✏️ Editar Perfil
+        <Modal.Header closeButton>
+          <Modal.Title>
+            Editar Perfil
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ 
-          padding: '24px', 
-          background: 'rgba(255, 255, 255, 0.05)', 
-          backdropFilter: 'blur(10px)',
-          maxHeight: '70vh', 
-          overflowY: 'auto' 
-        }}>
+        <Modal.Body style={{ maxHeight: '70vh', overflowY: 'auto' }}>
           <Form onSubmit={handleSaveEdit}>
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                🎭 Tipo de Perfil
+              <Form.Label>
+                Tipo de Perfil
               </Form.Label>
               <Form.Select
                 value={editDraft.type || 'musico'}
                 onChange={(e) => setEditDraft({ ...editDraft, type: e.target.value })}
-                style={{ 
-                  borderRadius: '10px', 
-                  padding: '14px', 
-                  fontSize: 15,
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  color: 'var(--text-primary, #fff)',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#0d6efd';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
               >
                 <option value="musico">Músico</option>
                 <option value="banda">Banda</option>
@@ -689,8 +657,8 @@ const Profile = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                👤 Nombre
+              <Form.Label>
+                Nombre
               </Form.Label>
               <Form.Control
                 type="text"
@@ -700,36 +668,20 @@ const Profile = () => {
                   setEditDraft({ ...editDraft, nombre: formattedName });
                 }}
                 placeholder="Nombre de la banda o músico"
-                style={{ 
-                  borderRadius: '10px', 
-                  padding: '14px', 
-                  fontSize: 15,
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  color: 'var(--text-primary, #fff)',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#0d6efd';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
               />
               {initialValues.perfilCompletado && (
                 <small style={{ 
                   display: 'block', 
                   marginTop: '8px', 
-                  color: 'rgba(255, 255, 255, 0.7)', 
-                  fontSize: '13px' 
+                  color: '#3b82f6', 
+                  fontSize: '14px',
+                  fontWeight: '500'
                 }}>
                   {(() => {
                     const historial = initialValues.historialCambiosNombre || [];
                     const cambiosRestantes = 2 - historial.length;
                     if (cambiosRestantes > 0) {
-                      return `💡 Te quedan ${cambiosRestantes} cambio(s) de nombre disponibles`;
+                      return `Te quedan ${cambiosRestantes} cambio(s) de nombre disponibles`;
                     } else {
                       const ultimoCambio = initialValues.ultimoCambioNombre;
                       if (ultimoCambio) {
@@ -739,9 +691,9 @@ const Profile = () => {
                         const diferencia = fechaActual - fechaUltimoCambio;
                         if (diferencia < unMesEnMs) {
                           const diasRestantes = Math.ceil((unMesEnMs - diferencia) / (24 * 60 * 60 * 1000));
-                          return `⏳ Debes esperar ${diasRestantes} día(s) para cambiar tu nombre`;
+                          return `Debes esperar ${diasRestantes} día(s) para cambiar tu nombre`;
                         } else {
-                          return `✅ Puedes cambiar tu nombre nuevamente`;
+                          return `Puedes cambiar tu nombre nuevamente`;
                         }
                       }
                     }
@@ -752,8 +704,8 @@ const Profile = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                📍 Departamento
+              <Form.Label>
+                Departamento
               </Form.Label>
               <Form.Select
                 value={departamentoSeleccionado}
@@ -769,23 +721,6 @@ const Profile = () => {
                     ciudad: ''
                   });
                 }}
-                style={{ 
-                  borderRadius: '10px', 
-                  padding: '14px', 
-                  fontSize: 15,
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  color: 'var(--text-primary, #fff)',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#0d6efd';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
               >
                 <option value="">Seleccionar departamento</option>
                 {departamentos.map(dept => (
@@ -795,8 +730,8 @@ const Profile = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                🏙️ Municipio/Ciudad
+              <Form.Label>
+                Municipio/Ciudad
               </Form.Label>
               <Form.Select
                 value={municipioSeleccionado}
@@ -811,24 +746,6 @@ const Profile = () => {
                   });
                 }}
                 disabled={!departamentoSeleccionado}
-                style={{ 
-                  borderRadius: '10px', 
-                  padding: '14px', 
-                  fontSize: 15,
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  background: !departamentoSeleccionado ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)',
-                  color: 'var(--text-primary, #fff)',
-                  transition: 'all 0.3s ease',
-                  opacity: !departamentoSeleccionado ? 0.6 : 1
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#0d6efd';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  e.target.style.background = !departamentoSeleccionado ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.15)';
-                }}
               >
                 <option value="">Seleccionar municipio</option>
                 {ciudades.map(city => (
@@ -838,8 +755,8 @@ const Profile = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                📝 Biografía
+              <Form.Label>
+                Biografía
               </Form.Label>
               <Form.Control
                 as="textarea"
@@ -847,30 +764,13 @@ const Profile = () => {
                 value={editDraft.bio || ''}
                 onChange={(e) => setEditDraft({ ...editDraft, bio: e.target.value })}
                 placeholder="Cuéntanos sobre ti o tu banda..."
-                style={{ 
-                  borderRadius: '10px', 
-                  padding: '14px', 
-                  fontSize: 15,
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  color: 'var(--text-primary, #fff)',
-                  transition: 'all 0.3s ease',
-                  resize: 'vertical'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#0d6efd';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
+                style={{ resize: 'vertical' }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                🎵 Géneros Musicales
+              <Form.Label>
+                Géneros Musicales
               </Form.Label>
               <Select
                 isMulti
@@ -887,8 +787,8 @@ const Profile = () => {
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                🎸 Instrumentos
+              <Form.Label>
+                Instrumentos
               </Form.Label>
               <Select
                 isMulti
@@ -939,108 +839,45 @@ const Profile = () => {
             )}
 
             {/* Separador visual */}
-            <div style={{ 
-              borderTop: '1px solid rgba(255, 255, 255, 0.2)', 
-              margin: '24px 0',
-              paddingTop: 24
-            }}>
-              <h5 style={{ 
-                fontWeight: 700, 
-                fontSize: 18, 
-                marginBottom: 16, 
-                color: 'var(--text-primary, #fff)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8
-              }}>
-                🌐 Redes Sociales
+            <div className="section-divider">
+              <h5 className="section-title">
+                Redes Sociales
               </h5>
             </div>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                🎵 Spotify
+              <Form.Label>
+                Spotify
               </Form.Label>
               <Form.Control
                 type="url"
                 value={editDraft.spotify || ''}
                 onChange={(e) => setEditDraft({ ...editDraft, spotify: e.target.value })}
                 placeholder="https://open.spotify.com/artist/..."
-                style={{ 
-                  borderRadius: '10px', 
-                  padding: '14px', 
-                  fontSize: 15,
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  color: 'var(--text-primary, #fff)',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#1DB954';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                📺 YouTube
+              <Form.Label>
+                YouTube
               </Form.Label>
               <Form.Control
                 type="url"
                 value={editDraft.youtube || ''}
                 onChange={(e) => setEditDraft({ ...editDraft, youtube: e.target.value })}
                 placeholder="https://youtube.com/@..."
-                style={{ 
-                  borderRadius: '10px', 
-                  padding: '14px', 
-                  fontSize: 15,
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  color: 'var(--text-primary, #fff)',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#FF0000';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
               />
             </Form.Group>
 
             <Form.Group className="mb-4">
-              <Form.Label style={{ fontWeight: 600, fontSize: 15, color: 'var(--text-primary, #fff)', marginBottom: 10 }}>
-                📸 Instagram
+              <Form.Label>
+                Instagram
               </Form.Label>
               <Form.Control
                 type="url"
                 value={editDraft.instagram || ''}
                 onChange={(e) => setEditDraft({ ...editDraft, instagram: e.target.value })}
                 placeholder="https://instagram.com/..."
-                style={{ 
-                  borderRadius: '10px', 
-                  padding: '14px', 
-                  fontSize: 15,
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  background: 'rgba(255, 255, 255, 0.15)',
-                  color: 'var(--text-primary, #fff)',
-                  transition: 'all 0.3s ease'
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#E1306C';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                  e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                }}
               />
             </Form.Group>
 
