@@ -1,119 +1,283 @@
+/* Modal Container */
 .auth-prompt-modal .modal-content {
   border-radius: 20px;
   border: none;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  max-width: 520px;
 }
 
+/* Header */
 .auth-prompt-modal .modal-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  border-bottom: none;
-  padding: 1.5rem;
+  border: none;
+  padding: 1.5rem 1.75rem 1.25rem;
+  position: relative;
+}
+
+.modal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-logo {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
 }
 
 .auth-prompt-modal .modal-title {
   font-weight: 700;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
+  margin: 0;
+  flex: 1;
 }
 
-.auth-prompt-modal .modal-header .btn-close {
-  filter: brightness(0) invert(1);
+.modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.1rem;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+/* Body */
+.auth-prompt-modal .modal-body {
+  padding: 1.5rem 1.75rem;
+  background: #f9fafb;
 }
 
 .auth-prompt-content {
   text-align: center;
-  padding: 1rem 0;
 }
 
-.auth-prompt-content h5 {
-  color: #333;
-  font-weight: 600;
-  margin-bottom: 1.5rem;
+.modal-subtitle {
+  color: #1f2937;
+  font-weight: 700;
+  font-size: 1.15rem;
+  margin-bottom: 1.25rem;
 }
 
-.benefits-list {
-  list-style: none;
-  padding: 0;
-  margin: 1.5rem 0;
+/* Benefits Grid */
+.benefits-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 1.25rem 0;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: white;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.benefit-item:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.benefit-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.benefit-text {
+  flex: 1;
   text-align: left;
 }
 
-.benefits-list li {
-  padding: 0.75rem 0;
-  font-size: 1rem;
-  color: #555;
-  border-bottom: 1px solid #f0f0f0;
+.benefit-text h6 {
+  margin: 0 0 2px 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1f2937;
 }
 
-.benefits-list li:last-child {
-  border-bottom: none;
+.benefit-text p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .auth-prompt-subtitle {
-  color: #666;
-  font-size: 0.95rem;
-  margin-top: 1.5rem;
+  color: #6b7280;
+  font-size: 0.88rem;
+  margin-top: 1.25rem;
   margin-bottom: 0;
+  line-height: 1.5;
+  font-weight: 500;
 }
 
+/* Footer */
 .auth-prompt-footer {
-  border-top: 1px solid #e9ecef;
-  padding: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  padding: 1.25rem 1.75rem;
   display: flex;
-  gap: 0.75rem;
+  gap: 10px;
   justify-content: center;
   flex-wrap: wrap;
+  background: white;
 }
 
 .btn-continue-guest {
   border-radius: 10px;
-  padding: 0.6rem 1.2rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  padding: 10px 20px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: 2px solid #e5e7eb;
+  color: #6b7280;
+  font-size: 0.88rem;
 }
 
 .btn-continue-guest:hover {
-  background-color: #f8f9fa;
-  transform: translateY(-2px);
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  color: #374151;
+  transform: translateY(-1px);
 }
 
 .btn-login-modal {
   border-radius: 10px;
-  padding: 0.6rem 1.5rem;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  border: 2px solid #667eea;
-  color: #667eea;
+  padding: 10px 22px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: 2px solid #3b82f6;
+  color: #3b82f6;
+  background: white;
+  font-size: 0.88rem;
 }
 
 .btn-login-modal:hover {
-  background-color: #667eea;
+  background-color: #3b82f6;
   color: white;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-register-modal {
   border-radius: 10px;
-  padding: 0.6rem 1.5rem;
-  font-weight: 500;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 10px 22px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   border: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  color: white;
+  font-size: 0.88rem;
 }
 
 .btn-register-modal:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-register-modal .me-2,
+.btn-login-modal .me-2 {
+  margin-right: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .auth-prompt-modal .modal-header {
+    padding: 1.5rem 1.5rem 1.25rem;
+  }
+  
+  .modal-icon-badge {
+    width: 48px;
+    height: 48px;
+    font-size: 1.4rem;
+  }
+  
+  .auth-prompt-modal .modal-title {
+    font-size: 1.3rem;
+  }
+  
+  .auth-prompt-modal .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .benefits-grid {
+    gap: 12px;
+    margin: 1.5rem 0;
+  }
+  
+  .benefit-item {
+    padding: 16px;
+  }
+  
+  .benefit-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
+  
+  .benefit-text h6 {
+    font-size: 0.95rem;
+  }
+  
+  .benefit-text p {
+    font-size: 0.8rem;
+  }
 }
 
 @media (max-width: 576px) {
   .auth-prompt-footer {
     flex-direction: column;
+    padding: 1.25rem 1.5rem;
   }
   
   .auth-prompt-footer button {
     width: 100%;
+  }
+  
+  .modal-title-wrapper {
+    gap: 12px;
+  }
+  
+  .modal-icon-badge {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
+  
+  .auth-prompt-modal .modal-title {
+    font-size: 1.2rem;
   }
 }
