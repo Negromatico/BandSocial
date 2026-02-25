@@ -384,17 +384,48 @@ const MusicmarketNuevo = () => {
                 Publicar Producto
               </Button>
             )}
-            <span className="text-muted">Ordenar por:</span>
-            <Form.Select 
-              className="ordenar-select"
-              value={ordenar}
-              onChange={(e) => setOrdenar(e.target.value)}
-            >
-              <option value="recientes">Más recientes</option>
-              <option value="precio-asc">Precio: Menor a Mayor</option>
-              <option value="precio-desc">Precio: Mayor a Menor</option>
-              <option value="rating">Mejor valorados</option>
-            </Form.Select>
+            <span style={{ color: 'var(--text-secondary, #65676b)', marginRight: '8px' }}>Ordenar por:</span>
+            <Select
+              options={[
+                { value: 'recientes', label: 'Más recientes' },
+                { value: 'precio-asc', label: 'Precio: Menor a Mayor' },
+                { value: 'precio-desc', label: 'Precio: Mayor a Menor' },
+                { value: 'rating', label: 'Mejor valorados' }
+              ]}
+              value={{ value: ordenar, label: ordenar === 'recientes' ? 'Más recientes' : ordenar === 'precio-asc' ? 'Precio: Menor a Mayor' : ordenar === 'precio-desc' ? 'Precio: Mayor a Menor' : 'Mejor valorados' }}
+              onChange={(selected) => setOrdenar(selected?.value || 'recientes')}
+              isSearchable={false}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  minWidth: '200px',
+                  fontSize: '14px',
+                  backgroundColor: 'var(--card-bg, #fff)',
+                  borderColor: 'var(--border-color, #e4e6eb)',
+                  color: 'var(--text-primary, #050505)'
+                }),
+                menu: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                  backgroundColor: 'var(--card-bg, #fff)',
+                  border: '1px solid var(--border-color, #e4e6eb)'
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused ? 'var(--hover-bg, #f0f2f5)' : 'var(--card-bg, #fff)',
+                  color: 'var(--text-primary, #050505)',
+                  cursor: 'pointer'
+                }),
+                singleValue: (base) => ({
+                  ...base,
+                  color: 'var(--text-primary, #050505)'
+                }),
+                placeholder: (base) => ({
+                  ...base,
+                  color: 'var(--text-secondary, #65676b)'
+                })
+              }}
+            />
           </div>
         </div>
 
@@ -405,41 +436,149 @@ const MusicmarketNuevo = () => {
             Filtros
           </Button>
           
-          <Form.Select 
-            size="sm" 
-            className="filtro-select me-2"
-            value={filtroCategoria}
-            onChange={(e) => setFiltroCategoria(e.target.value)}
-          >
-            <option value="">Todas las categorias</option>
-            <option value="Musica">Musica</option>
-            <option value="Conciertos">Conciertos</option>
-            <option value="Jam Session">Jam Session</option>
-          </Form.Select>
+          <Select
+            options={[
+              { value: '', label: 'Todas las categorias' },
+              { value: 'Musica', label: 'Musica' },
+              { value: 'Conciertos', label: 'Conciertos' },
+              { value: 'Jam Session', label: 'Jam Session' }
+            ]}
+            value={filtroCategoria ? { value: filtroCategoria, label: filtroCategoria } : { value: '', label: 'Todas las categorias' }}
+            onChange={(selected) => setFiltroCategoria(selected?.value || '')}
+            placeholder="Todas las categorias"
+            isClearable
+            className="me-2"
+            styles={{
+              control: (base) => ({
+                ...base,
+                minWidth: '200px',
+                fontSize: '14px',
+                backgroundColor: 'var(--card-bg, #fff)',
+                borderColor: 'var(--border-color, #e4e6eb)',
+                color: 'var(--text-primary, #050505)'
+              }),
+              menu: (base) => ({
+                ...base,
+                zIndex: 9999,
+                backgroundColor: 'var(--card-bg, #fff)',
+                border: '1px solid var(--border-color, #e4e6eb)'
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.isFocused ? 'var(--hover-bg, #f0f2f5)' : 'var(--card-bg, #fff)',
+                color: 'var(--text-primary, #050505)',
+                cursor: 'pointer'
+              }),
+              singleValue: (base) => ({
+                ...base,
+                color: 'var(--text-primary, #050505)'
+              }),
+              input: (base) => ({
+                ...base,
+                color: 'var(--text-primary, #050505)'
+              }),
+              placeholder: (base) => ({
+                ...base,
+                color: 'var(--text-secondary, #65676b)'
+              })
+            }}
+          />
 
-          <Form.Select 
-            size="sm" 
-            className="filtro-select me-2"
-            value={filtroPrecio}
-            onChange={(e) => setFiltroPrecio(e.target.value)}
-          >
-            <option value="">Cualquier precio</option>
-            <option value="bajo">Menos de $5,000</option>
-            <option value="medio">$5,000 - $10,000</option>
-            <option value="alto">$10,000 - $20,000</option>
-            <option value="muy-alto">Más de $20,000</option>
-          </Form.Select>
+          <Select
+            options={[
+              { value: '', label: 'Cualquier precio' },
+              { value: 'bajo', label: 'Menos de $5,000' },
+              { value: 'medio', label: '$5,000 - $10,000' },
+              { value: 'alto', label: '$10,000 - $20,000' },
+              { value: 'muy-alto', label: 'Más de $20,000' }
+            ]}
+            value={filtroPrecio ? { value: filtroPrecio, label: filtroPrecio === 'bajo' ? 'Menos de $5,000' : filtroPrecio === 'medio' ? '$5,000 - $10,000' : filtroPrecio === 'alto' ? '$10,000 - $20,000' : 'Más de $20,000' } : { value: '', label: 'Cualquier precio' }}
+            onChange={(selected) => setFiltroPrecio(selected?.value || '')}
+            placeholder="Cualquier precio"
+            isClearable
+            className="me-2"
+            styles={{
+              control: (base) => ({
+                ...base,
+                minWidth: '200px',
+                fontSize: '14px',
+                backgroundColor: 'var(--card-bg, #fff)',
+                borderColor: 'var(--border-color, #e4e6eb)',
+                color: 'var(--text-primary, #050505)'
+              }),
+              menu: (base) => ({
+                ...base,
+                zIndex: 9999,
+                backgroundColor: 'var(--card-bg, #fff)',
+                border: '1px solid var(--border-color, #e4e6eb)'
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.isFocused ? 'var(--hover-bg, #f0f2f5)' : 'var(--card-bg, #fff)',
+                color: 'var(--text-primary, #050505)',
+                cursor: 'pointer'
+              }),
+              singleValue: (base) => ({
+                ...base,
+                color: 'var(--text-primary, #050505)'
+              }),
+              input: (base) => ({
+                ...base,
+                color: 'var(--text-primary, #050505)'
+              }),
+              placeholder: (base) => ({
+                ...base,
+                color: 'var(--text-secondary, #65676b)'
+              })
+            }}
+          />
 
-          <Form.Select 
-            size="sm" 
-            className="filtro-select me-2"
-            value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value)}
-          >
-            <option value="">Cualquier estado</option>
-            <option value="Nuevo">Nuevo</option>
-            <option value="Usado">Usado</option>
-          </Form.Select>
+          <Select
+            options={[
+              { value: '', label: 'Cualquier estado' },
+              { value: 'Nuevo', label: 'Nuevo' },
+              { value: 'Usado', label: 'Usado' }
+            ]}
+            value={filtroEstado ? { value: filtroEstado, label: filtroEstado } : { value: '', label: 'Cualquier estado' }}
+            onChange={(selected) => setFiltroEstado(selected?.value || '')}
+            placeholder="Cualquier estado"
+            isClearable
+            className="me-2"
+            styles={{
+              control: (base) => ({
+                ...base,
+                minWidth: '200px',
+                fontSize: '14px',
+                backgroundColor: 'var(--card-bg, #fff)',
+                borderColor: 'var(--border-color, #e4e6eb)',
+                color: 'var(--text-primary, #050505)'
+              }),
+              menu: (base) => ({
+                ...base,
+                zIndex: 9999,
+                backgroundColor: 'var(--card-bg, #fff)',
+                border: '1px solid var(--border-color, #e4e6eb)'
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.isFocused ? 'var(--hover-bg, #f0f2f5)' : 'var(--card-bg, #fff)',
+                color: 'var(--text-primary, #050505)',
+                cursor: 'pointer'
+              }),
+              singleValue: (base) => ({
+                ...base,
+                color: 'var(--text-primary, #050505)'
+              }),
+              input: (base) => ({
+                ...base,
+                color: 'var(--text-primary, #050505)'
+              }),
+              placeholder: (base) => ({
+                ...base,
+                color: 'var(--text-secondary, #65676b)'
+              })
+            }}
+          />
 
           <Select
             options={[
@@ -455,11 +594,34 @@ const MusicmarketNuevo = () => {
               control: (base) => ({
                 ...base,
                 minWidth: '200px',
-                fontSize: '14px'
+                fontSize: '14px',
+                backgroundColor: 'var(--card-bg, #fff)',
+                borderColor: 'var(--border-color, #e4e6eb)',
+                color: 'var(--text-primary, #050505)'
               }),
               menu: (base) => ({
                 ...base,
-                zIndex: 9999
+                zIndex: 9999,
+                backgroundColor: 'var(--card-bg, #fff)',
+                border: '1px solid var(--border-color, #e4e6eb)'
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.isFocused ? 'var(--hover-bg, #f0f2f5)' : 'var(--card-bg, #fff)',
+                color: 'var(--text-primary, #050505)',
+                cursor: 'pointer'
+              }),
+              singleValue: (base) => ({
+                ...base,
+                color: 'var(--text-primary, #050505)'
+              }),
+              input: (base) => ({
+                ...base,
+                color: 'var(--text-primary, #050505)'
+              }),
+              placeholder: (base) => ({
+                ...base,
+                color: 'var(--text-secondary, #65676b)'
               })
             }}
           />
