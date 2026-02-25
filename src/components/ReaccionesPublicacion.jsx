@@ -136,38 +136,64 @@ const ReaccionesPublicacion = ({ publicacionId, user }) => {
     }
   };
 
+  const totalLikes = reacciones['love'] ? reacciones['love'].length : 0;
+
   return (
-    <div style={{ 
-      display: 'flex', 
-      alignItems: 'center', 
-      gap: '8px',
-      padding: '8px 12px',
-      borderRadius: '20px',
-      background: miReaccion === 'love' ? '#fee2e2' : '#f3f4f6',
-      transition: 'all 0.2s ease',
-      cursor: procesando ? 'wait' : 'pointer',
-      opacity: procesando ? 0.6 : 1,
-      pointerEvents: procesando ? 'none' : 'auto'
-    }}
-    onClick={() => handleReaccion(miReaccion === 'love' ? null : 'love')}
-    title={miReaccion === 'love' ? 'Quitar me gusta' : 'Me gusta'}
+    <button 
+      style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '6px',
+        padding: '6px 12px',
+        borderRadius: '6px',
+        background: 'transparent',
+        border: 'none',
+        transition: 'all 0.2s ease',
+        cursor: procesando ? 'wait' : 'pointer',
+        opacity: procesando ? 0.6 : 1,
+        pointerEvents: procesando ? 'none' : 'auto',
+        color: miReaccion === 'love' ? '#ed4956' : 'var(--text-secondary, #65676b)',
+        fontWeight: miReaccion === 'love' ? 600 : 500,
+        fontSize: '15px'
+      }}
+      onClick={() => handleReaccion(miReaccion === 'love' ? null : 'love')}
+      title={miReaccion === 'love' ? 'Quitar me gusta' : 'Me gusta'}
+      onMouseEnter={(e) => {
+        if (!procesando) {
+          e.currentTarget.style.background = 'var(--hover-bg, #f0f2f5)';
+        }
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent';
+      }}
     >
-      <span style={{ 
-        fontSize: 20,
-        lineHeight: 1,
-        transition: 'transform 0.2s ease',
-        transform: miReaccion === 'love' ? 'scale(1.2)' : 'scale(1)'
-      }}>
-        ❤️
-      </span>
-      <span style={{ 
-        fontWeight: 600, 
-        color: miReaccion === 'love' ? '#dc2626' : '#6b7280',
-        fontSize: 14
-      }}>
-        {reacciones['love'] ? reacciones['love'].length : 0}
-      </span>
-    </div>
+      <svg 
+        width="20" 
+        height="20" 
+        viewBox="0 0 24 24" 
+        fill={miReaccion === 'love' ? '#ed4956' : 'none'}
+        stroke={miReaccion === 'love' ? '#ed4956' : 'currentColor'}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{
+          transition: 'transform 0.2s ease',
+          flexShrink: 0
+        }}
+      >
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+      </svg>
+      <span>Me gusta</span>
+      {totalLikes > 0 && (
+        <span style={{
+          marginLeft: '4px',
+          fontWeight: 600,
+          color: miReaccion === 'love' ? '#ed4956' : 'var(--text-secondary, #65676b)'
+        }}>
+          {totalLikes}
+        </span>
+      )}
+    </button>
   );
 };
 
