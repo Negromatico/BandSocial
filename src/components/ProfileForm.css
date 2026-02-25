@@ -1,0 +1,222 @@
+/* Profile Form Container */
+.profile-form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 1rem;
+  min-height: unset;
+}
+
+.profile-form-card {
+  min-width: 350px;
+  max-width: 700px;
+  width: 100%;
+  border-radius: 20px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Header */
+.profile-form-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  padding: 1.75rem 2rem;
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.header-text {
+  flex: 1;
+}
+
+.header-text h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+}
+
+.profile-type-badge {
+  background: rgba(255, 255, 255, 0.25) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Body */
+.profile-form-body {
+  padding: 2rem;
+  background: #f9fafb;
+}
+
+/* Form Labels Modern */
+.form-label-modern {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+}
+
+/* Modern Input */
+.modern-input {
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.modern-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+/* Save Button */
+.save-profile-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 14px 28px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.save-profile-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+.save-profile-btn:active {
+  transform: translateY(0);
+}
+
+/* Form Groups */
+.profile-form-body .form-group,
+.profile-form-body .mb-3 {
+  margin-bottom: 1.25rem;
+}
+
+/* Custom Select Styles */
+.profile-form-body .css-13cymwt-control,
+.profile-form-body .css-t3ipsp-control {
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  min-height: 44px;
+  transition: all 0.2s ease;
+}
+
+.profile-form-body .css-13cymwt-control:hover,
+.profile-form-body .css-t3ipsp-control:hover {
+  border-color: #3b82f6;
+}
+
+.profile-form-body .css-t3ipsp-control {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Form Control Overrides */
+.profile-form-body .form-control {
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.profile-form-body .form-control:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Upload Media Section */
+.profile-form-body .text-success {
+  color: #10b981 !important;
+  font-weight: 600;
+}
+
+/* Photo Grid */
+.profile-form-body .d-flex.gap-2.flex-wrap img {
+  border: 3px solid #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-form-header {
+    padding: 1.5rem 1.5rem;
+  }
+  
+  .header-icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.4rem;
+  }
+  
+  .header-text h2 {
+    font-size: 1.5rem;
+  }
+  
+  .profile-form-body {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .profile-form-container {
+    padding: 1rem 0.5rem;
+  }
+  
+  .profile-form-card {
+    min-width: unset;
+  }
+  
+  .header-content {
+    gap: 12px;
+  }
+  
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
+  
+  .header-text h2 {
+    font-size: 1.3rem;
+  }
+  
+  .profile-type-badge {
+    font-size: 0.85rem;
+    padding: 5px 12px;
+  }
+}

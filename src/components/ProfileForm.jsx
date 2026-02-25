@@ -4,6 +4,8 @@ import Select from 'react-select';
 import UploadMedia from './UploadMedia';
 import HorariosField from './HorariosField';
 import { Card, Button, Form, Row, Col, Alert, Badge } from 'react-bootstrap';
+import { FaEdit, FaUser, FaUsers, FaMapMarkerAlt, FaMusic, FaCalendar, FaGuitar, FaVideo, FaCamera } from 'react-icons/fa';
+import './ProfileForm.css';
 
 // Opciones predefinidas
 // Las ciudades se cargarán dinámicamente desde la API de Colombia
@@ -96,28 +98,43 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center py-4" style={{ minHeight: 'unset' }}>
-      <Card style={{ minWidth: 350, maxWidth: 600, width: '100%', background: '#f8f5ff', border: '1.5px solid #a78bfa' }} className="shadow p-4">
-        <Card.Body>
-          <Card.Title className="mb-4 text-center" style={{ color: '#7c3aed', fontWeight: 700, fontSize: 26, letterSpacing: 1 }}>
-            <span>Editar Perfil</span> <Badge bg="secondary">{type === 'musico' ? 'Músico' : 'Banda'}</Badge>
-          </Card.Title>
+    <div className="profile-form-container">
+      <Card className="profile-form-card">
+        <div className="profile-form-header">
+          <div className="header-content">
+            <div className="header-icon">
+              <FaEdit />
+            </div>
+            <div className="header-text">
+              <h2>Editar Perfil</h2>
+              <Badge bg="primary" className="profile-type-badge">
+                {type === 'musico' ? <><FaUser className="me-1" /> Músico</> : <><FaUsers className="me-1" /> Banda</>}
+              </Badge>
+            </div>
+          </div>
+        </div>
+        <Card.Body className="profile-form-body">
           <Form
             onSubmit={handleSubmit((data) => {
               onSubmit && onSubmit({ ...data, type, videoUrl, fotos });
             })}
           >
             <Form.Group className="mb-3">
-              <Form.Label>Nombre {type === 'banda' ? 'de la banda' : 'del músico'}</Form.Label>
+              <Form.Label className="form-label-modern">
+                Nombre {type === 'banda' ? 'de la banda' : 'del músico'}
+              </Form.Label>
               <Form.Control
                 {...register('nombre', { required: true })}
-                placeholder={type === 'banda' ? 'Nombre de la banda' : 'Nombre completo'}
+                placeholder={type === 'banda' ? 'Nombre de la banda o músico' : 'Nombre de la banda o músico'}
                 maxLength={40}
                 autoComplete="off"
+                className="modern-input"
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Tipo de perfil</Form.Label>
+              <Form.Label className="form-label-modern">
+                Tipo de Perfil
+              </Form.Label>
               <Select
                 value={type === 'musico' ? { value: 'musico', label: 'Músico' } : { value: 'banda', label: 'Banda' }}
                 onChange={(opt) => setType(opt.value)}
@@ -130,7 +147,9 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
             </Form.Group>
             <Row>
               <Col md={6} className="mb-3">
-                <Form.Label>Ciudad</Form.Label>
+                <Form.Label className="form-label-modern">
+                  Ciudad
+                </Form.Label>
                 <Controller
                   name="ciudad"
                   control={control}
@@ -140,7 +159,9 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
                 />
               </Col>
               <Col md={6} className="mb-3">
-                <Form.Label>Géneros musicales</Form.Label>
+                <Form.Label className="form-label-modern">
+                  Géneros musicales
+                </Form.Label>
                 <Controller
                   name="generos"
                   control={control}
@@ -159,7 +180,9 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
               {type === 'musico' && (
                 <>
                   <Col md={6} className="mb-3">
-                    <Form.Label>Días disponibles</Form.Label>
+                    <Form.Label className="form-label-modern">
+                      Días disponibles
+                    </Form.Label>
                     <Controller
                       name="dias"
                       control={control}
@@ -177,7 +200,9 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
                     />
                   </Col>
                   <Col md={6} className="mb-3">
-                    <Form.Label>Instrumentos</Form.Label>
+                    <Form.Label className="form-label-modern">
+                      Instrumentos
+                    </Form.Label>
                     <Controller
                       name="instrumentos"
                       control={control}
@@ -197,12 +222,16 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
             {type === 'banda' && (
               <>
                 <Form.Group className="mb-3">
-                  <Form.Label>Miembros (roles/instrumentos)</Form.Label>
-                  <Form.Control {...register('miembros')} placeholder="Ej: Juan - Guitarra, Ana - Voz" />
+                  <Form.Label className="form-label-modern">
+                    Miembros (roles/instrumentos)
+                  </Form.Label>
+                  <Form.Control {...register('miembros')} placeholder="Ej: Juan - Guitarra, Ana - Voz" className="modern-input" />
                 </Form.Group>
                 <Row>
                   <Col md={6} className="mb-3">
-                    <Form.Label>¿Qué buscan? (instrumentos)</Form.Label>
+                    <Form.Label className="form-label-modern">
+                      ¿Qué buscan? (instrumentos)
+                    </Form.Label>
                     <Controller
                       name="buscan"
                       control={control}
@@ -212,14 +241,18 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
                     />
                   </Col>
                   <Col md={6} className="mb-3">
-                    <Form.Label>Horarios requeridos</Form.Label>
+                    <Form.Label className="form-label-modern">
+                      Horarios requeridos
+                    </Form.Label>
                     <HorariosField control={control} register={register} setValue={setValue} watch={watch} />
                   </Col>
                 </Row>
               </>
             )}
             <Form.Group className="mb-3">
-              <Form.Label>Video de presentación (máx 10s)</Form.Label>
+              <Form.Label className="form-label-modern">
+                Video de presentación (máx 10s)
+              </Form.Label>
               <UploadMedia
                 type="video"
                 maxDuration={10}
@@ -234,7 +267,9 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
               )}
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Fotos (máx 5)</Form.Label>
+              <Form.Label className="form-label-modern">
+                Fotos (máx 5)
+              </Form.Label>
               {fotos.length < 5 && (
                 <UploadMedia
                   type="image"
@@ -254,8 +289,8 @@ const ProfileForm = ({ defaultType = 'musico', onSubmit, defaultValues = {} }) =
               </div>
             </Form.Group>
             <div className="d-grid mt-4">
-              <Button type="submit" variant="primary" size="lg">
-                Guardar perfil
+              <Button type="submit" className="save-profile-btn" size="lg">
+                Guardar Cambios
               </Button>
             </div>
           </Form>
