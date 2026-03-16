@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { db } from '../services/firebase';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
@@ -16,6 +16,14 @@ const Buscar = () => {
     eventos: [],
     productos: []
   });
+  const searchInputRef = useRef(null);
+
+  // Auto-focus en el input de búsqueda al montar el componente
+  useEffect(() => {
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, []);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -127,13 +135,33 @@ const Buscar = () => {
   const totalResults = results.usuarios.length + results.publicaciones.length + 
                        results.eventos.length + results.productos.length;
 
+  const handleSearchInput = (e) => {
+    const value = e.target.value;
+    if (value.trim()) {
+      window.location.href = `/buscar?q=${encodeURIComponent(value)}`;
+    }
+  };
+
   if (!searchQuery.trim()) {
     return (
       <Container className="search-container py-5">
+        <div className="search-input-wrapper mb-4">
+          <input
+            ref={searchInputRef}
+            type="search"
+            className="search-input form-control"
+            placeholder="Buscar usuarios, eventos, productos..."
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleSearchInput(e);
+              }
+            }}
+          />
+        </div>
         <div className="text-center">
           <FaSearch size={60} color="#9ca3af" className="mb-3" />
           <h3>Buscar en BandSocial</h3>
-          <p className="text-muted">Usa la barra de búsqueda para encontrar usuarios, publicaciones, eventos y productos</p>
+          <p className="text-muted">Encuentra usuarios, publicaciones, eventos y productos</p>
         </div>
       </Container>
     );
@@ -141,6 +169,20 @@ const Buscar = () => {
 
   return (
     <Container className="search-container py-4">
+      <div className="search-input-wrapper mb-3">
+        <input
+          ref={searchInputRef}
+          type="search"
+          className="search-input form-control"
+          placeholder="Buscar usuarios, eventos, productos..."
+          defaultValue={searchQuery}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleSearchInput(e);
+            }
+          }}
+        />
+      </div>
       <div className="search-header mb-4">
         <h2>Resultados de búsqueda</h2>
         <p className="text-muted">

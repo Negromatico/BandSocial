@@ -16,6 +16,11 @@ const ChatDock = () => {
   const [recentChats, setRecentChats] = useState([]); // [{chatId, with, withEmail, withNombre, ...}]
   const [user, setUser] = useState(null);
   const { chatToOpen, setChatToOpen } = useChatDock();
+  
+  // Ocultar en móvil
+  if (window.innerWidth <= 768) {
+    return null;
+  }
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => setUser(u));

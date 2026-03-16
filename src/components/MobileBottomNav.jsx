@@ -8,7 +8,6 @@ const MobileBottomNav = ({ user }) => {
   const location = useLocation();
 
   const navItems = [
-    { path: '/', icon: FaHome, label: 'Inicio' },
     { path: '/buscar', icon: FaSearch, label: 'Buscar', isSearch: true },
     { path: '/messages', icon: FaComments, label: 'Mensajes' },
     { path: '/notifications', icon: FaBell, label: 'Notificaciones' },
