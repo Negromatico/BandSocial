@@ -33,6 +33,15 @@ const AdminDashboard = () => {
   const [changingPassword, setChangingPassword] = useState(false);
   const [departamentosMap, setDepartamentosMap] = useState({});
   const [ciudadesMap, setCiudadesMap] = useState({});
+  const [departamentosList, setDepartamentosList] = useState([]);
+  const [ciudadesList, setCiudadesList] = useState([]);
+  const [loadingLocations, setLoadingLocations] = useState(true);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editUserData, setEditUserData] = useState({
+    departamento: '',
+    ciudad: ''
+  });
   
   const navigate = useNavigate();
   const { showToast, ToastContainer } = useToast();
@@ -40,17 +49,31 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     checkAdminAccess();
-    fetchAllData();
     cargarDepartamentosYCiudades();
   }, []);
 
+  useEffect(() => {
+    if (!loadingLocations && Object.keys(departamentosMap).length > 0) {
+      fetchAllData();
+    }
+  }, [loadingLocations, departamentosMap]);
+
   const cargarDepartamentosYCiudades = async () => {
     try {
+      console.log('🌐 Cargando departamentos y ciudades desde API de Colombia...');
+      
       const [departamentos, ciudades] = await Promise.all([
         colombiaAPI.getDepartamentos(),
         colombiaAPI.getAllCiudades()
       ]);
 
+      console.log('✅ API respondió:', departamentos?.length, 'departamentos,', ciudades?.length, 'ciudades');
+      
+      // Guardar listas completas para los selectores
+      setDepartamentosList(departamentos);
+      setCiudadesList(ciudades);
+      
+      // Crear mapas para conversión de IDs a nombres
       const deptMap = {};
       departamentos.forEach(dept => {
         deptMap[dept.id] = dept.name;
@@ -62,8 +85,13 @@ const AdminDashboard = () => {
         cityMap[city.id] = city.name;
       });
       setCiudadesMap(cityMap);
+      
+      setLoadingLocations(false);
+      console.log('✅ Ubicaciones cargadas exitosamente desde API de Colombia');
     } catch (error) {
-      console.error('Error al cargar departamentos y ciudades:', error);
+      console.error('❌ Error al cargar desde API de Colombia:', error);
+      setLoadingLocations(false);
+      showToast('Error al cargar ubicaciones desde API de Colombia', 'error');
     }
   };
 
@@ -72,6 +100,59 @@ const AdminDashboard = () => {
       showToast('Acceso denegado. Solo administradores pueden acceder.', 'error');
       navigate('/');
     }
+  };
+
+  const obtenerNombreDepartamento = (departamento) => {
+    if (!departamento) return 'N/A';
+    
+    // Si es un objeto con label o value
+    if (typeof departamento === 'object') {
+      return departamento?.label || departamento?.value || 'N/A';
+    }
+    
+    // Si es un número
+    if (typeof departamento === 'number') {
+      return departamentosMap[departamento] || 'N/A';
+    }
+    
+    // Si es un string numérico
+    if (typeof departamento === 'string' && !isNaN(departamento)) {
+      const deptId = parseInt(departamento);
+      return departamentosMap[deptId] || 'N/A';
+    }
+    
+    // Si es un string no numérico, asumimos que ya es el nombre
+    return departamento;
+  };
+
+  const obtenerNombreMunicipio = (municipio, ciudad) => {
+    const valor = municipio || ciudad;
+    if (!valor) return 'N/A';
+    
+    // Si es un objeto con label o value
+    if (typeof valor === 'object') {
+      return valor?.label || valor?.value || 'N/A';
+    }
+    
+    // Si es un número
+    if (typeof valor === 'number') {
+      const nombre = ciudadesMap[valor];
+      if (nombre) return nombre;
+      console.warn(`Ciudad ID ${valor} no encontrada en mapa`);
+      return 'N/A';
+    }
+    
+    // Si es un string numérico
+    if (typeof valor === 'string' && !isNaN(valor)) {
+      const cityId = parseInt(valor);
+      const nombre = ciudadesMap[cityId];
+      if (nombre) return nombre;
+      console.warn(`Ciudad ID ${cityId} no encontrada en mapa`);
+      return 'N/A';
+    }
+    
+    // Si es un string no numérico, asumimos que ya es el nombre
+    return valor;
   };
 
   const fetchAllData = async () => {
@@ -179,38 +260,54 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteUser = async (userId, userName) => {
-    if (window.confirm(`¿Estás seguro de eliminar al usuario "${userName}"? Esta acción no se puede deshacer.`)) {
+  const handleBanUser = async (userId, userName, isBanned) => {
+    const action = isBanned ? 'desbanear' : 'banear';
+    if (window.confirm(`¿Estás seguro de ${action} a "${userName}"?`)) {
       try {
-        await deleteDoc(doc(db, 'perfiles', userId));
-        setUsers(users.filter(u => u.id !== userId));
-        setStats(prev => ({ ...prev, totalUsers: prev.totalUsers - 1 }));
-        showToast('Usuario eliminado exitosamente', 'success');
+        await updateDoc(doc(db, 'perfiles', userId), {
+          banned: !isBanned
+        });
+        setUsers(users.map(u => u.id === userId ? { ...u, banned: !isBanned } : u));
+        showToast(`Usuario ${action}do exitosamente`, 'success');
       } catch (error) {
-        console.error('Error deleting user:', error);
-        showToast('Error al eliminar el usuario', 'error');
+        console.error(`Error al ${action} usuario:`, error);
+        showToast(`Error al ${action} usuario`, 'error');
       }
     }
   };
 
-  const handleBanUser = async (userId, userName, currentBanStatus) => {
-    const action = currentBanStatus ? 'desbanear' : 'banear';
-    if (window.confirm(`¿Estás seguro de ${action} al usuario "${userName}"?`)) {
-      try {
-        await updateDoc(doc(db, 'perfiles', userId), {
-          banned: !currentBanStatus,
-          bannedAt: !currentBanStatus ? new Date().toISOString() : null
-        });
-        setUsers(users.map(u => 
-          u.id === userId 
-            ? { ...u, banned: !currentBanStatus, bannedAt: !currentBanStatus ? new Date().toISOString() : null }
-            : u
-        ));
-        showToast(`Usuario ${action}do exitosamente`, 'success');
-      } catch (error) {
-        console.error('Error banning/unbanning user:', error);
-        showToast(`Error al ${action} el usuario`, 'error');
-      }
+  const handleOpenEditUser = (user) => {
+    setEditingUser(user);
+    setEditUserData({
+      departamento: user.departamento || '',
+      ciudad: user.ciudad || user.municipio || ''
+    });
+    setShowEditUserModal(true);
+  };
+
+  const handleUpdateUserLocation = async () => {
+    if (!editingUser) return;
+
+    try {
+      await updateDoc(doc(db, 'perfiles', editingUser.id), {
+        departamento: editUserData.departamento,
+        ciudad: editUserData.ciudad,
+        municipio: editUserData.ciudad,
+        updatedAt: new Date()
+      });
+
+      setUsers(users.map(u => 
+        u.id === editingUser.id 
+          ? { ...u, departamento: editUserData.departamento, ciudad: editUserData.ciudad, municipio: editUserData.ciudad }
+          : u
+      ));
+
+      showToast('Ubicación actualizada exitosamente', 'success');
+      setShowEditUserModal(false);
+      setEditingUser(null);
+    } catch (error) {
+      console.error('Error al actualizar ubicación:', error);
+      showToast('Error al actualizar ubicación', 'error');
     }
   };
 
@@ -265,16 +362,15 @@ const AdminDashboard = () => {
     });
   };
 
-  const calcularTiempoEnPlataforma = (createdAt) => {
-    if (!createdAt) return 'N/A';
+  const calcularTiempoEnPlataforma = (tiempoUsoTotal) => {
+    if (!tiempoUsoTotal || tiempoUsoTotal === 0) return '0m';
     
-    const fechaRegistro = createdAt.toDate ? createdAt.toDate() : new Date(createdAt);
-    const ahora = new Date();
-    const diferenciaMilisegundos = ahora - fechaRegistro;
+    // tiempoUsoTotal está en minutos
+    const totalMinutos = tiempoUsoTotal;
     
-    const dias = Math.floor(diferenciaMilisegundos / (1000 * 60 * 60 * 24));
-    const horas = Math.floor((diferenciaMilisegundos % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutos = Math.floor((diferenciaMilisegundos % (1000 * 60 * 60)) / (1000 * 60));
+    const dias = Math.floor(totalMinutos / (60 * 24));
+    const horas = Math.floor((totalMinutos % (60 * 24)) / 60);
+    const minutos = Math.floor(totalMinutos % 60);
     
     if (dias > 0) {
       return `${dias}d ${horas}h`;
@@ -285,11 +381,19 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading || loadingLocations) {
     return (
       <Container className="admin-dashboard mt-5">
         <div className="text-center">
-          <h3>Cargando panel de administrador...</h3>
+          <Spinner animation="border" variant="primary" />
+          <h3 className="mt-3">
+            {loadingLocations ? 'Cargando ubicaciones desde API de Colombia...' : 'Cargando datos del panel...'}
+          </h3>
+          {loadingLocations && (
+            <p className="text-muted">
+              Obteniendo nombres de departamentos y ciudades...
+            </p>
+          )}
         </div>
       </Container>
     );
@@ -414,39 +518,22 @@ const AdminDashboard = () => {
                         </td>
                         <td>
                           <Badge bg="info">
-                            {calcularTiempoEnPlataforma(user.createdAt || user.fechaRegistro)}
+                            {calcularTiempoEnPlataforma(user.tiempoUsoTotal || 0)}
                           </Badge>
                         </td>
                         <td>{formatDate(user.fechaRegistro || user.createdAt)}</td>
-                        <td>
-                          {(() => {
-                            if (typeof user.departamento === 'object') {
-                              return user.departamento?.label || user.departamento?.value || 'N/A';
-                            } else if (typeof user.departamento === 'number') {
-                              return departamentosMap[user.departamento] || `ID: ${user.departamento}`;
-                            } else if (typeof user.departamento === 'string' && !isNaN(user.departamento)) {
-                              const deptId = parseInt(user.departamento);
-                              return departamentosMap[deptId] || `ID: ${user.departamento}`;
-                            }
-                            return user.departamento || 'N/A';
-                          })()}
-                        </td>
-                        <td>
-                          {(() => {
-                            const municipio = user.municipio || user.ciudad;
-                            if (typeof municipio === 'object') {
-                              return municipio?.label || municipio?.value || 'N/A';
-                            } else if (typeof municipio === 'number') {
-                              return ciudadesMap[municipio] || `ID: ${municipio}`;
-                            } else if (typeof municipio === 'string' && !isNaN(municipio)) {
-                              const cityId = parseInt(municipio);
-                              return ciudadesMap[cityId] || `ID: ${municipio}`;
-                            }
-                            return municipio || 'N/A';
-                          })()}
-                        </td>
+                        <td>{obtenerNombreDepartamento(user.departamento)}</td>
+                        <td>{obtenerNombreMunicipio(user.municipio, user.ciudad)}</td>
                         <td>
                           <div className="d-flex gap-2">
+                            <Button 
+                              variant="primary"
+                              size="sm"
+                              onClick={() => handleOpenEditUser(user)}
+                              title="Editar ubicación"
+                            >
+                              <FaCheck />
+                            </Button>
                             <Button 
                               variant={user.banned ? 'success' : 'warning'}
                               size="sm"
@@ -531,19 +618,7 @@ const AdminDashboard = () => {
                         <td>{event.titulo}</td>
                         <td>{event.creadorNombre || 'N/A'}</td>
                         <td>{event.fecha}</td>
-                        <td>
-                          {(() => {
-                            if (typeof event.departamento === 'object') {
-                              return event.departamento?.label || event.departamento?.value || 'N/A';
-                            } else if (typeof event.departamento === 'number') {
-                              return departamentosMap[event.departamento] || `ID: ${event.departamento}`;
-                            } else if (typeof event.departamento === 'string' && !isNaN(event.departamento)) {
-                              const deptId = parseInt(event.departamento);
-                              return departamentosMap[deptId] || `ID: ${event.departamento}`;
-                            }
-                            return event.departamento || 'N/A';
-                          })()}
-                        </td>
+                        <td>{obtenerNombreDepartamento(event.departamento)}</td>
                         <td>{event.ciudad || 'N/A'}</td>
                         <td>{event.asistentes?.length || 0}</td>
                         <td>
@@ -673,6 +748,62 @@ const AdminDashboard = () => {
             </div>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      {/* Modal de Edición de Ubicación */}
+      <Modal show={showEditUserModal} onHide={() => setShowEditUserModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Editar Ubicación de Usuario</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {editingUser && (
+            <>
+              <p><strong>Usuario:</strong> {editingUser.nombre || editingUser.email}</p>
+              <Form>
+                <Form.Group className="mb-3">
+                  <Form.Label>Departamento</Form.Label>
+                  <Form.Select
+                    value={editUserData.departamento}
+                    onChange={(e) => setEditUserData({ ...editUserData, departamento: e.target.value })}
+                  >
+                    <option value="">Seleccionar departamento...</option>
+                    {departamentosList.map(dept => (
+                      <option key={dept.id} value={dept.id}>{dept.name}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Ciudad</Form.Label>
+                  <Form.Select
+                    value={editUserData.ciudad}
+                    onChange={(e) => setEditUserData({ ...editUserData, ciudad: e.target.value })}
+                  >
+                    <option value="">Seleccionar ciudad...</option>
+                    {ciudadesList
+                      .filter(city => !editUserData.departamento || city.departmentId === parseInt(editUserData.departamento))
+                      .map(city => (
+                        <option key={city.id} value={city.id}>{city.name}</option>
+                      ))}
+                  </Form.Select>
+                  {editUserData.departamento && (
+                    <Form.Text className="text-muted">
+                      Mostrando ciudades del departamento seleccionado
+                    </Form.Text>
+                  )}
+                </Form.Group>
+              </Form>
+            </>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowEditUserModal(false)}>
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleUpdateUserLocation}>
+            Guardar Cambios
+          </Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );

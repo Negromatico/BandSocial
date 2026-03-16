@@ -7,6 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { ChatDockProvider } from './contexts/ChatDockContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import EmailVerificationPrompt from './components/EmailVerificationPrompt';
+import useActivityTracker from './hooks/useActivityTracker';
 
 // Lazy loading de componentes para mejorar rendimiento
 const Login = lazy(() => import('./pages/Login'));
@@ -68,6 +69,9 @@ function MainLayout() {
   
   const [user, setUser] = useState(null);
   const [showVerificationPrompt, setShowVerificationPrompt] = useState(false);
+
+  // Rastrear tiempo de uso del usuario autenticado
+  useActivityTracker(user?.uid);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {

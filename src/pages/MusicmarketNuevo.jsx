@@ -48,6 +48,8 @@ const MusicmarketNuevo = () => {
   // Estado para modal de detalles del producto
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedProductDetails, setSelectedProductDetails] = useState(null);
+  const [resenasProducto, setResenasProducto] = useState([]);
+  const [loadingResenas, setLoadingResenas] = useState(false);
   
   // API de ciudades
   const [ciudadesOptions, setCiudadesOptions] = useState([]);
@@ -248,9 +250,27 @@ const MusicmarketNuevo = () => {
     ));
   };
 
-  const handleOpenDetailsModal = (producto) => {
+  const handleOpenDetailsModal = async (producto) => {
     setSelectedProductDetails(producto);
     setShowDetailsModal(true);
+    
+    // Cargar reseñas del producto
+    setLoadingResenas(true);
+    try {
+      const resenasQuery = query(
+        collection(db, 'resenas'),
+        where('productoId', '==', producto.id),
+        orderBy('createdAt', 'desc')
+      );
+      const resenasSnap = await getDocs(resenasQuery);
+      const resenasData = resenasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setResenasProducto(resenasData);
+    } catch (error) {
+      console.error('Error cargando reseñas:', error);
+      setResenasProducto([]);
+    } finally {
+      setLoadingResenas(false);
+    }
   };
 
   const handleOpenRatingModal = (producto) => {
@@ -1132,6 +1152,85 @@ const MusicmarketNuevo = () => {
                     </p>
                   </div>
                 )}
+
+                {/* Sección de Reseñas */}
+                <div className="mb-3 mt-4">
+                  <h5 style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 16 }}>
+                    Reseñas y Comentarios ({resenasProducto.length})
+                  </h5>
+                  
+                  {loadingResenas ? (
+                    <div className="text-center py-3">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Cargando reseñas...</span>
+                      </div>
+                    </div>
+                  ) : resenasProducto.length > 0 ? (
+                    <div style={{ 
+                      maxHeight: '400px', 
+                      overflowY: 'auto',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '8px',
+                      padding: '12px'
+                    }}>
+                      {resenasProducto.map((resena) => (
+                        <div 
+                          key={resena.id} 
+                          style={{ 
+                            padding: '12px',
+                            marginBottom: '12px',
+                            borderBottom: '1px solid var(--border-color)',
+                            background: 'var(--bg-secondary)',
+                            borderRadius: '8px'
+                          }}
+                        >
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                              <strong style={{ color: 'var(--text-primary)' }}>
+                                {resena.usuarioNombre || 'Usuario'}
+                              </strong>
+                              <div className="d-flex align-items-center mt-1">
+                                {renderStars(resena.rating || 0)}
+                                <span className="ms-2" style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                                  {resena.createdAt?.toDate ? 
+                                    new Date(resena.createdAt.toDate()).toLocaleDateString('es-ES', { 
+                                      year: 'numeric', 
+                                      month: 'short', 
+                                      day: 'numeric' 
+                                    }) : 'Fecha no disponible'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {resena.comentario && (
+                            <p style={{ 
+                              color: 'var(--text-secondary)', 
+                              marginBottom: 0,
+                              fontSize: 14,
+                              lineHeight: 1.5
+                            }}>
+                              {resena.comentario}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div 
+                      className="text-center py-4" 
+                      style={{ 
+                        background: 'var(--bg-secondary)', 
+                        borderRadius: '8px',
+                        border: '1px solid var(--border-color)'
+                      }}
+                    >
+                      <p style={{ color: 'var(--text-secondary)', marginBottom: 0 }}>
+                        Aún no hay reseñas para este producto. ¡Sé el primero en valorarlo!
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Botones de acción */}

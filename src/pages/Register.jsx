@@ -54,14 +54,8 @@ const Register = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const user = userCredential.user;
       
-      // Configurar el enlace de verificación
-      const actionCodeSettings = {
-        url: window.location.origin + '/__/auth/action',
-        handleCodeInApp: false
-      };
-      
-      // Enviar email de verificación con la configuración correcta
-      await sendEmailVerification(user, actionCodeSettings);
+      // Enviar email de verificación
+      await sendEmailVerification(user);
       
       await setDoc(doc(db, 'perfiles', user.uid), {
         uid: user.uid,

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, Timestamp, getDoc, doc as docFirestore } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, Timestamp, getDoc, doc as docFirestore, updateDoc, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
 import { notificarComentario } from '../services/notificationService';
 
 const formatTimeAgo = (timestamp) => {
@@ -137,8 +137,6 @@ const ComentariosPublicacion = ({ publicacionId, user }) => {
       const likes = comentarioData.likes || [];
       const hasLiked = likes.includes(user.uid);
       
-      const { updateDoc, arrayUnion, arrayRemove } = await import('firebase/firestore');
-      
       if (hasLiked) {
         await updateDoc(comentarioRef, {
           likes: arrayRemove(user.uid)
@@ -150,6 +148,7 @@ const ComentariosPublicacion = ({ publicacionId, user }) => {
       }
     } catch (err) {
       console.error('Error al dar like al comentario:', err);
+      alert('Error al dar like. Intenta de nuevo.');
     }
   };
 
@@ -176,7 +175,6 @@ const ComentariosPublicacion = ({ publicacionId, user }) => {
     }
 
     try {
-      const { deleteDoc } = await import('firebase/firestore');
       await deleteDoc(docFirestore(db, 'publicaciones', publicacionId, 'comentarios', comentarioId));
       
       // También eliminar las respuestas a este comentario

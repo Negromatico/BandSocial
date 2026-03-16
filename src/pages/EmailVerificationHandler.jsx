@@ -16,6 +16,12 @@ const EmailVerificationHandler = () => {
       const mode = searchParams.get('mode');
       const oobCode = searchParams.get('oobCode');
 
+      // Si es restablecimiento de contraseña, redirigir a ResetPassword
+      if (mode === 'resetPassword') {
+        navigate(`/reset-password?oobCode=${oobCode}`);
+        return;
+      }
+
       // Verificar que sea una acción de verificación de email
       if (mode !== 'verifyEmail' || !oobCode) {
         setStatus('error');

@@ -45,11 +45,15 @@ service cloud.firestore {
         && request.auth.uid == userId
         && hasRequiredFields(['nombre', 'email', 'type', 'uid']);
       
-      // Actualizar: El propietario O actualización de seguidores/siguiendo O el administrador
+      // Actualizar: El propietario O actualización de seguidores/siguiendo O tracking de tiempo O el administrador
       allow update: if isOwner(userId) ||
                       (isAuthenticated() && 
                        request.resource.data.diff(resource.data).affectedKeys()
                        .hasOnly(['seguidores', 'siguiendo'])) ||
+                      (isAuthenticated() && 
+                       request.auth.uid == userId &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['tiempoUsoTotal', 'ultimaActividad'])) ||
                       isAdmin();
       
       // Eliminar: Solo el propietario o el administrador
@@ -77,7 +81,11 @@ service cloud.firestore {
         allow read: if true;
         allow create: if isAuthenticated()
           && request.resource.data.autorUid == request.auth.uid;
-        allow update, delete: if isAuthenticated() 
+        // Actualizar: El autor puede editar todo, otros usuarios solo pueden actualizar likes
+        allow update: if isAuthenticated() && 
+          (resource.data.autorUid == request.auth.uid ||
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']));
+        allow delete: if isAuthenticated() 
           && resource.data.autorUid == request.auth.uid;
       }
       
@@ -139,7 +147,11 @@ service cloud.firestore {
         allow read: if true;
         allow create: if isAuthenticated()
           && request.resource.data.autorUid == request.auth.uid;
-        allow update, delete: if isAuthenticated() 
+        // Actualizar: El autor puede editar todo, otros usuarios solo pueden actualizar likes
+        allow update: if isAuthenticated() && 
+          (resource.data.autorUid == request.auth.uid ||
+           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']));
+        allow delete: if isAuthenticated() 
           && resource.data.autorUid == request.auth.uid;
       }
     }
