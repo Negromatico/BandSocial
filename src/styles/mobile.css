@@ -1,0 +1,790 @@
+/* ============================================
+   OPTIMIZACIÓN MÓVIL - BANDSOCIAL
+   Solo se aplica en dispositivos móviles
+   ============================================ */
+
+/* Media query para móviles (max-width: 768px) */
+@media (max-width: 768px) {
+  
+  /* ============================================
+     LAYOUT GENERAL
+     ============================================ */
+  
+  body {
+    font-size: 14px;
+    overflow-x: hidden;
+  }
+
+  .container-fluid {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* ============================================
+     NAVBAR MÓVIL
+     ============================================ */
+  
+  /* Ocultar navbar de escritorio en móvil */
+  .navbar {
+    display: none !important;
+  }
+  
+  /* Ajustar padding del body para compensar navbars fijos */
+  body {
+    padding-top: 0 !important;
+  }
+
+  .navbar-brand {
+    font-size: 18px !important;
+    padding: 0 !important;
+  }
+
+  .navbar-brand img {
+    height: 32px !important;
+    width: auto;
+  }
+
+  .navbar-toggler {
+    padding: 4px 8px !important;
+    border: none !important;
+    font-size: 20px !important;
+  }
+
+  .navbar-collapse {
+    background: var(--card-bg);
+    margin: 8px -12px 0;
+    padding: 12px;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .navbar-nav {
+    gap: 4px !important;
+  }
+
+  .nav-link {
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .nav-link:hover {
+    background: var(--bg-secondary) !important;
+  }
+
+  /* Iconos del navbar */
+  .nav-link svg {
+    font-size: 18px !important;
+  }
+
+  /* ============================================
+     PUBLICACIONES MÓVIL
+     ============================================ */
+  
+  .publicacion-card,
+  .post-card {
+    margin-bottom: 12px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .publicacion-card .card-body,
+  .post-card .card-body {
+    padding: 12px !important;
+  }
+
+  /* Header de publicación */
+  .post-header {
+    margin-bottom: 12px !important;
+  }
+
+  .post-header img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .post-header h6 {
+    font-size: 14px !important;
+    margin-bottom: 2px !important;
+  }
+
+  .post-header small {
+    font-size: 11px !important;
+  }
+
+  /* Contenido de publicación */
+  .post-content {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* Imágenes de publicación */
+  .post-image,
+  .publicacion-imagen {
+    border-radius: 8px !important;
+    margin-bottom: 12px !important;
+    max-height: 400px !important;
+    object-fit: cover !important;
+  }
+
+  /* Botones de acción */
+  .post-actions,
+  .publicacion-actions {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .post-actions button,
+  .publicacion-actions button {
+    flex: 1 !important;
+    min-width: 80px !important;
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+    border-radius: 8px !important;
+  }
+
+  /* ============================================
+     FORMULARIO DE NUEVA PUBLICACIÓN
+     ============================================ */
+  
+  .create-post-card {
+    margin-bottom: 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .create-post-card textarea {
+    font-size: 14px !important;
+    min-height: 80px !important;
+  }
+
+  .create-post-buttons {
+    display: flex !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .create-post-buttons button {
+    flex: 1 !important;
+    min-width: 100px !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+
+  /* ============================================
+     PERFIL MÓVIL
+     ============================================ */
+  
+  .profile-header {
+    padding: 16px 12px !important;
+  }
+
+  .profile-avatar {
+    width: 80px !important;
+    height: 80px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .profile-name {
+    font-size: 20px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .profile-bio {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+
+  .profile-stats {
+    display: flex !important;
+    justify-content: space-around !important;
+    padding: 12px 0 !important;
+    gap: 8px !important;
+  }
+
+  .profile-stat {
+    text-align: center !important;
+    flex: 1 !important;
+  }
+
+  .profile-stat-number {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+  }
+
+  .profile-stat-label {
+    font-size: 11px !important;
+    text-transform: uppercase !important;
+  }
+
+  /* Tabs del perfil */
+  .profile-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .profile-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .profile-tab {
+    flex-shrink: 0 !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    white-space: nowrap !important;
+  }
+
+  /* ============================================
+     EVENTOS MÓVIL
+     ============================================ */
+  
+  .evento-card {
+    margin-bottom: 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .evento-card .card-body {
+    padding: 12px !important;
+  }
+
+  .evento-imagen {
+    height: 180px !important;
+    object-fit: cover !important;
+    border-radius: 8px 8px 0 0 !important;
+  }
+
+  .evento-titulo {
+    font-size: 16px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .evento-info {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .evento-asistentes {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* ============================================
+     MUSICMARKET MÓVIL
+     ============================================ */
+  
+  .market-header {
+    padding: 12px !important;
+  }
+
+  .market-title {
+    font-size: 20px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .filtros-rapidos {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    padding: 8px 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .filtros-rapidos::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .filtro-select {
+    min-width: 140px !important;
+    font-size: 13px !important;
+    padding: 6px 10px !important;
+  }
+
+  .instrument-card {
+    margin-bottom: 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .instrument-card .card-image {
+    height: 200px !important;
+    object-fit: cover !important;
+  }
+
+  .instrument-card .card-body {
+    padding: 12px !important;
+  }
+
+  .instrument-name {
+    font-size: 15px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .instrument-price {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    color: var(--button-primary) !important;
+  }
+
+  /* ============================================
+     MODALES MÓVIL
+     ============================================ */
+  
+  .modal-dialog {
+    margin: 8px !important;
+    max-width: calc(100% - 16px) !important;
+  }
+
+  .modal-content {
+    border-radius: 16px !important;
+  }
+
+  .modal-header {
+    padding: 16px !important;
+  }
+
+  .modal-title {
+    font-size: 18px !important;
+  }
+
+  .modal-body {
+    padding: 16px !important;
+    max-height: calc(100vh - 200px) !important;
+    overflow-y: auto !important;
+  }
+
+  .modal-footer {
+    padding: 12px 16px !important;
+    gap: 8px !important;
+  }
+
+  .modal-footer button {
+    flex: 1 !important;
+    font-size: 14px !important;
+  }
+
+  /* ============================================
+     FORMULARIOS MÓVIL
+     ============================================ */
+  
+  .form-label {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .form-control,
+  .form-select {
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  textarea.form-control {
+    min-height: 100px !important;
+  }
+
+  /* ============================================
+     BOTONES MÓVIL
+     ============================================ */
+  
+  .btn {
+    font-size: 14px !important;
+    padding: 10px 16px !important;
+    border-radius: 8px !important;
+  }
+
+  .btn-sm {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+  }
+
+  .btn-lg {
+    font-size: 16px !important;
+    padding: 12px 24px !important;
+  }
+
+  /* ============================================
+     COMENTARIOS MÓVIL
+     ============================================ */
+  
+  .comentarios-section {
+    padding: 12px !important;
+  }
+
+  .comentario-item {
+    padding: 12px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+  }
+
+  .comentario-avatar {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .comentario-content {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+
+  .comentario-autor {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+
+  .comentario-fecha {
+    font-size: 11px !important;
+  }
+
+  /* ============================================
+     BÚSQUEDA MÓVIL
+     ============================================ */
+  
+  .search-bar {
+    margin-bottom: 12px !important;
+  }
+
+  .search-input {
+    font-size: 14px !important;
+    padding: 10px 16px !important;
+    border-radius: 20px !important;
+  }
+
+  .search-results {
+    padding: 8px !important;
+  }
+
+  .search-result-item {
+    padding: 12px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+  }
+
+  /* ============================================
+     NOTIFICACIONES MÓVIL
+     ============================================ */
+  
+  .notification-item {
+    padding: 12px !important;
+    margin-bottom: 8px !important;
+    border-radius: 8px !important;
+  }
+
+  .notification-avatar {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .notification-content {
+    font-size: 13px !important;
+  }
+
+  .notification-time {
+    font-size: 11px !important;
+  }
+
+  /* ============================================
+     FOOTER MÓVIL
+     ============================================ */
+  
+  footer {
+    padding: 20px 12px !important;
+  }
+
+  footer .container {
+    padding: 0 !important;
+  }
+
+  footer h5 {
+    font-size: 14px !important;
+    margin-bottom: 12px !important;
+  }
+
+  footer a,
+  footer p {
+    font-size: 12px !important;
+  }
+
+  /* ============================================
+     UTILIDADES MÓVIL
+     ============================================ */
+  
+  /* Ocultar elementos en móvil */
+  .hide-mobile {
+    display: none !important;
+  }
+
+  /* Mostrar solo en móvil */
+  .show-mobile {
+    display: block !important;
+  }
+
+  /* Espaciado reducido */
+  .mb-mobile-2 {
+    margin-bottom: 8px !important;
+  }
+
+  .mb-mobile-3 {
+    margin-bottom: 12px !important;
+  }
+
+  .p-mobile-2 {
+    padding: 8px !important;
+  }
+
+  .p-mobile-3 {
+    padding: 12px !important;
+  }
+
+  /* Texto más pequeño */
+  .text-mobile-sm {
+    font-size: 12px !important;
+  }
+
+  /* ============================================
+     GRID RESPONSIVE
+     ============================================ */
+  
+  .row {
+    margin-left: -8px !important;
+    margin-right: -8px !important;
+  }
+
+  .row > * {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Columnas en móvil siempre full width */
+  .col,
+  .col-1, .col-2, .col-3, .col-4, .col-5, .col-6,
+  .col-7, .col-8, .col-9, .col-10, .col-11, .col-12,
+  .col-sm, .col-md, .col-lg, .col-xl {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* ============================================
+     CARDS MÓVIL
+     ============================================ */
+  
+  .card {
+    border-radius: 12px !important;
+    margin-bottom: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .card-header {
+    padding: 12px !important;
+    font-size: 14px !important;
+  }
+
+  .card-body {
+    padding: 12px !important;
+  }
+
+  .card-footer {
+    padding: 12px !important;
+  }
+
+  /* ============================================
+     BADGES Y TAGS
+     ============================================ */
+  
+  .badge {
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    border-radius: 6px !important;
+  }
+
+  /* ============================================
+     TABS MÓVIL
+     ============================================ */
+  
+  .nav-tabs {
+    border-bottom: 2px solid var(--border-color) !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .nav-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .nav-tabs .nav-link {
+    font-size: 13px !important;
+    padding: 10px 16px !important;
+    white-space: nowrap !important;
+  }
+
+  /* ============================================
+     DROPDOWN MÓVIL
+     ============================================ */
+  
+  .dropdown-menu {
+    font-size: 13px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .dropdown-item {
+    padding: 10px 16px !important;
+  }
+
+  /* ============================================
+     SPINNER Y LOADING
+     ============================================ */
+  
+  .spinner-border {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  .spinner-border-sm {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  /* ============================================
+     MEJORAS DE USABILIDAD MÓVIL
+     ============================================ */
+  
+  /* Áreas táctiles más grandes */
+  button,
+  a,
+  .clickable {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Scroll suave */
+  * {
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Prevenir zoom en inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* ============================================
+     ANIMACIONES MÓVIL (Reducidas)
+     ============================================ */
+  
+  @media (prefers-reduced-motion: no-preference) {
+    .card,
+    .btn,
+    .nav-link {
+      transition: all 0.2s ease !important;
+    }
+  }
+
+  /* ============================================
+     CHAT DOCK MÓVIL
+     ============================================ */
+  
+  .chat-dock {
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .chat-window {
+    width: 100% !important;
+    height: calc(100vh - 60px) !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
+
+  /* ============================================
+     ADMIN DASHBOARD MÓVIL
+     ============================================ */
+  
+  .admin-stats {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .admin-stat-card {
+    padding: 12px !important;
+    border-radius: 8px !important;
+  }
+
+  .admin-stat-value {
+    font-size: 24px !important;
+  }
+
+  .admin-stat-label {
+    font-size: 11px !important;
+  }
+
+  /* Tabla responsive */
+  .table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  table {
+    font-size: 12px !important;
+  }
+
+  table th,
+  table td {
+    padding: 8px !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* ============================================
+   MÓVIL PEQUEÑO (max-width: 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  
+  body {
+    font-size: 13px;
+  }
+
+  .navbar-brand {
+    font-size: 16px !important;
+  }
+
+  .post-actions button,
+  .publicacion-actions button {
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+  }
+
+  .profile-avatar {
+    width: 70px !important;
+    height: 70px !important;
+  }
+
+  .profile-name {
+    font-size: 18px !important;
+  }
+
+  .instrument-card .card-image {
+    height: 160px !important;
+  }
+
+  .modal-body {
+    max-height: calc(100vh - 150px) !important;
+  }
+}

@@ -1,0 +1,810 @@
+/* ============================================
+   OPTIMIZACIÓN MÓVIL PARA PÁGINAS ESPECÍFICAS
+   ============================================ */
+
+@media (max-width: 768px) {
+  
+  /* ============================================
+     PUBLICACIONES MÓVIL
+     ============================================ */
+  
+  /* Formulario de crear publicación */
+  .create-post-section {
+    margin-bottom: 12px !important;
+    padding: 12px !important;
+  }
+
+  .create-post-card {
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    margin-bottom: 12px !important;
+  }
+
+  .create-post-card .card-body {
+    padding: 12px !important;
+  }
+
+  .create-post-textarea {
+    min-height: 80px !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+  }
+
+  .create-post-actions {
+    display: flex !important;
+    gap: 8px !important;
+    margin-top: 12px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .create-post-actions button {
+    flex: 1 !important;
+    min-width: 100px !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Feed de publicaciones */
+  .publicaciones-feed {
+    padding: 0 !important;
+  }
+
+  .publicacion-card {
+    margin-bottom: 12px !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+  }
+
+  .publicacion-header {
+    padding: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .publicacion-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+  }
+
+  .publicacion-user-info h6 {
+    font-size: 14px !important;
+    margin-bottom: 2px !important;
+    font-weight: 600 !important;
+  }
+
+  .publicacion-user-info small {
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+  }
+
+  .publicacion-content {
+    padding: 0 12px 12px !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+  }
+
+  .publicacion-image {
+    width: 100% !important;
+    max-height: 400px !important;
+    object-fit: cover !important;
+    margin-bottom: 12px !important;
+  }
+
+  .publicacion-actions {
+    padding: 8px 12px !important;
+    display: flex !important;
+    gap: 6px !important;
+    border-top: 1px solid var(--border-color) !important;
+  }
+
+  .publicacion-actions button {
+    flex: 1 !important;
+    font-size: 12px !important;
+    padding: 8px 10px !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+  }
+
+  .publicacion-stats {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    color: var(--text-secondary) !important;
+  }
+
+  /* ============================================
+     EVENTOS MÓVIL
+     ============================================ */
+  
+  .eventos-container {
+    padding: 0 !important;
+  }
+
+  .eventos-header {
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .eventos-header h2 {
+    font-size: 20px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .eventos-filters {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    padding: 8px 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .eventos-filters::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .eventos-filters button {
+    flex-shrink: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    border-radius: 16px !important;
+    white-space: nowrap !important;
+  }
+
+  .eventos-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .evento-card {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .evento-image {
+    width: 100% !important;
+    height: 180px !important;
+    object-fit: cover !important;
+  }
+
+  .evento-body {
+    padding: 12px !important;
+  }
+
+  .evento-title {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+  }
+
+  .evento-info {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+
+  .evento-description {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    color: var(--text-secondary) !important;
+    margin-bottom: 12px !important;
+  }
+
+  .evento-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding-top: 12px !important;
+    border-top: 1px solid var(--border-color) !important;
+  }
+
+  .evento-asistentes {
+    font-size: 12px !important;
+  }
+
+  .evento-actions button {
+    font-size: 13px !important;
+    padding: 6px 16px !important;
+  }
+
+  /* ============================================
+     MUSICMARKET MÓVIL
+     ============================================ */
+  
+  .musicmarket-container {
+    padding: 0 !important;
+  }
+
+  .market-header {
+    padding: 12px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .market-title {
+    font-size: 20px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .market-filters {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    padding: 8px 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .market-filters::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .market-filter-btn {
+    flex-shrink: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    border-radius: 16px !important;
+    white-space: nowrap !important;
+  }
+
+  .products-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+    padding: 0 8px !important;
+  }
+
+  .product-card {
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  .product-image {
+    width: 100% !important;
+    height: 140px !important;
+    object-fit: cover !important;
+  }
+
+  .product-body {
+    padding: 10px !important;
+  }
+
+  .product-name {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    margin-bottom: 4px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .product-price {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: var(--button-primary) !important;
+    margin-bottom: 6px !important;
+  }
+
+  .product-rating {
+    font-size: 11px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+
+  .product-location {
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    margin-top: 4px !important;
+  }
+
+  /* ============================================
+     PERFIL MÓVIL
+     ============================================ */
+  
+  .profile-container {
+    padding: 0 !important;
+  }
+
+  .profile-header {
+    padding: 16px 12px !important;
+    text-align: center !important;
+  }
+
+  .profile-cover {
+    height: 120px !important;
+    object-fit: cover !important;
+    border-radius: 0 !important;
+  }
+
+  .profile-avatar-container {
+    margin-top: -40px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .profile-avatar {
+    width: 80px !important;
+    height: 80px !important;
+    border: 3px solid var(--card-bg) !important;
+    border-radius: 50% !important;
+  }
+
+  .profile-name {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .profile-username {
+    font-size: 13px !important;
+    color: var(--text-secondary) !important;
+    margin-bottom: 12px !important;
+  }
+
+  .profile-bio {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 12px !important;
+    padding: 0 12px !important;
+  }
+
+  .profile-stats {
+    display: flex !important;
+    justify-content: space-around !important;
+    padding: 12px 0 !important;
+    border-top: 1px solid var(--border-color) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+  }
+
+  .profile-stat {
+    text-align: center !important;
+    flex: 1 !important;
+  }
+
+  .profile-stat-number {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    display: block !important;
+  }
+
+  .profile-stat-label {
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+    text-transform: uppercase !important;
+  }
+
+  .profile-actions {
+    padding: 12px !important;
+    display: flex !important;
+    gap: 8px !important;
+  }
+
+  .profile-actions button {
+    flex: 1 !important;
+    font-size: 13px !important;
+    padding: 8px 12px !important;
+  }
+
+  .profile-tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    border-bottom: 2px solid var(--border-color) !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .profile-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .profile-tab {
+    flex-shrink: 0 !important;
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    border-bottom: 2px solid transparent !important;
+    cursor: pointer !important;
+  }
+
+  .profile-tab.active {
+    color: var(--button-primary) !important;
+    border-bottom-color: var(--button-primary) !important;
+  }
+
+  .profile-content {
+    padding: 12px 8px !important;
+  }
+
+  /* ============================================
+     BÚSQUEDA MÓVIL
+     ============================================ */
+  
+  .buscar-container {
+    padding: 12px 8px !important;
+  }
+
+  .search-header {
+    margin-bottom: 12px !important;
+  }
+
+  .search-input-container {
+    position: relative !important;
+    margin-bottom: 12px !important;
+  }
+
+  .search-input {
+    width: 100% !important;
+    padding: 10px 40px 10px 16px !important;
+    font-size: 14px !important;
+    border-radius: 20px !important;
+    border: 1px solid var(--border-color) !important;
+  }
+
+  .search-icon {
+    position: absolute !important;
+    right: 16px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: var(--text-secondary) !important;
+  }
+
+  .search-filters {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    margin-bottom: 12px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .search-filters::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .search-filter-chip {
+    flex-shrink: 0 !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    border-radius: 16px !important;
+    white-space: nowrap !important;
+  }
+
+  .search-results {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .search-result-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    background: var(--card-bg) !important;
+    border-radius: 12px !important;
+    cursor: pointer !important;
+  }
+
+  .search-result-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+
+  .search-result-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .search-result-name {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin-bottom: 2px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .search-result-meta {
+    font-size: 12px !important;
+    color: var(--text-secondary) !important;
+  }
+
+  /* ============================================
+     NOTIFICACIONES MÓVIL
+     ============================================ */
+  
+  .notifications-container {
+    padding: 0 !important;
+  }
+
+  .notifications-header {
+    padding: 12px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+  }
+
+  .notifications-header h2 {
+    font-size: 20px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .notifications-list {
+    padding: 0 !important;
+  }
+
+  .notification-item {
+    display: flex !important;
+    align-items: start !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    cursor: pointer !important;
+  }
+
+  .notification-item:active {
+    background: var(--bg-secondary) !important;
+  }
+
+  .notification-item.unread {
+    background: rgba(99, 102, 241, 0.05) !important;
+  }
+
+  .notification-avatar {
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+
+  .notification-content {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .notification-text {
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 4px !important;
+  }
+
+  .notification-time {
+    font-size: 11px !important;
+    color: var(--text-secondary) !important;
+  }
+
+  .notification-badge {
+    width: 8px !important;
+    height: 8px !important;
+    background: var(--button-primary) !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ============================================
+     FOLLOWERS/COMUNIDAD MÓVIL
+     ============================================ */
+  
+  .followers-container {
+    padding: 0 !important;
+  }
+
+  .followers-tabs {
+    display: flex !important;
+    border-bottom: 2px solid var(--border-color) !important;
+  }
+
+  .followers-tab {
+    flex: 1 !important;
+    padding: 12px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    text-align: center !important;
+    border-bottom: 2px solid transparent !important;
+    cursor: pointer !important;
+  }
+
+  .followers-tab.active {
+    color: var(--button-primary) !important;
+    border-bottom-color: var(--button-primary) !important;
+  }
+
+  .followers-list {
+    padding: 8px !important;
+  }
+
+  .follower-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px !important;
+    background: var(--card-bg) !important;
+    border-radius: 12px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .follower-avatar {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+  }
+
+  .follower-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .follower-name {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    margin-bottom: 2px !important;
+  }
+
+  .follower-username {
+    font-size: 12px !important;
+    color: var(--text-secondary) !important;
+  }
+
+  .follower-action button {
+    font-size: 12px !important;
+    padding: 6px 16px !important;
+    border-radius: 16px !important;
+  }
+
+  /* ============================================
+     JUEGO MÓVIL
+     ============================================ */
+  
+  .game-container {
+    padding: 12px 8px !important;
+  }
+
+  .game-header {
+    text-align: center !important;
+    margin-bottom: 16px !important;
+  }
+
+  .game-title {
+    font-size: 20px !important;
+    margin-bottom: 8px !important;
+  }
+
+  .game-canvas {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .game-controls {
+    display: flex !important;
+    gap: 8px !important;
+    margin-top: 16px !important;
+  }
+
+  .game-controls button {
+    flex: 1 !important;
+    font-size: 14px !important;
+    padding: 12px !important;
+  }
+
+  .game-score {
+    text-align: center !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    margin-top: 16px !important;
+  }
+
+  /* ============================================
+     AJUSTES GENERALES MÓVIL
+     ============================================ */
+  
+  /* Contenedores principales */
+  .page-container,
+  .main-container {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Títulos de página */
+  .page-title {
+    font-size: 20px !important;
+    margin-bottom: 12px !important;
+    padding: 12px !important;
+  }
+
+  /* Secciones */
+  .section {
+    margin-bottom: 12px !important;
+    padding: 12px !important;
+  }
+
+  /* Listas */
+  .list-group-item {
+    padding: 12px !important;
+    font-size: 13px !important;
+  }
+
+  /* Badges */
+  .badge {
+    font-size: 10px !important;
+    padding: 3px 8px !important;
+  }
+
+  /* Alertas */
+  .alert {
+    font-size: 13px !important;
+    padding: 10px 12px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Spinners */
+  .loading-container {
+    padding: 40px 20px !important;
+  }
+
+  /* Empty states */
+  .empty-state {
+    padding: 40px 20px !important;
+    text-align: center !important;
+  }
+
+  .empty-state-icon {
+    font-size: 48px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .empty-state-text {
+    font-size: 14px !important;
+    color: var(--text-secondary) !important;
+  }
+}
+
+/* ============================================
+   MÓVIL PEQUEÑO (max-width: 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  
+  /* Grid de productos a 1 columna en pantallas muy pequeñas */
+  .products-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .product-image {
+    height: 200px !important;
+  }
+
+  /* Reducir aún más el padding */
+  .publicacion-card,
+  .evento-card,
+  .product-card {
+    margin-bottom: 10px !important;
+  }
+
+  /* Fuentes más pequeñas */
+  .page-title {
+    font-size: 18px !important;
+  }
+
+  .profile-name {
+    font-size: 18px !important;
+  }
+
+  .market-title,
+  .eventos-header h2 {
+    font-size: 18px !important;
+  }
+}

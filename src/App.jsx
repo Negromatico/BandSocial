@@ -1,6 +1,8 @@
 import React, { Suspense, lazy, useState, useEffect } from 'react';
 import './global.css';
 import './styles/theme.css';
+import './styles/mobile.css';
+import './styles/pages-mobile.css';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { auth } from './services/firebase';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -8,6 +10,8 @@ import { ChatDockProvider } from './contexts/ChatDockContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import EmailVerificationPrompt from './components/EmailVerificationPrompt';
 import useActivityTracker from './hooks/useActivityTracker';
+import MobileBottomNav from './components/MobileBottomNav';
+import MobileTopNav from './components/MobileTopNav';
 
 // Lazy loading de componentes para mejorar rendimiento
 const Login = lazy(() => import('./pages/Login'));
@@ -105,6 +109,7 @@ function MainLayout() {
     <Suspense fallback={<LoadingSpinner />}>
       <ScrollToTop />
       {showVerificationPrompt && <EmailVerificationPrompt user={user} onVerified={handleVerified} />}
+      <MobileTopNav user={user} />
       {shouldShowNavbar && <AppNavbar />}
       <Routes>
         <Route path="/" element={<PublicacionesNuevo />} />
@@ -134,6 +139,7 @@ function MainLayout() {
         <Route path="/__/auth/action" element={<EmailVerificationHandler />} />
       </Routes>
       {shouldShowFooter && <Footer />}
+      <MobileBottomNav user={user} />
     </Suspense>
   );
 }
