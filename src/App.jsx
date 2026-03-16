@@ -33,6 +33,7 @@ const Notifications = lazy(() => import('./pages/Notifications'));
 const Followers = lazy(() => import('./pages/Followers'));
 const Buscar = lazy(() => import('./pages/Buscar'));
 const MisPublicaciones = lazy(() => import('./pages/MisPublicaciones'));
+const Messages = lazy(() => import('./pages/Messages'));
 const GamePage = lazy(() => import('./pages/GamePage'));
 const AcercaDe = lazy(() => import('./pages/AcercaDe'));
 const TerminosCondiciones = lazy(() => import('./pages/TerminosCondiciones'));
@@ -129,6 +130,7 @@ function MainLayout() {
         <Route path="/followers" element={<Followers />} />
         <Route path="/buscar" element={<Buscar />} />
         <Route path="/mis-publicaciones" element={<MisPublicaciones />} />
+        <Route path="/messages" element={<Messages />} />
         <Route path="/juego" element={<GamePage />} />
         <Route path="/acerca-de" element={<AcercaDe />} />
         <Route path="/terminos" element={<TerminosCondiciones />} />

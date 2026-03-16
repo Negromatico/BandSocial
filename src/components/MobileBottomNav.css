@@ -89,29 +89,13 @@
   font-weight: 600;
 }
 
-/* Botón de crear (centro) */
-.mobile-nav-item.create-btn {
-  position: relative;
+/* Todos los botones tienen el mismo estilo */
+.mobile-nav-item .mobile-nav-icon {
+  transition: transform 0.2s ease;
 }
 
-.mobile-nav-item.create-btn .mobile-nav-icon {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-  margin-bottom: 4px;
-}
-
-.mobile-nav-item.create-btn .mobile-nav-label {
-  color: var(--button-primary);
-  font-weight: 600;
-}
-
-.mobile-nav-item.create-btn:active .mobile-nav-icon {
-  transform: scale(0.9);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+.mobile-nav-item:active .mobile-nav-icon {
+  transform: scale(0.95);
 }
 
 /* Animación de ripple al hacer tap */

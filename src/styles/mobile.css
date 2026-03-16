@@ -697,18 +697,11 @@
      CHAT DOCK MÓVIL
      ============================================ */
   
-  .chat-dock {
-    bottom: 0 !important;
-    right: 0 !important;
-    left: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  .chat-window {
-    width: 100% !important;
-    height: calc(100vh - 60px) !important;
-    border-radius: 16px 16px 0 0 !important;
+  /* Ocultar chat flotante en móvil */
+  .chat-dock,
+  .chat-dock-container,
+  .floating-chat {
+    display: none !important;
   }
 
   /* ============================================
