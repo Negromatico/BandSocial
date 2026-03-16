@@ -12,6 +12,7 @@ import EmailVerificationPrompt from './components/EmailVerificationPrompt';
 import useActivityTracker from './hooks/useActivityTracker';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileTopNav from './components/MobileTopNav';
+import MobileLogoutButton from './components/MobileLogoutButton';
 
 // Lazy loading de componentes para mejorar rendimiento
 const Login = lazy(() => import('./pages/Login'));
@@ -106,11 +107,13 @@ function MainLayout() {
     window.location.reload(); // Recargar para actualizar el estado
   };
   
+  const shouldShowMobileNav = !hideNavbarPaths.includes(location.pathname);
+
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <ScrollToTop />
       {showVerificationPrompt && <EmailVerificationPrompt user={user} onVerified={handleVerified} />}
-      <MobileTopNav user={user} />
+      {shouldShowMobileNav && <MobileTopNav user={user} />}
       {shouldShowNavbar && <AppNavbar />}
       <Routes>
         <Route path="/" element={<PublicacionesNuevo />} />
@@ -141,7 +144,8 @@ function MainLayout() {
         <Route path="/__/auth/action" element={<EmailVerificationHandler />} />
       </Routes>
       {shouldShowFooter && <Footer />}
-      <MobileBottomNav user={user} />
+      {shouldShowMobileNav && <MobileBottomNav user={user} />}
+      {shouldShowMobileNav && <MobileLogoutButton user={user} />}
     </Suspense>
   );
 }
