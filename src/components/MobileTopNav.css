@@ -11,56 +11,59 @@
     display: block;
     position: fixed;
     top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 375px;
+    left: 0;
+    right: 0;
     z-index: 999;
     background: var(--card-bg);
     border-bottom: 1px solid var(--border-color);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 4px 8px;
   }
 
-  /* Contenedor principal - todo en una línea */
-  .mobile-nav-container {
+  /* Header con logo */
+  .mobile-top-nav-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: var(--card-bg);
   }
 
-  .mobile-nav-container::-webkit-scrollbar {
-    display: none;
-  }
-
-  /* Logo más grande */
   .mobile-logo {
-    height: 40px;
+    height: 32px;
     width: auto;
     cursor: pointer;
     transition: transform 0.2s ease;
-    flex-shrink: 0;
   }
 
   .mobile-logo:active {
     transform: scale(0.95);
   }
 
-  /* Tabs de navegación en línea con el logo */
-  .mobile-nav-tabs {
+  .mobile-header-actions {
     display: flex;
-    gap: 8px;
-    flex: 1;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    gap: 12px;
+    align-items: center;
   }
 
-  .mobile-nav-tabs::-webkit-scrollbar {
+  /* Contenedor de scroll horizontal */
+  .mobile-nav-scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    background: var(--card-bg);
+  }
+
+  .mobile-nav-scroll-container::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Tabs de navegación */
+  .mobile-nav-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 0 12px 8px;
+    min-width: min-content;
   }
 
   .mobile-nav-tab {

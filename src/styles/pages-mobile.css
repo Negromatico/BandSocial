@@ -19,13 +19,11 @@
   [class*="container"] {
     padding-top: 0 !important;
     padding-bottom: 80px !important;
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-    max-width: 375px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100% !important;
     overflow-x: hidden !important;
-    margin-top: 0 !important;
+    margin-top: 120px !important; /* Espacio para navbar fijo superior */
   }
 
   /* Ajuste específico para páginas principales */
