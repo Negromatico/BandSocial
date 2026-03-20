@@ -5,69 +5,6 @@
 @media (max-width: 768px) {
   
   /* ============================================
-     AJUSTES GLOBALES PARA LAYOUT MÓVIL
-     ============================================ */
-  
-  /* Contenedor principal de la app */
-  body {
-    overflow-x: hidden !important;
-  }
-
-  /* Todos los contenedores principales necesitan espacio para navbars */
-  .container,
-  .container-fluid,
-  [class*="container"] {
-    padding-top: 0 !important;
-    padding-bottom: 80px !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-  }
-
-  /* Ajuste específico para páginas principales */
-  .publicaciones-container,
-  .eventos-container,
-  .musicmarket-container,
-  .profile-container,
-  .buscar-container,
-  .notifications-container,
-  .messages-container,
-  .followers-container,
-  .game-container {
-    padding-top: 110px !important; /* Espacio para navbar superior fijo */
-    padding-bottom: 80px !important;
-    min-height: 100vh !important;
-    overflow-x: hidden !important;
-  }
-
-  /* Evitar scroll horizontal */
-  .row {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-  }
-
-  .col,
-  [class*="col-"] {
-    padding-left: 8px !important;
-    padding-right: 8px !important;
-  }
-
-  img,
-  video,
-  iframe {
-    max-width: 100% !important;
-    height: auto !important;
-  }
-
-  /* Cards y elementos de contenido */
-  .card,
-  .card-body,
-  .modal-content {
-    max-width: 100% !important;
-  }
-
-  /* ============================================
      PUBLICACIONES MÓVIL
      ============================================ */
   
@@ -186,11 +123,11 @@
      ============================================ */
   
   .eventos-container {
-    padding: 0 8px !important;
+    padding: 0 !important;
   }
 
   .eventos-header {
-    padding: 12px 8px !important;
+    padding: 12px !important;
     margin-bottom: 12px !important;
   }
 
@@ -285,11 +222,11 @@
      ============================================ */
   
   .musicmarket-container {
-    padding: 0 8px !important;
+    padding: 0 !important;
   }
 
   .market-header {
-    padding: 12px 8px !important;
+    padding: 12px !important;
     margin-bottom: 12px !important;
   }
 
@@ -376,7 +313,8 @@
      ============================================ */
   
   .profile-container {
-    padding: 0 8px !important;
+    padding: 0 !important;
+    margin-bottom: 80px !important;
   }
 
   .profile-header {
@@ -606,8 +544,7 @@
      BÚSQUEDA MÓVIL
      ============================================ */
   
-  .buscar-container,
-  .search-container {
+  .buscar-container {
     padding: 12px 8px !important;
   }
 
@@ -704,11 +641,11 @@
      ============================================ */
   
   .notifications-container {
-    padding: 0 8px !important;
+    padding: 0 !important;
   }
 
   .notifications-header {
-    padding: 12px 8px !important;
+    padding: 12px !important;
     border-bottom: 1px solid var(--border-color) !important;
   }
 
@@ -774,7 +711,7 @@
      ============================================ */
   
   .followers-container {
-    padding: 0 8px !important;
+    padding: 0 !important;
   }
 
   .followers-tabs {
@@ -838,92 +775,6 @@
     font-size: 12px !important;
     padding: 6px 16px !important;
     border-radius: 16px !important;
-  }
-
-  /* ============================================
-     MENSAJES MÓVIL
-     ============================================ */
-  
-  .messages-container {
-    padding: 0 8px !important;
-  }
-
-  .messages-header {
-    padding: 12px 8px !important;
-    margin-bottom: 12px !important;
-  }
-
-  .messages-header h2 {
-    font-size: 20px !important;
-    margin-bottom: 0 !important;
-  }
-
-  .conversation-list {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-  }
-
-  .conversation-item {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    padding: 12px !important;
-    background: var(--card-bg) !important;
-    border-radius: 12px !important;
-    cursor: pointer !important;
-  }
-
-  .conversation-item:active {
-    background: var(--bg-secondary) !important;
-  }
-
-  .conversation-avatar {
-    width: 48px !important;
-    height: 48px !important;
-    border-radius: 50% !important;
-    flex-shrink: 0 !important;
-  }
-
-  .conversation-info {
-    flex: 1 !important;
-    min-width: 0 !important;
-  }
-
-  .conversation-name {
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    margin-bottom: 4px !important;
-  }
-
-  .conversation-last-message {
-    font-size: 13px !important;
-    color: var(--text-secondary) !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-  }
-
-  .conversation-meta {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-end !important;
-    gap: 4px !important;
-  }
-
-  .conversation-time {
-    font-size: 11px !important;
-    color: var(--text-secondary) !important;
-  }
-
-  .conversation-unread {
-    background: var(--button-primary) !important;
-    color: white !important;
-    font-size: 10px !important;
-    padding: 2px 6px !important;
-    border-radius: 10px !important;
-    min-width: 20px !important;
-    text-align: center !important;
   }
 
   /* ============================================

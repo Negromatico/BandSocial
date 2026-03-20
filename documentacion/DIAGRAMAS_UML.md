@@ -628,21 +628,34 @@ App
 │   ├── Premium
 │   │   ├── Membership
 │   │   └── Payment
+│   ├── Communication
+│   │   ├── Notifications
+│   │   ├── Messages (NUEVO 2026)
+│   │   └── Chat
 │   └── Other
-│       ├── Notifications
 │       ├── Followers
+│       ├── MisPublicaciones
 │       ├── MisGrupos
 │       └── GamePage
 ├── Components
-│   ├── Navbar
-│   ├── Footer
-│   ├── PublicacionForm
-│   ├── ComentariosPublicacion
-│   ├── ReaccionesPublicacion
-│   ├── ContadorComentarios
-│   ├── AuthPromptModal
-│   ├── ScrollToTop
-│   └── ErrorBoundary
+│   ├── Navigation
+│   │   ├── Navbar
+│   │   ├── MobileBottomNav (NUEVO 2026)
+│   │   ├── MobileTopNav (NUEVO 2026)
+│   │   └── MobileLogoutButton (NUEVO 2026)
+│   ├── Common
+│   │   ├── Footer
+│   │   ├── ScrollToTop
+│   │   └── ErrorBoundary
+│   ├── Social
+│   │   ├── PublicacionForm
+│   │   ├── ComentariosPublicacion
+│   │   ├── ReaccionesPublicacion
+│   │   ├── ContadorComentarios
+│   │   └── AuthPromptModal
+│   └── Chat
+│       ├── ChatDock
+│       └── ChatModal
 └── Services
     ├── firebase
     ├── notificationService
@@ -752,15 +765,23 @@ Servicios Externos
 bandsocial/
 ├── src/
 │   ├── components/
-│   │   ├── common/
+│   │   ├── navigation/
 │   │   │   ├── Navbar
+│   │   │   ├── MobileBottomNav (NUEVO 2026)
+│   │   │   ├── MobileTopNav (NUEVO 2026)
+│   │   │   └── MobileLogoutButton (NUEVO 2026)
+│   │   ├── common/
 │   │   │   ├── Footer
+│   │   │   ├── ScrollToTop
 │   │   │   └── ErrorBoundary
 │   │   ├── social/
 │   │   │   ├── PublicacionForm
 │   │   │   ├── ComentariosPublicacion
 │   │   │   ├── ReaccionesPublicacion
 │   │   │   └── ContadorComentarios
+│   │   ├── chat/
+│   │   │   ├── ChatDock
+│   │   │   └── ChatModal
 │   │   └── auth/
 │   │       └── AuthPromptModal
 │   ├── pages/
@@ -797,6 +818,8 @@ bandsocial/
 │   ├── styles/
 │   │   ├── global.css
 │   │   ├── theme.css
+│   │   ├── mobile.css (NUEVO 2026)
+│   │   ├── pages-mobile.css (NUEVO 2026)
 │   │   └── InfoPages.css
 │   └── utils/
 │       └── helpers
@@ -868,5 +891,6 @@ bandsocial/
 ---
 
 **Fecha de creación**: Febrero 2026
+**Última actualización**: Marzo 2026
 **Proyecto**: BandSocial - Red Social Musical
-**Versión**: 1.0
+**Versión**: 2.0 (Incluye optimización móvil completa)

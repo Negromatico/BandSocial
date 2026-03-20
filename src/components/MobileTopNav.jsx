@@ -22,9 +22,14 @@ const MobileTopNav = ({ user }) => {
 
   return (
     <div className="mobile-top-nav">
-      <div className="mobile-nav-container">
+      <div className="mobile-top-nav-header">
         <img src={logo} alt="BandSocial" className="mobile-logo" onClick={() => navigate('/')} />
-        
+        <div className="mobile-header-actions">
+          {/* Espacio para acciones adicionales si se necesitan */}
+        </div>
+      </div>
+      
+      <div className="mobile-nav-scroll-container">
         <div className="mobile-nav-tabs">
           {navPages.map((page) => {
             const Icon = page.icon;
