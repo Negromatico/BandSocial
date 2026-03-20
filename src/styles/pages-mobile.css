@@ -17,8 +17,8 @@
   .container,
   .container-fluid,
   [class*="container"] {
-    padding-top: 60px !important; /* Espacio para navbar superior */
-    padding-bottom: 80px !important; /* Espacio para navbar inferior */
+    padding-top: 0 !important;
+    padding-bottom: 80px !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
     max-width: 100% !important;
@@ -35,7 +35,7 @@
   .messages-container,
   .followers-container,
   .game-container {
-    padding-top: 60px !important;
+    padding-top: 110px !important; /* Espacio para navbar superior fijo */
     padding-bottom: 80px !important;
     min-height: 100vh !important;
     overflow-x: hidden !important;
