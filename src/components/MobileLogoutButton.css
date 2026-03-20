@@ -13,7 +13,7 @@
     justify-content: center;
     position: fixed;
     bottom: 80px;
-    left: 16px;
+    left: calc(50% - 240px + 16px);
     width: 48px;
     height: 48px;
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
