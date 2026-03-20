@@ -23,7 +23,7 @@
     padding-right: 0 !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
-    margin-top: 120px !important; /* Espacio para navbar fijo superior */
+    margin-top: 60px !important; /* Espacio para navbar fijo superior */
   }
 
   /* Ajuste específico para páginas principales */
