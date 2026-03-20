@@ -14,12 +14,13 @@
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 100px;
+    max-width: 375px;
     z-index: 999;
     background: var(--card-bg);
     border-bottom: 1px solid var(--border-color);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     padding: 8px 12px;
+    min-height: 150px;
   }
 
   /* Contenedor principal - todo en una línea */

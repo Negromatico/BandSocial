@@ -18,14 +18,14 @@
   .container-fluid,
   [class*="container"] {
     padding-top: 0 !important;
-    padding-bottom: 80px !important;
+    padding-bottom: 160px !important;
     padding-left: 8px !important;
     padding-right: 8px !important;
-    max-width: 100px !important;
+    max-width: 375px !important;
     margin-left: auto !important;
     margin-right: auto !important;
     overflow-x: hidden !important;
-    margin-top: 60px !important; /* Espacio para navbar fijo superior */
+    margin-top: 160px !important; /* Espacio para navbar fijo superior de 150px */
   }
 
   /* Ajuste específico para páginas principales */
