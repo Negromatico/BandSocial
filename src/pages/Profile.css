@@ -244,3 +244,111 @@
     width: 100%;
   }
 }
+
+/* ============================================
+   CORRECCIONES DE LAYOUT DE PERFIL MÓVIL
+   ============================================ */
+
+/* --- Layout de dos columnas → una columna en móvil --- */
+@media (max-width: 900px) {
+  .profile-content-grid {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .profile-sidebar-col {
+    width: 100% !important;
+    flex-shrink: unset !important;
+  }
+}
+
+/* --- Header del perfil en móvil --- */
+@media (max-width: 768px) {
+  /* Banner más compacto */
+  .profile-banner-mobile {
+    height: 160px !important;
+  }
+
+  /* La fila de avatar+nombre+botones:
+     queda en modo fila (avatar izquierda, nombre+botones derecha)
+     pero el nombre se hace más pequeño */
+  .profile-info-row {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .profile-avatar-name-row {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  /* Avatar más pequeño */
+  .profile-avatar-large {
+    width: 90px !important;
+    height: 90px !important;
+    margin-top: -30px !important;
+  }
+
+  /* Nombre de perfil más pequeño */
+  .profile-name-title {
+    font-size: 18px !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* Botones de acción en fila ancha */
+  .profile-action-buttons {
+    width: 100% !important;
+    justify-content: stretch !important;
+    flex-wrap: nowrap !important;
+    padding-bottom: 8px !important;
+    gap: 8px !important;
+    flex: 1 1 100% !important;
+  }
+
+  .profile-action-buttons .btn {
+    flex: 1 !important;
+    padding: 10px 8px !important;
+    font-size: 13px !important;
+  }
+
+  /* Contadores de stats */
+  .profile-stats-row {
+    justify-content: space-around !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* El contenido apilado en una sola columna */
+  .profile-content-grid {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 8px !important;
+  }
+
+  .profile-sidebar-col {
+    width: 100% !important;
+    flex-shrink: unset !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-banner-mobile {
+    height: 120px !important;
+  }
+
+  .profile-avatar-large {
+    width: 75px !important;
+    height: 75px !important;
+    margin-top: -25px !important;
+  }
+
+  .profile-name-title {
+    font-size: 15px !important;
+  }
+
+  .profile-action-buttons .btn {
+    font-size: 12px !important;
+    padding: 8px 6px !important;
+  }
+}
+

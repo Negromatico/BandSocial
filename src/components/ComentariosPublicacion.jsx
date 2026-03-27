@@ -18,7 +18,7 @@ const formatTimeAgo = (timestamp) => {
   return `${diffDays} d`;
 };
 
-const ComentariosPublicacion = ({ publicacionId, user }) => {
+const ComentariosPublicacion = ({ publicacionId, user, onAuthRequired }) => {
   const [comentarios, setComentarios] = useState([]);
   const [nuevoComentario, setNuevoComentario] = useState('');
   const [loading, setLoading] = useState(false);
@@ -528,7 +528,7 @@ const ComentariosPublicacion = ({ publicacionId, user }) => {
         </div>
       )}
 
-      {/* Input de comentario */}
+      {/* Input de comentario - usuario autenticado */}
       {user && (
         <form 
           onSubmit={handleComentar}
@@ -577,6 +577,48 @@ const ComentariosPublicacion = ({ publicacionId, user }) => {
             </button>
           )}
         </form>
+      )}
+
+      {/* Input de comentario - usuario no autenticado */}
+      {!user && (
+        <div
+          onClick={() => onAuthRequired && onAuthRequired()}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            borderTop: comentarios.length > 0 ? '1px solid var(--border-color, #e4e6eb)' : 'none',
+            paddingTop: comentarios.length > 0 ? '12px' : '0',
+            cursor: 'pointer',
+          }}
+        >
+          <div style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div style={{
+            flex: 1,
+            padding: '8px 12px',
+            borderRadius: '20px',
+            background: 'var(--input-bg, #f0f2f5)',
+            fontSize: '14px',
+            color: 'var(--text-secondary, #65676b)',
+            userSelect: 'none',
+          }}>
+            Inicia sesión para comentar...
+          </div>
+        </div>
       )}
     </div>
   );

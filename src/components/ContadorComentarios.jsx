@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../services/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
-import { FaComment } from 'react-icons/fa';
 
-const ContadorComentarios = ({ publicacionId }) => {
+const ContadorComentarios = ({ publicacionId, user, onAuthRequired }) => {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -19,8 +18,16 @@ const ContadorComentarios = ({ publicacionId }) => {
     return () => unsubscribe();
   }, [publicacionId]);
 
+  const handleClick = () => {
+    if (!user && onAuthRequired) {
+      onAuthRequired();
+    }
+    // Si hay usuario, el scroll al formulario de comentarios lo maneja el padre
+  };
+
   return (
     <button 
+      onClick={handleClick}
       style={{ 
         display: 'flex', 
         alignItems: 'center', 

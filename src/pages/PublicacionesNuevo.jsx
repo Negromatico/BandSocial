@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { db, auth } from '../services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, query, orderBy, doc, getDoc, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
-import { Modal, Button, Form } from 'react-bootstrap';
-import { FaImage, FaVideo, FaHeart, FaComment, FaShare, FaUser, FaTag, FaUsers, FaCalendarAlt, FaMusic } from 'react-icons/fa';
-import { Link, useLocation } from 'react-router-dom';
+import { collection, getDocs, query, orderBy, doc, getDoc, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
+import { Modal } from 'react-bootstrap';
+import { FaImage, FaVideo, FaUser, FaTag, FaCalendarAlt, FaMusic, FaSignInAlt, FaUserPlus } from 'react-icons/fa';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import PublicacionForm from '../components/PublicacionForm';
 import ComentariosPublicacion from '../components/ComentariosPublicacion';
 import ReaccionesPublicacion from '../components/ReaccionesPublicacion';
@@ -20,17 +20,23 @@ const PublicacionesNuevo = () => {
   const isGuest = guestContext?.isGuest || false;
   const { openChat } = useChatDock();
   const location = useLocation();
+  const navigate = useNavigate();
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(auth.currentUser);
   const [userProfile, setUserProfile] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [chatsActivos, setChatsActivos] = useState([]);
   const [sugerencias, setSugerencias] = useState([]);
   const [seguidores, setSeguidores] = useState(0);
   const [siguiendo, setSiguiendo] = useState(0);
   const [siguiendoList, setSiguiendoList] = useState([]);
   const [loadingFollow, setLoadingFollow] = useState({});
+
+  const handleAuthRequired = useCallback(() => {
+    setShowAuthModal(true);
+  }, []);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
@@ -266,7 +272,58 @@ const PublicacionesNuevo = () => {
 
   return (
     <>
+      {/* Modal auth automático (scroll/tiempo) */}
       <AuthPromptModal user={user} isGuest={isGuest} />
+
+      {/* Modal auth manual (click en comentar/reaccionar) */}
+      <Modal show={showAuthModal} onHide={() => setShowAuthModal(false)} centered className="auth-prompt-modal">
+        <Modal.Header style={{ borderBottom: '1px solid var(--border-color, #e4e6eb)', padding: '20px 24px' }}>
+          <Modal.Title style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+            Únete a BandSocial
+          </Modal.Title>
+          <button
+            onClick={() => setShowAuthModal(false)}
+            style={{ background: 'none', border: 'none', fontSize: '1.4rem', cursor: 'pointer', color: 'var(--text-secondary)', lineHeight: 1, padding: '0 4px' }}
+          >×</button>
+        </Modal.Header>
+        <Modal.Body style={{ padding: '24px', textAlign: 'center' }}>
+          <h5 style={{ fontWeight: 700, marginBottom: '8px', color: 'var(--text-primary)' }}>Inicia sesión para interactuar</h5>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '0.95rem' }}>
+            Para dar «Me gusta» y comentar necesitas una cuenta. ¡Es gratis!
+          </p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => { setShowAuthModal(false); navigate('/login'); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 24px', borderRadius: '8px',
+                border: '2px solid #6366f1', background: 'transparent',
+                color: '#6366f1', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#6366f1'; e.currentTarget.style.color = 'white'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6366f1'; }}
+            >
+              <FaSignInAlt /> Iniciar Sesión
+            </button>
+            <button
+              onClick={() => { setShowAuthModal(false); navigate('/register'); }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 24px', borderRadius: '8px',
+                border: 'none', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white', fontWeight: 600, fontSize: '0.95rem', cursor: 'pointer',
+                transition: 'all 0.2s ease', boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(102, 126, 234, 0.5)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)'; }}
+            >
+              <FaUserPlus /> Registrarse Gratis
+            </button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
       <div className="publicaciones-layout">
         {/* Sidebar Izquierdo - Perfil (Solo si hay usuario) */}
         {user && (
@@ -423,13 +480,14 @@ const PublicacionesNuevo = () => {
               </div>
 
               <div className="post-actions">
-                <ReaccionesPublicacion publicacionId={pub.id} user={user} />
-                <ContadorComentarios publicacionId={pub.id} />
+                <ReaccionesPublicacion publicacionId={pub.id} user={user} onAuthRequired={handleAuthRequired} />
+                <ContadorComentarios publicacionId={pub.id} user={user} onAuthRequired={handleAuthRequired} />
               </div>
 
               <ComentariosPublicacion 
                 publicacionId={pub.id} 
                 user={user}
+                onAuthRequired={handleAuthRequired}
               />
             </div>
           </React.Fragment>

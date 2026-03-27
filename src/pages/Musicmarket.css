@@ -246,4 +246,21 @@
   .instrument-image-container {
     height: 200px;
   }
+
+  /* Header del market en móvil */
+  .market-controls-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+    gap: 8px !important;
+  }
+
+  .market-sort-row {
+    width: 100%;
+  }
+
+  .market-sort-row > [class*="react-select"] {
+    flex: 1;
+  }
 }
+

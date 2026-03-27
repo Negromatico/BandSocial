@@ -8,7 +8,7 @@ const REACCIONES = [
   { tipo: 'love', emoji: '❤️' }
 ];
 
-const ReaccionesPublicacion = ({ publicacionId, user }) => {
+const ReaccionesPublicacion = ({ publicacionId, user, onAuthRequired }) => {
   const [reacciones, setReacciones] = useState({});
   const [miReaccion, setMiReaccion] = useState(null);
   const [procesando, setProcesando] = useState(false);
@@ -62,6 +62,7 @@ const ReaccionesPublicacion = ({ publicacionId, user }) => {
   const handleReaccion = async (tipo) => {
     if (!user) {
       console.log('[Reacciones] Usuario no autenticado');
+      if (onAuthRequired) onAuthRequired();
       return;
     }
     

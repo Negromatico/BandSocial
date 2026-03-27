@@ -60,14 +60,14 @@ const AdminDashboard = () => {
 
   const cargarDepartamentosYCiudades = async () => {
     try {
-      console.log('🌐 Cargando departamentos y ciudades desde API de Colombia...');
+      console.log('Cargando departamentos y ciudades desde API de Colombia...');
       
       const [departamentos, ciudades] = await Promise.all([
         colombiaAPI.getDepartamentos(),
         colombiaAPI.getAllCiudades()
       ]);
 
-      console.log('✅ API respondió:', departamentos?.length, 'departamentos,', ciudades?.length, 'ciudades');
+      console.log('API respondio:', departamentos?.length, 'departamentos,', ciudades?.length, 'ciudades');
       
       // Guardar listas completas para los selectores
       setDepartamentosList(departamentos);
@@ -87,9 +87,9 @@ const AdminDashboard = () => {
       setCiudadesMap(cityMap);
       
       setLoadingLocations(false);
-      console.log('✅ Ubicaciones cargadas exitosamente desde API de Colombia');
+      console.log('Ubicaciones cargadas exitosamente desde API de Colombia');
     } catch (error) {
-      console.error('❌ Error al cargar desde API de Colombia:', error);
+      console.error('Error al cargar desde API de Colombia:', error);
       setLoadingLocations(false);
       showToast('Error al cargar ubicaciones desde API de Colombia', 'error');
     }
@@ -242,6 +242,20 @@ const AdminDashboard = () => {
       } catch (error) {
         console.error('Error deleting event:', error);
         showToast('Error al eliminar el evento', 'error');
+      }
+    }
+  };
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (window.confirm(`¿Estás seguro de eliminar al usuario "${userName}"? Esta acción no se puede deshacer.`)) {
+      try {
+        await deleteDoc(doc(db, 'perfiles', userId));
+        setUsers(users.filter(u => u.id !== userId));
+        setStats(prev => ({ ...prev, totalUsers: prev.totalUsers - 1 }));
+        showToast('Usuario eliminado exitosamente', 'success');
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        showToast('Error al eliminar el usuario', 'error');
       }
     }
   };
@@ -504,7 +518,7 @@ const AdminDashboard = () => {
                   <tbody>
                     {users.map(user => (
                       <tr key={user.id} style={{ backgroundColor: user.banned ? '#ffe6e6' : 'transparent' }}>
-                        <td>{user.nombre || 'N/A'}</td>
+                        <td>{user.nombre || user.nombreCompleto || user.displayName || <span style={{color:'#9ca3af',fontStyle:'italic'}}>Sin nombre</span>}</td>
                         <td>{user.email}</td>
                         <td>
                           <Badge bg="info">
@@ -580,7 +594,7 @@ const AdminDashboard = () => {
                         <td>{post.autorNombre || 'N/A'}</td>
                         <td><Badge bg="primary">{post.tipo || 'general'}</Badge></td>
                         <td>{formatDate(post.createdAt)}</td>
-                        <td>{post.reacciones?.length || 0}</td>
+                        <td>{post.reacciones ? Object.values(post.reacciones).reduce((acc, arr) => acc + (Array.isArray(arr) ? arr.length : 0), 0) : 0}</td>
                         <td>
                           <Button 
                             variant="danger" 
@@ -666,7 +680,7 @@ const AdminDashboard = () => {
                         <td>${product.precio?.toLocaleString()}</td>
                         <td><Badge bg="success">{product.estado}</Badge></td>
                         <td>{product.ubicacion}</td>
-                        <td>⭐ {product.rating || 0} ({product.resenas || 0})</td>
+                        <td>{product.rating || 0}/5 ({product.resenas || 0} reseñas)</td>
                         <td>
                           <Button 
                             variant="danger" 

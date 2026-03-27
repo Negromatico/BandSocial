@@ -12,12 +12,21 @@ const NotificationCenter = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('todas');
+  const [user, setUser] = useState(auth.currentUser);
   const navigate = useNavigate();
   const { openChat } = useChatDock();
-  const user = auth.currentUser;
+
+  // Escuchar cambios de autenticación de forma reactiva
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(u => setUser(u));
+    return unsub;
+  }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     // Listener en tiempo real para notificaciones
     const notificationsQuery = query(

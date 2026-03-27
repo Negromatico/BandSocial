@@ -1211,7 +1211,7 @@ const Profile = () => {
       {user && (
         <Container fluid className="p-0" style={{ maxWidth: '100%', margin: '0 auto', marginTop: 0, background: 'var(--bg-secondary)', minHeight: '100vh' }}>
           {/* Banner/Portada */}
-          <div style={{ position: 'relative', width: '100%', height: 350, background: '#000', overflow: 'hidden' }}>
+          <div className="profile-banner-mobile" style={{ position: 'relative', width: '100%', height: 350, background: '#000', overflow: 'hidden' }}>
             {initialValues?.fotoPortada && (
               <img 
                 src={initialValues.fotoPortada} 
@@ -1251,8 +1251,8 @@ const Profile = () => {
           <div style={{ maxWidth: '940px', margin: '0 auto', background: 'var(--card-bg, #fff)', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
             {/* Sección de información del perfil */}
             <div style={{ padding: '20px 20px 0 20px', position: 'relative' }}>
-              <div className="d-flex align-items-end justify-content-between" style={{ marginBottom: '16px' }}>
-                <div className="d-flex align-items-end gap-3">
+              <div className="d-flex align-items-end justify-content-between profile-info-row" style={{ marginBottom: '16px' }}>
+                <div className="d-flex align-items-end gap-3 profile-avatar-name-row">
                   {/* Avatar con badge */}
                   <div style={{ position: 'relative', marginTop: '-50px' }}>
                     <input
@@ -1263,6 +1263,7 @@ const Profile = () => {
                       onChange={handleChangeFoto}
                     />
                     <div
+                      className="profile-avatar-large"
                       style={{
                         width: 168,
                         height: 168,
@@ -1312,7 +1313,7 @@ const Profile = () => {
                   
                   {/* Nombre y descripción */}
                   <div style={{ paddingBottom: '8px' }}>
-                    <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary, #050505)', marginBottom: 4, lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <h1 className="profile-name-title" style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary, #050505)', marginBottom: 4, lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                       {initialValues?.nombre || 'Mi perfil'}
                       {(initialValues?.planActual === 'premium' || initialValues?.membershipPlan === 'premium') && (
                         <span style={{
@@ -1347,7 +1348,7 @@ const Profile = () => {
                 </div>
                 
                 {/* Botones de acción */}
-                <div className="d-flex gap-2" style={{ paddingBottom: '8px' }}>
+                <div className="d-flex gap-2 profile-action-buttons" style={{ paddingBottom: '8px' }}>
                   <Button 
                     variant="primary" 
                     onClick={() => setShowEditModal(true)}
@@ -1477,9 +1478,9 @@ const Profile = () => {
             </div>
             
             {/* Contenido con sidebar y feed */}
-            <div className="d-flex gap-3" style={{ padding: '16px', background: 'var(--bg-secondary)' }}>
+            <div className="d-flex gap-3 profile-content-grid" style={{ padding: '16px', background: 'var(--bg-secondary)' }}>
               {/* Sidebar izquierdo */}
-              <div style={{ width: '360px', flexShrink: 0 }}>
+              <div className="profile-sidebar-col" style={{ width: '360px', flexShrink: 0 }}>
                 {/* Acerca de */}
                 <div style={{ background: 'var(--card-bg, #fff)', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 2px var(--card-shadow, rgba(0,0,0,0.1))' }}>
                   <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12, color: 'var(--text-primary, #050505)' }}>Acerca de</h3>

@@ -397,14 +397,15 @@ const MusicmarketNuevo = () => {
             <h2 className="market-title mb-1">Instrumentos Musicales</h2>
             <p className="text-muted mb-0">{instrumentosOrdenados.length} instrumentos encontrados</p>
           </div>
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2 market-controls-row">
             {user && (
               <Button variant="primary" onClick={() => setShowModal(true)} className="me-3">
                 <FaPlus className="me-2" />
                 Publicar Producto
               </Button>
             )}
-            <span style={{ color: 'var(--text-secondary, #65676b)', marginRight: '8px' }}>Ordenar por:</span>
+            <div className="d-flex align-items-center gap-2 market-sort-row">
+              <span style={{ color: 'var(--text-secondary, #65676b)', marginRight: '8px', whiteSpace: 'nowrap' }}>Ordenar por:</span>
             <Select
               options={[
                 { value: 'recientes', label: 'Más recientes' },
@@ -446,8 +447,9 @@ const MusicmarketNuevo = () => {
                 })
               }}
             />
-          </div>
-        </div>
+            </div>{/* market-sort-row */}
+          </div>{/* market-controls-row */}
+        </div>{/* justify-content-between */}
 
         {/* Filtros */}
         <div className="filtros-rapidos mt-3">

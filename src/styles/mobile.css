@@ -15,6 +15,12 @@
     overflow-x: hidden;
   }
 
+  /* Offset para la top nav móvil cuando hay usuario */
+  .publicaciones-layout,
+  .page-content-mobile {
+    padding-top: 0;
+  }
+
   .container-fluid {
     padding-left: 8px !important;
     padding-right: 8px !important;
@@ -562,14 +568,14 @@
     padding-right: 8px !important;
   }
 
-  /* Columnas en móvil siempre full width */
   .col,
   .col-1, .col-2, .col-3, .col-4, .col-5, .col-6,
-  .col-7, .col-8, .col-9, .col-10, .col-11, .col-12,
-  .col-sm, .col-md, .col-lg, .col-xl {
+  .col-7, .col-8, .col-9, .col-10, .col-11, .col-12 {
     flex: 0 0 100% !important;
     max-width: 100% !important;
   }
+
+  /* NO forzar col-sm/md/lg/xl a 100% — pueden tener sus propios breakpoints útiles */
 
   /* ============================================
      CARDS MÓVIL
@@ -658,10 +664,9 @@
      MEJORAS DE USABILIDAD MÓVIL
      ============================================ */
   
-  /* Áreas táctiles más grandes */
-  button,
-  a,
-  .clickable {
+  /* Áreas táctiles más grandes — SOLO para nav items, no para todos los elementos */
+  .mobile-nav-item,
+  .mobile-nav-tab {
     min-height: 44px !important;
     min-width: 44px !important;
   }

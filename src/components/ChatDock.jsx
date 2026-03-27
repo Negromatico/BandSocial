@@ -15,12 +15,15 @@ const ChatDock = () => {
   const [openChats, setOpenChats] = useState([]); // [{user, minimized}]
   const [recentChats, setRecentChats] = useState([]); // [{chatId, with, withEmail, withNombre, ...}]
   const [user, setUser] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const { chatToOpen, setChatToOpen } = useChatDock();
-  
-  // Ocultar en móvil
-  if (window.innerWidth <= 768) {
-    return null;
-  }
+
+  // Mantener isMobile reactivo
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(u => setUser(u));
@@ -71,6 +74,9 @@ const ChatDock = () => {
   const handleMinimize = (uid) => setOpenChats(chats => chats.map(c => c.user.uid === uid ? { ...c, minimized: !c.minimized } : c));
   // Cerrar
   const handleClose = (uid) => setOpenChats(chats => chats.filter(c => c.user.uid !== uid));
+
+  // Ocultar en móvil — aquí es correcto, DESPUÉS de todos los hooks
+  if (isMobile) return null;
 
   return (
     <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 2000, display: 'flex', flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>

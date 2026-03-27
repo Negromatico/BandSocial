@@ -1,11 +1,13 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaHome, FaSearch, FaComments, FaBell, FaUser } from 'react-icons/fa';
+import { FaSearch, FaComments, FaBell, FaUser } from 'react-icons/fa';
+import useUnreadChats from '../hooks/useUnreadChats';
 import './MobileBottomNav.css';
 
 const MobileBottomNav = ({ user }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const unreadMessages = useUnreadChats();
 
   const navItems = [
     { path: '/buscar', icon: FaSearch, label: 'Buscar', isSearch: true },
@@ -42,17 +44,22 @@ const MobileBottomNav = ({ user }) => {
           const active = isActive(item.path);
           
           return (
-            <button
-              key={item.path}
-              className={`mobile-nav-item ${active ? 'active' : ''}`}
-              onClick={() => handleNavigation(item.path, item.isSearch)}
-              aria-label={item.label}
-            >
-              <div className="mobile-nav-icon">
-                <Icon />
-              </div>
-              <span className="mobile-nav-label">{item.label}</span>
-            </button>
+          <button
+            key={item.path}
+            className={`mobile-nav-item ${active ? 'active' : ''}`}
+            onClick={() => handleNavigation(item.path, item.isSearch)}
+            aria-label={item.label}
+          >
+            <div className="mobile-nav-icon" style={{ position: 'relative' }}>
+              <Icon />
+              {item.path === '/messages' && unreadMessages > 0 && (
+                <span className="mobile-nav-badge">
+                  {unreadMessages > 99 ? '99+' : unreadMessages}
+                </span>
+              )}
+            </div>
+            <span className="mobile-nav-label">{item.label}</span>
+          </button>
           );
         })}
       </div>
