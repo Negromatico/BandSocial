@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge, Tabs, Tab, Spinner, Alert } from 'react-bootstrap';
-import { FaUsers, FaFileAlt, FaCalendar, FaShoppingBag, FaTrash, FaBan, FaCheck, FaChartLine, FaKey } from 'react-icons/fa';
+import { FaUsers, FaFileAlt, FaCalendar, FaShoppingBag, FaTrash, FaBan, FaCheck, FaChartLine, FaKey, FaQrcode, FaDownload, FaShareAlt } from 'react-icons/fa';
+import { QRCodeCanvas } from 'qrcode.react';
 import { db, auth } from '../services/firebase';
 import { collection, getDocs, deleteDoc, doc, updateDoc, query, orderBy, limit, getDoc } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
@@ -9,6 +10,155 @@ import { useToast } from '../components/Toast';
 import colombiaAPI from '../services/colombiaAPI';
 import AnalyticsDashboard from '../components/AnalyticsDashboard';
 import './AdminDashboard.css';
+
+// ─── Componente QR Code Section ───────────────────────────────────────────────
+const SITE_URL = 'https://bandsociall.netlify.app';
+
+const QRCodeSection = () => {
+  const qrRef = useRef(null);
+  const [qrSize, setQrSize] = useState(220);
+  const [copied, setCopied] = useState(false);
+
+  const downloadQR = () => {
+    const canvas = qrRef.current?.querySelector('canvas');
+    if (!canvas) return;
+
+    // Crear canvas compuesto con el diseño de la tarjeta
+    const compositeCanvas = document.createElement('canvas');
+    const padding = 40;
+    const labelHeight = 70;
+    const cardW = qrSize + padding * 2;
+    const cardH = qrSize + padding * 2 + labelHeight;
+    compositeCanvas.width = cardW;
+    compositeCanvas.height = cardH;
+
+    const ctx = compositeCanvas.getContext('2d');
+
+    // Fondo gradiente azul-negro
+    const grad = ctx.createLinearGradient(0, 0, cardW, cardH);
+    grad.addColorStop(0, '#0a0a1a');
+    grad.addColorStop(0.5, '#1a1aff');
+    grad.addColorStop(1, '#0033ff');
+    ctx.fillStyle = grad;
+
+    // Bordes redondeados
+    const r = 20;
+    ctx.beginPath();
+    ctx.moveTo(r, 0);
+    ctx.lineTo(cardW - r, 0);
+    ctx.quadraticCurveTo(cardW, 0, cardW, r);
+    ctx.lineTo(cardW, cardH - r);
+    ctx.quadraticCurveTo(cardW, cardH, cardW - r, cardH);
+    ctx.lineTo(r, cardH);
+    ctx.quadraticCurveTo(0, cardH, 0, cardH - r);
+    ctx.lineTo(0, r);
+    ctx.quadraticCurveTo(0, 0, r, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // QR blanco sobre fondo
+    ctx.fillStyle = 'white';
+    ctx.fillRect(padding - 8, padding - 8, qrSize + 16, qrSize + 16);
+    ctx.drawImage(canvas, padding, padding, qrSize, qrSize);
+
+    // Texto BandSocial centrado abajo
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 22px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('BandSocial', cardW / 2, cardH - 22);
+
+    const link = document.createElement('a');
+    link.download = 'BandSocial-QR.png';
+    link.href = compositeCanvas.toDataURL('image/png');
+    link.click();
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(SITE_URL);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="qr-section-wrapper">
+      <div className="qr-intro" style={{textAlign: 'center'}}>
+        <h4 className="qr-intro-title" style={{justifyContent: 'center'}}><FaQrcode className="me-2" />Código QR de BandSocial</h4>
+        <p className="qr-intro-desc">
+          Comparte la plataforma escaneando este código QR. Enlace directo a{' '}
+          <a href={SITE_URL} target="_blank" rel="noreferrer" className="qr-link">{SITE_URL}</a>
+        </p>
+      </div>
+
+      <div className="qr-content-center">
+        {/* Tarjeta QR principal */}
+        <div className="qr-card-outer" ref={qrRef}>
+          <div className="qr-card-inner">
+            <div className="qr-white-bg">
+              <QRCodeCanvas
+                value={SITE_URL}
+                size={qrSize}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="H"
+              />
+            </div>
+            <p className="qr-brand-label">BandSocial</p>
+          </div>
+        </div>
+
+        {/* Panel de opciones */}
+        <div className="qr-options-panel">
+          <div className="qr-option-card">
+            <h5 className="qr-option-title">Tamaño del QR</h5>
+            <div className="qr-size-buttons">
+              {[180, 220, 280].map(s => (
+                <button
+                  key={s}
+                  className={`qr-size-btn ${qrSize === s ? 'active' : ''}`}
+                  onClick={() => setQrSize(s)}
+                >
+                  {s === 180 ? 'S' : s === 220 ? 'M' : 'L'}
+                  <span>{s}px</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="qr-option-card">
+            <h5 className="qr-option-title">URL del sitio</h5>
+            <div className="qr-url-display">
+              <span className="qr-url-text">{SITE_URL}</span>
+              <button className="qr-copy-btn" onClick={copyLink}>
+                {copied ? '✓ Copiado' : 'Copiar'}
+              </button>
+            </div>
+          </div>
+
+          <div className="qr-action-buttons">
+            <button className="qr-download-btn" onClick={downloadQR}>
+              <FaDownload className="me-2" />
+              Descargar PNG
+            </button>
+            <a
+              href={SITE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="qr-visit-btn"
+            >
+              <FaShareAlt className="me-2" />
+              Visitar sitio
+            </a>
+          </div>
+
+          <div className="qr-info-box">
+            <p>💡 El código QR lleva directamente a la plataforma BandSocial. Ideal para imprimir en flyers, tarjetas o eventos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+// ──────────────────────────────────────────────────────────────────────────────
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -705,6 +855,11 @@ const AdminDashboard = () => {
                 events={events}
                 products={products}
               />
+            </Tab>
+
+            {/* Tab QR Code */}
+            <Tab eventKey="qrcode" title={<span><FaQrcode className="me-1" />Código QR</span>}>
+              <QRCodeSection />
             </Tab>
 
           </Tabs>
