@@ -72,8 +72,15 @@ service cloud.firestore {
         && request.resource.data.autorUid == request.auth.uid
         && hasRequiredFields(['titulo', 'descripcion', 'autorUid', 'createdAt']);
       
-      // Actualizar/Eliminar: Solo el autor o el administrador
-      allow update, delete: if isAuthenticated() 
+      // Actualizar: El autor/admin pueden editar todo; cualquier usuario autenticado puede actualizar reacciones
+      allow update: if isAuthenticated() && (
+        resource.data.autorUid == request.auth.uid ||
+        isAdmin() ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reacciones'])
+      );
+
+      // Eliminar: Solo el autor o el administrador
+      allow delete: if isAuthenticated() 
         && (resource.data.autorUid == request.auth.uid || isAdmin());
       
       // Subcolección: Comentarios de publicaciones

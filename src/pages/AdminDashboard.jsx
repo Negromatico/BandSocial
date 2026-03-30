@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Table, Button, Modal, Form, Badge, Tabs, Tab, Spinner, Alert } from 'react-bootstrap';
-import { FaUsers, FaFileAlt, FaCalendar, FaShoppingBag, FaTrash, FaBan, FaCheck, FaChartLine, FaKey, FaQrcode, FaDownload, FaShareAlt } from 'react-icons/fa';
+import { FaUsers, FaFileAlt, FaCalendar, FaShoppingBag, FaTrash, FaBan, FaCheck, FaChartLine, FaKey, FaQrcode, FaDownload, FaShareAlt, FaDollarSign, FaCrown } from 'react-icons/fa';
 import { QRCodeCanvas } from 'qrcode.react';
 import { db, auth } from '../services/firebase';
 import { collection, getDocs, deleteDoc, doc, updateDoc, query, orderBy, limit, getDoc } from 'firebase/firestore';
@@ -161,12 +161,15 @@ const QRCodeSection = () => {
 // ──────────────────────────────────────────────────────────────────────────────
 
 const AdminDashboard = () => {
+  const PREMIUM_PRICE_COP = 29990;
+
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalPosts: 0,
     totalEvents: 0,
     totalProducts: 0,
-    premiumUsers: 0
+    premiumUsers: 0,
+    totalRevenue: 0
   });
   
   const [users, setUsers] = useState([]);
@@ -356,7 +359,8 @@ const AdminDashboard = () => {
         totalPosts: postsData.length,
         totalEvents: eventsData.length,
         totalProducts: productsData.length,
-        premiumUsers: premiumCount
+        premiumUsers: premiumCount,
+        totalRevenue: premiumCount * PREMIUM_PRICE_COP
       });
       
       console.log('Datos cargados exitosamente');
@@ -589,7 +593,7 @@ const AdminDashboard = () => {
 
       {/* Estadísticas */}
       <Row className="mb-4">
-        <Col md={3}>
+        <Col md={3} sm={6} className="mb-3 mb-md-0">
           <Card className="stat-card stat-users">
             <Card.Body>
               <div className="stat-icon">
@@ -603,7 +607,7 @@ const AdminDashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
+        <Col md={3} sm={6} className="mb-3 mb-md-0">
           <Card className="stat-card stat-posts">
             <Card.Body>
               <div className="stat-icon">
@@ -616,7 +620,7 @@ const AdminDashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
+        <Col md={3} sm={6} className="mb-3 mb-md-0">
           <Card className="stat-card stat-events">
             <Card.Body>
               <div className="stat-icon">
@@ -629,7 +633,7 @@ const AdminDashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
+        <Col md={3} sm={6} className="mb-3 mb-md-0">
           <Card className="stat-card stat-products">
             <Card.Body>
               <div className="stat-icon">
@@ -638,6 +642,40 @@ const AdminDashboard = () => {
               <div className="stat-info">
                 <h3>{stats.totalProducts}</h3>
                 <p>Productos</p>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Tarjeta de Ingresos Premium */}
+      <Row className="mb-4">
+        <Col md={12}>
+          <Card className="stat-card stat-revenue">
+            <Card.Body>
+              <div className="stat-icon">
+                <FaDollarSign />
+              </div>
+              <div className="stat-info">
+                <h3>${stats.totalRevenue.toLocaleString('es-CO')} COP</h3>
+                <p>Ingresos por Suscripciones Premium</p>
+                <small className="text-muted">
+                  {stats.premiumUsers} usuarios × ${ PREMIUM_PRICE_COP.toLocaleString('es-CO')} COP/mes
+                </small>
+              </div>
+              <div className="revenue-breakdown">
+                <div className="revenue-item">
+                  <span className="revenue-label">Precio por suscripción</span>
+                  <span className="revenue-value">${PREMIUM_PRICE_COP.toLocaleString('es-CO')} COP</span>
+                </div>
+                <div className="revenue-item">
+                  <span className="revenue-label">Suscriptores activos</span>
+                  <span className="revenue-value">{stats.premiumUsers}</span>
+                </div>
+                <div className="revenue-item highlight">
+                  <span className="revenue-label">Total mensual estimado</span>
+                  <span className="revenue-value">${stats.totalRevenue.toLocaleString('es-CO')} COP</span>
+                </div>
               </div>
             </Card.Body>
           </Card>
@@ -855,6 +893,142 @@ const AdminDashboard = () => {
                 events={events}
                 products={products}
               />
+            </Tab>
+
+            {/* Tab Ingresos Premium */}
+            <Tab eventKey="revenue" title={<span><FaDollarSign className="me-1" />Ingresos</span>}>
+              <div className="revenue-tab-wrapper">
+                <div className="revenue-tab-header">
+                  <div className="revenue-tab-title">
+                    <FaCrown className="me-2 text-warning" />
+                    Ingresos por Suscripciones Premium
+                  </div>
+                  <div className="revenue-summary-pills">
+                    <span className="rev-pill rev-pill-users">
+                      <FaUsers className="me-1" />{stats.premiumUsers} Suscriptores
+                    </span>
+                    <span className="rev-pill rev-pill-money">
+                      <FaDollarSign className="me-1" />${stats.totalRevenue.toLocaleString('es-CO')} COP/mes
+                    </span>
+                  </div>
+                </div>
+
+                {/* Resumen de ingresos */}
+                <Row className="mb-4">
+                  <Col md={4}>
+                    <div className="rev-stat-box">
+                      <div className="rev-stat-icon" style={{background: 'linear-gradient(135deg,#f59e0b,#d97706)'}}>
+                        <FaCrown />
+                      </div>
+                      <div>
+                        <div className="rev-stat-value">{stats.premiumUsers}</div>
+                        <div className="rev-stat-label">Cuentas Premium Activas</div>
+                      </div>
+                    </div>
+                  </Col>
+                  <Col md={4}>
+                    <div className="rev-stat-box">
+                      <div className="rev-stat-icon" style={{background: 'linear-gradient(135deg,#10b981,#059669)'}}>
+                        <FaDollarSign />
+                      </div>
+                      <div>
+                        <div className="rev-stat-value">${PREMIUM_PRICE_COP.toLocaleString('es-CO')}</div>
+                        <div className="rev-stat-label">Precio por Suscripción (COP)</div>
+                      </div>
+                    </div>
+                  </Col>
+                  <Col md={4}>
+                    <div className="rev-stat-box rev-stat-box--highlight">
+                      <div className="rev-stat-icon" style={{background: 'linear-gradient(135deg,#6366f1,#8b5cf6)'}}>
+                        <FaChartLine />
+                      </div>
+                      <div>
+                        <div className="rev-stat-value">${stats.totalRevenue.toLocaleString('es-CO')}</div>
+                        <div className="rev-stat-label">Total Mensual Estimado (COP)</div>
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+
+                {/* Tabla de usuarios premium */}
+                <div className="table-responsive">
+                  <Table striped hover>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Fecha Suscripción</th>
+                        <th>Vencimiento</th>
+                        <th>Aporte Mensual</th>
+                        <th>Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.filter(u => u.planActual === 'premium').length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="text-center py-4">
+                            <FaCrown className="me-2 text-warning" />
+                            No hay usuarios con plan Premium actualmente.
+                          </td>
+                        </tr>
+                      ) : (
+                        users
+                          .filter(u => u.planActual === 'premium')
+                          .map((user, idx) => {
+                            const endDate = user.membershipEndDate ? new Date(user.membershipEndDate) : null;
+                            const now = new Date();
+                            const isActive = endDate ? endDate > now : true;
+                            return (
+                              <tr key={user.id}>
+                                <td><Badge bg="secondary">{idx + 1}</Badge></td>
+                                <td><strong>{user.nombre || user.nombreCompleto || user.displayName || <span style={{color:'#9ca3af',fontStyle:'italic'}}>Sin nombre</span>}</strong></td>
+                                <td>{user.email}</td>
+                                <td>{formatDate(user.membershipStartDate || user.lastPaymentDate)}</td>
+                                <td>
+                                  {endDate ? (
+                                    <span style={{color: isActive ? 'inherit' : '#ef4444'}}>
+                                      {formatDate(user.membershipEndDate)}
+                                    </span>
+                                  ) : 'N/A'}
+                                </td>
+                                <td>
+                                  <span className="rev-amount">
+                                    ${PREMIUM_PRICE_COP.toLocaleString('es-CO')} COP
+                                  </span>
+                                </td>
+                                <td>
+                                  <Badge bg={isActive ? 'success' : 'danger'}>
+                                    {isActive ? '✓ Activo' : '✗ Vencido'}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            );
+                          })
+                      )}
+                    </tbody>
+                    {users.filter(u => u.planActual === 'premium').length > 0 && (
+                      <tfoot>
+                        <tr className="rev-table-footer">
+                          <td colSpan={5}><strong>TOTAL MENSUAL ESTIMADO</strong></td>
+                          <td colSpan={2}>
+                            <strong className="rev-total">
+                              ${stats.totalRevenue.toLocaleString('es-CO')} COP
+                            </strong>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </Table>
+                </div>
+
+                <div className="rev-note">
+                  <FaDollarSign className="me-2" />
+                  Los ingresos mostrados son una estimación basada en el número de usuarios con plan Premium activo
+                  al precio de <strong>${PREMIUM_PRICE_COP.toLocaleString('es-CO')} COP/mes</strong> por suscripción.
+                  Los usuarios con membresía vencida aún se muestran si tienen <code>planActual: 'premium'</code> en su perfil.
+                </div>
+              </div>
             </Tab>
 
             {/* Tab QR Code */}
