@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔧 Manual de Instalación — BandSocial</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:#059669;--primary-lt:#d1fae5;--dark:#0f172a;
+      --text:#1e293b;--muted:#64748b;--border:#e2e8f0;
+      --bg:#f8fafc;--card:#ffffff;--code-bg:#0f172a;--radius:12px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px;}
+    .wrapper{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
+
+    /* Sidebar */
+    aside{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--dark);padding:1.75rem 1.25rem;display:flex;flex-direction:column;gap:.2rem;}
+    .sidebar-brand{display:flex;align-items:center;gap:.6rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,.08);}
+    .sidebar-brand .logo{width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+    .sidebar-brand span{color:#fff;font-weight:700;font-size:.95rem;}
+    .sidebar-brand small{display:block;color:rgba(255,255,255,.4);font-size:.7rem;}
+    .nav-label{font-size:.64rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin:.85rem 0 .25rem;}
+    aside a{display:block;padding:.36rem .7rem;border-radius:6px;color:rgba(255,255,255,.6);text-decoration:none;font-size:.83rem;transition:background .15s,color .15s;}
+    aside a:hover{background:rgba(5,150,105,.4);color:#fff;}
+
+    /* Main */
+    main{padding:2.5rem 3rem;max-width:900px;}
+
+    /* Header */
+    .doc-header{background:linear-gradient(135deg,#047857 0%,#0284c7 100%);border-radius:var(--radius);padding:2.25rem 2.5rem;margin-bottom:2rem;color:#fff;}
+    .doc-header .badge{display:inline-flex;align-items:center;gap:.3rem;background:rgba(255,255,255,.2);border-radius:999px;padding:.2rem .8rem;font-size:.72rem;font-weight:600;letter-spacing:.05em;margin-bottom:.9rem;}
+    .doc-header h1{font-size:1.85rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.7rem;}
+    .doc-header .meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.85rem;opacity:.85;}
+
+    /* TOC */
+    .toc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem 1.75rem;margin-bottom:1.75rem;}
+    .toc-title{font-size:.88rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.85rem;}
+    .toc-card ol{list-style:none;counter-reset:toc;display:grid;grid-template-columns:1fr 1fr;gap:.28rem 2rem;}
+    .toc-card li{counter-increment:toc;display:flex;align-items:center;gap:.4rem;}
+    .toc-card li::before{content:"0"counter(toc);font-size:.66rem;font-weight:700;color:var(--primary);background:var(--primary-lt);border-radius:999px;min-width:1.45rem;height:1.45rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .toc-card li a{color:var(--text);text-decoration:none;font-size:.84rem;font-weight:500;}
+    .toc-card li a:hover{color:var(--primary);}
+
+    /* Section card */
+    .section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem 2rem;margin-bottom:1.5rem;}
+    h2{font-size:1.2rem;font-weight:700;color:var(--dark);margin:2rem 0 .85rem;display:flex;align-items:center;gap:.45rem;padding-bottom:.5rem;border-bottom:2px solid var(--primary-lt);}
+    h2::before{content:'';display:inline-block;width:4px;height:1em;background:var(--primary);border-radius:2px;}
+    .section-card>h2:first-child{margin-top:0;}
+    h3{font-size:.97rem;font-weight:600;color:var(--dark);margin:1.4rem 0 .45rem;}
+
+    /* Code */
+    .code-block{background:var(--code-bg);color:#e2e8f0;border-radius:var(--radius);padding:1rem 1.2rem;font-family:'JetBrains Mono',monospace;font-size:.81rem;line-height:1.65;overflow-x:auto;margin:.75rem 0;white-space:pre;position:relative;}
+    .code-block .lang-tag{position:absolute;top:.55rem;right:.7rem;font-size:.63rem;color:rgba(255,255,255,.3);font-weight:500;letter-spacing:.05em;text-transform:uppercase;}
+    .code-block .c{color:#475569;}
+    code{background:#f0fdf4;color:#065f46;padding:.1rem .35rem;border-radius:4px;font-size:.84em;font-family:'JetBrains Mono',monospace;}
+
+    /* Table */
+    .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);margin:.75rem 0;}
+    table{border-collapse:collapse;width:100%;}
+    thead{background:var(--primary);}
+    th{color:#fff;padding:.6rem 1rem;text-align:left;font-size:.76rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+    td{padding:.55rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:nth-child(even){background:#f8fafc;}
+
+    /* Image callout */
+    .img-callout{background:linear-gradient(135deg,#f0fdf4,#d1fae5);border:1px solid #6ee7b7;border-left:4px solid var(--primary);border-radius:var(--radius);padding:.85rem 1.1rem;margin:1rem 0;}
+    .img-callout .lbl{font-size:.69rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);margin-bottom:.25rem;}
+    .img-callout p{font-size:.86rem;color:#374151;margin-bottom:.5rem;}
+    .img-callout img{width:100%;max-width:680px;border-radius:8px;border:1px solid #6ee7b7;box-shadow:0 4px 14px rgba(5,150,105,.1);display:block;}
+
+    /* Alerts */
+    .alert-warn{background:#fefce8;border-left:4px solid #f59e0b;border-radius:0 var(--radius) var(--radius) 0;padding:.75rem 1rem;margin:.75rem 0;font-size:.86rem;color:#713f12;}
+    .alert-info{background:#f0fdf4;border-left:4px solid var(--primary);border-radius:0 var(--radius) var(--radius) 0;padding:.75rem 1rem;margin:.75rem 0;font-size:.86rem;color:#064e3b;}
+
+    /* Lists */
+    ol,ul{padding-left:1.4rem;margin:.4rem 0;}
+    li{margin-bottom:.28rem;}
+    hr{border:none;border-top:1px solid var(--border);margin:1.5rem 0;}
+
+    /* Req cards */
+    .req-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:.85rem 0;}
+    .req-card{border:1px solid var(--border);border-radius:10px;padding:1rem 1.1rem;background:#fafafa;}
+    .req-card .req-icon{font-size:1.4rem;margin-bottom:.4rem;}
+    .req-card strong{display:block;font-size:.9rem;color:var(--dark);margin-bottom:.15rem;}
+    .req-card span{font-size:.8rem;color:var(--muted);}
+
+    /* Checklist */
+    .checklist{list-style:none;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:.1rem;}
+    .checklist li{display:flex;align-items:center;gap:.55rem;padding:.3rem .1rem;font-size:.88rem;color:var(--text);}
+    .checklist li::before{content:'☐';color:var(--primary);font-size:1rem;flex-shrink:0;}
+
+    /* Footer */
+    footer{margin-top:2.5rem;padding:1.1rem 1.65rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;font-size:.84rem;color:var(--muted);}
+    footer a{color:var(--primary);text-decoration:none;}
+
+    @media(max-width:768px){.wrapper{grid-template-columns:1fr;}aside{display:none;}main{padding:1.5rem;}.toc-card ol,.req-grid,.checklist{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside>
+    <div class="sidebar-brand">
+      <div class="logo">🔧</div>
+      <div><span>BandSocial</span><small>Manual de Instalación v2.0</small></div>
+    </div>
+    <span class="nav-label">Inicio</span>
+    <a href="#requisitos">1. Requisitos Previos</a>
+    <a href="#instalacion">2. Clonar e Instalar</a>
+    <span class="nav-label">Servicios</span>
+    <a href="#firebase">3. Firebase</a>
+    <a href="#cloudinary">4. Cloudinary</a>
+    <a href="#emailjs">5. EmailJS</a>
+    <span class="nav-label">Configuración</span>
+    <a href="#env">6. Variables de Entorno</a>
+    <a href="#ejecucion">7. Ejecutar el Proyecto</a>
+    <a href="#despliegue">8. Despliegue en Netlify</a>
+    <span class="nav-label">Referencia</span>
+    <a href="#problemas">9. Problemas Comunes</a>
+    <a href="#checklist">Checklist</a>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <main>
+
+    <div class="doc-header">
+      <div class="badge">🔧 Guía de Instalación</div>
+      <h1>Manual de Instalación — BandSocial</h1>
+      <div class="meta">
+        <span>📌 Versión 2.0</span>
+        <span>📅 Marzo 2026</span>
+        <span>👤 Equipo BandSocial</span>
+      </div>
+    </div>
+
+    <div class="toc-card">
+      <div class="toc-title">📋 Tabla de Contenidos</div>
+      <ol>
+        <li><a href="#requisitos">Requisitos Previos</a></li>
+        <li><a href="#instalacion">Clonar e Instalar</a></li>
+        <li><a href="#firebase">Configuración de Firebase</a></li>
+        <li><a href="#cloudinary">Configuración de Cloudinary</a></li>
+        <li><a href="#emailjs">Configuración de EmailJS</a></li>
+        <li><a href="#env">Variables de Entorno</a></li>
+        <li><a href="#ejecucion">Ejecutar el Proyecto</a></li>
+        <li><a href="#despliegue">Despliegue en Netlify</a></li>
+        <li><a href="#problemas">Problemas Comunes</a></li>
+      </ol>
+    </div>
+
+    <!-- 1. Requisitos -->
+    <div class="section-card" id="requisitos">
+      <h2>1. Requisitos Previos</h2>
+
+      <div class="req-grid">
+        <div class="req-card">
+          <div class="req-icon">⬢</div>
+          <strong>Node.js ≥ 18.x</strong>
+          <span><a href="https://nodejs.org/">nodejs.org</a></span>
+        </div>
+        <div class="req-card">
+          <div class="req-icon">🔀</div>
+          <strong>Git</strong>
+          <span><a href="https://git-scm.com/">git-scm.com</a></span>
+        </div>
+        <div class="req-card">
+          <div class="req-icon">✏️</div>
+          <strong>VS Code</strong>
+          <span><a href="https://code.visualstudio.com/">code.visualstudio.com</a></span>
+        </div>
+      </div>
+
+      <div class="code-block"><span class="lang-tag">bash</span>node --version   <span class="c"># Debe ser v18+</span>
+npm --version
+git --version</div>
+
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Página de descarga de Node.js</p>
+        <img src="imagenes/nodejs-download.png" alt="Descarga de Node.js">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Verificación de versión de Git en terminal</p>
+        <img src="imagenes/git-version.png" alt="git --version en terminal">
+      </div>
+
+      <h3>Cuentas necesarias</h3>
+      <ul>
+        <li><strong>Firebase</strong> — cuenta de Google → <a href="https://console.firebase.google.com/">console.firebase.google.com</a></li>
+        <li><strong>Cloudinary</strong> — cuenta gratuita → <a href="https://cloudinary.com/">cloudinary.com</a></li>
+        <li><strong>EmailJS</strong> — cuenta gratuita (200 emails/mes) → <a href="https://www.emailjs.com/">emailjs.com</a></li>
+      </ul>
+    </div>
+
+    <!-- 2. Instalación -->
+    <div class="section-card" id="instalacion">
+      <h2>2. Clonar e Instalar</h2>
+
+      <div class="code-block"><span class="lang-tag">bash</span><span class="c"># Clonar el repositorio</span>
+git clone https://github.com/Negromatico/BandSocial.git
+cd BandSocial
+
+<span class="c"># Instalar dependencias (~2-5 min)</span>
+npm install</div>
+
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Terminal mostrando la clonación del repositorio</p>
+        <img src="imagenes/git-clone.png" alt="git clone del repositorio">
+      </div>
+
+      <div class="alert-info">✅ Al terminar <code>npm install</code>, se creará la carpeta <code>node_modules/</code> con todas las dependencias del proyecto.</div>
+    </div>
+
+    <!-- 3. Firebase -->
+    <div class="section-card" id="firebase">
+      <h2>3. Configuración de Firebase</h2>
+
+      <h3>Crear el Proyecto</h3>
+      <ol>
+        <li>Ve a <a href="https://console.firebase.google.com/">console.firebase.google.com</a></li>
+        <li>Clic en <strong>"Agregar proyecto"</strong> → nombre: <code>BandSocial</code></li>
+        <li>Completa el asistente y crea el proyecto</li>
+      </ol>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Botón "Agregar proyecto" en Firebase Console</p>
+        <img src="imagenes/firebase-add-project.png" alt="Firebase - Agregar proyecto">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Formulario de creación de proyecto</p>
+        <img src="imagenes/firebase-create-project.png" alt="Firebase - Crear proyecto">
+      </div>
+
+      <hr>
+
+      <h3>Authentication</h3>
+      <ol>
+        <li>Menú lateral → <strong>Authentication</strong> → "Comenzar"</li>
+        <li>Habilitar: ✅ <strong>Correo/contraseña</strong> y ✅ <strong>Google</strong></li>
+      </ol>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Panel de Authentication en Firebase</p>
+        <img src="imagenes/firebase-authentication.png" alt="Firebase - Authentication panel">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Métodos de inicio de sesión habilitados</p>
+        <img src="imagenes/firebase-auth-methods.png" alt="Firebase - Métodos de autenticación">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Plantillas de email en Authentication → Templates</p>
+        <img src="imagenes/firebase-email-templates.png" alt="Firebase - Email Templates">
+      </div>
+
+      <hr>
+
+      <h3>Firestore Database</h3>
+      <ol>
+        <li>Menú lateral → <strong>Firestore Database</strong> → "Crear base de datos"</li>
+        <li>Modo: <strong>Producción</strong> | Región: <code>us-central</code></li>
+        <li>Desplegar reglas e índices del proyecto:</li>
+      </ol>
+      <div class="code-block"><span class="lang-tag">bash</span>npm install -g firebase-tools
+firebase login
+firebase deploy --only firestore</div>
+
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Crear base de datos en Firestore</p>
+        <img src="imagenes/firestore-create-database.png" alt="Firestore - Crear base de datos">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Selección de modo y región de Firestore</p>
+        <img src="imagenes/firestore-setup.png" alt="Firestore - Configuración inicial">
+      </div>
+
+      <hr>
+
+      <h3>Obtener Credenciales</h3>
+      <ol>
+        <li>⚙️ Configuración del proyecto → <strong>"Tus aplicaciones"</strong></li>
+        <li>Clic en <code>&lt;/&gt;</code> → registrar app: <code>BandSocial Web</code></li>
+        <li>Copiar el objeto <code>firebaseConfig</code> — se usará en el <code>.env</code></li>
+      </ol>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Configuración del proyecto en Firebase</p>
+        <img src="imagenes/firebase-project-settings.png" alt="Firebase - Project settings">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Credenciales de la aplicación web</p>
+        <img src="imagenes/firebase-web-credentials.png" alt="Firebase - Credenciales web">
+      </div>
+    </div>
+
+    <!-- 4. Cloudinary -->
+    <div class="section-card" id="cloudinary">
+      <h2>4. Configuración de Cloudinary</h2>
+
+      <ol>
+        <li>Crea una cuenta en <a href="https://cloudinary.com/">cloudinary.com</a></li>
+        <li>En el Dashboard, copia: <strong>Cloud Name</strong>, <strong>API Key</strong>, <strong>API Secret</strong></li>
+        <li>Ve a Settings → Upload → <strong>"Add upload preset"</strong></li>
+        <li>Configura el preset:
+          <ul>
+            <li><strong>Name:</strong> <code>bandsocial_preset</code></li>
+            <li><strong>Signing Mode:</strong> <code>Unsigned</code> ← imprescindible</li>
+            <li><strong>Folder:</strong> <code>bandsocial</code> | Formats: <code>jpg, png, gif, webp</code> | Max: <code>10 MB</code></li>
+          </ul>
+        </li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Registro en Cloudinary</p>
+        <img src="imagenes/cloudinary-signup.png" alt="Cloudinary - Registro">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Lista de Upload Presets en Settings</p>
+        <img src="imagenes/cloudinary-upload-presets.png" alt="Cloudinary - Upload Presets">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Formulario de creación del Upload Preset</p>
+        <img src="imagenes/cloudinary-create-preset.png" alt="Cloudinary - Crear preset">
+      </div>
+    </div>
+
+    <!-- 5. EmailJS -->
+    <div class="section-card" id="emailjs">
+      <h2>5. Configuración de EmailJS</h2>
+
+      <ol>
+        <li>Crea una cuenta en <a href="https://www.emailjs.com/">emailjs.com</a></li>
+        <li>Dashboard → <strong>Email Services</strong> → "Add New Service" → Gmail</li>
+        <li>Conecta tu cuenta de Gmail y copia el <strong>Service ID</strong></li>
+        <li>Dashboard → <strong>Email Templates</strong> → "Create New Template"
+          <ul>
+            <li>Template ID: <code>template_contacto</code></li>
+          </ul>
+        </li>
+        <li>Account → API Keys → copia la <strong>Public Key</strong></li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Registro en EmailJS</p>
+        <img src="imagenes/emailjs-signup.png" alt="EmailJS - Registro">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Configuración del servicio Gmail en EmailJS</p>
+        <img src="imagenes/emailjs-gmail-setup.png" alt="EmailJS - Gmail setup">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>API Keys en EmailJS (Public Key)</p>
+        <img src="imagenes/emailjs-api-keys.png" alt="EmailJS - API Keys">
+      </div>
+    </div>
+
+    <!-- 6. Variables de Entorno -->
+    <div class="section-card" id="env">
+      <h2>6. Variables de Entorno</h2>
+
+      <div class="code-block"><span class="lang-tag">bash</span><span class="c"># Crea el .env desde la plantilla</span>
+copy .env.example .env   <span class="c"># Windows</span>
+cp .env.example .env     <span class="c"># Mac / Linux</span></div>
+
+      <p>Edita <code>.env</code> con los valores obtenidos en los pasos anteriores:</p>
+
+      <div class="code-block"><span class="lang-tag">env</span><span class="c"># Firebase</span>
+VITE_FIREBASE_API_KEY=AIzaXXXXXX
+VITE_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=tu-proyecto
+VITE_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
+
+<span class="c"># Cloudinary</span>
+VITE_CLOUDINARY_CLOUD_NAME=tu-cloud-name
+VITE_CLOUDINARY_UPLOAD_PRESET=bandsocial_preset
+
+<span class="c"># EmailJS</span>
+VITE_EMAILJS_PUBLIC_KEY=tu-public-key
+VITE_EMAILJS_SERVICE_ID=service_xxxxxxx
+VITE_EMAILJS_TEMPLATE_CONTACTO=template_contacto
+
+<span class="c"># Admin (UIDs separados por coma)</span>
+VITE_ADMIN_UIDS=uid1,uid2</div>
+
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Creación del archivo <code>.env</code> en la raíz del proyecto</p>
+        <img src="imagenes/create-env-file.png" alt="Crear archivo .env">
+      </div>
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Archivo <code>.env</code> configurado con todas las variables</p>
+        <img src="imagenes/env-file-configured.png" alt=".env configurado">
+      </div>
+
+      <div class="alert-warn">⚠️ <strong>Nunca subas <code>.env</code> al repositorio.</strong> Ya está incluido en <code>.gitignore</code>. Usa <code>.env.example</code> como plantilla para otros colaboradores.</div>
+    </div>
+
+    <!-- 7. Ejecución -->
+    <div class="section-card" id="ejecucion">
+      <h2>7. Ejecutar el Proyecto</h2>
+
+      <div class="code-block"><span class="lang-tag">bash</span>npm run dev          <span class="c"># Servidor de desarrollo → localhost:5173</span>
+npm run build        <span class="c"># Build de producción → /dist</span>
+npm run preview      <span class="c"># Preview del build local</span>
+npm run test         <span class="c"># Tests unitarios con Vitest</span>
+npm run test:e2e     <span class="c"># Tests E2E con Cypress</span>
+npm run lint         <span class="c"># Verificar errores ESLint</span></div>
+
+      <div class="alert-info">✅ Al ejecutar <code>npm run dev</code> la app estará disponible en <code>http://localhost:5173</code> con hot-reload automático.</div>
+    </div>
+
+    <!-- 8. Despliegue -->
+    <div class="section-card" id="despliegue">
+      <h2>8. Despliegue en Netlify</h2>
+
+      <h3>Desde la interfaz web</h3>
+      <ol>
+        <li>Ve a <a href="https://www.netlify.com/">netlify.com</a> → "Add new site" → "Import existing project"</li>
+        <li>Conecta con GitHub y selecciona el repositorio <code>BandSocial</code></li>
+        <li>Configurar build:
+          <ul>
+            <li><strong>Build command:</strong> <code>npm run build</code></li>
+            <li><strong>Publish directory:</strong> <code>dist</code></li>
+          </ul>
+        </li>
+        <li>En <strong>Site configuration → Environment variables</strong> agrega todas las variables del <code>.env</code></li>
+        <li>Clic en <strong>"Deploy site"</strong></li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="lbl">📸 Captura</div>
+        <p>Variables de entorno configuradas en Netlify</p>
+        <img src="imagenes/netlify-env-variables.png" alt="Netlify - Environment variables">
+      </div>
+
+      <h3>Post-despliegue (obligatorio)</h3>
+      <ul>
+        <li><strong>Firebase Auth:</strong> Authentication → Settings → Authorized domains → agrega tu dominio de Netlify</li>
+        <li><strong>Cloudinary CORS:</strong> Settings → Security → Allowed fetch domains → agrega tu dominio</li>
+      </ul>
+
+      <div class="alert-info">🌐 La URL de producción actual es: <strong>https://bandsociall.netlify.app</strong></div>
+    </div>
+
+    <!-- 9. Problemas -->
+    <div class="section-card" id="problemas">
+      <h2>9. Problemas Comunes</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Problema</th><th>Causa probable</th><th>Solución</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><code>npm install</code> falla</td>
+              <td>Conflicto de dependencias</td>
+              <td><code>npm install --legacy-peer-deps</code></td>
+            </tr>
+            <tr>
+              <td>Vite no inicia</td>
+              <td><code>node_modules</code> corrupto</td>
+              <td>Borra <code>node_modules</code> y ejecuta <code>npm install</code> de nuevo</td>
+            </tr>
+            <tr>
+              <td>Firebase: <em>invalid-api-key</em></td>
+              <td>Variables de entorno incorrectas</td>
+              <td>Revisa el <code>.env</code> y reinicia el servidor</td>
+            </tr>
+            <tr>
+              <td>Cloudinary devuelve 401</td>
+              <td>Preset en modo <em>Signed</em></td>
+              <td>Cambia el preset a <strong>Unsigned</strong> en Cloudinary</td>
+            </tr>
+            <tr>
+              <td>EmailJS error 403</td>
+              <td>Dominio no autorizado</td>
+              <td>Agrega tu dominio en EmailJS → Account → Security</td>
+            </tr>
+            <tr>
+              <td>Variables <code>undefined</code> en producción</td>
+              <td>No configuradas en Netlify</td>
+              <td>Agrega todas las variables en Netlify y redesplega</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Checklist -->
+    <div class="section-card" id="checklist">
+      <h2>✅ Checklist de Instalación</h2>
+      <ul class="checklist">
+        <li>Node.js 18+ instalado</li>
+        <li>Git instalado</li>
+        <li>Repositorio clonado</li>
+        <li><code>npm install</code> sin errores</li>
+        <li>Proyecto Firebase creado</li>
+        <li>Authentication configurado</li>
+        <li>Firestore Database creado</li>
+        <li>Reglas e índices desplegados</li>
+        <li>Cuenta Cloudinary creada</li>
+        <li>Upload preset <em>Unsigned</em> configurado</li>
+        <li>Cuenta EmailJS creada</li>
+        <li>Servicio Gmail conectado</li>
+        <li>Plantilla <code>template_contacto</code> creada</li>
+        <li>Archivo <code>.env</code> creado y completado</li>
+        <li><code>npm run dev</code> arranca sin errores</li>
+        <li>Login y registro funcionan correctamente</li>
+        <li><code>npm run build</code> genera el <code>/dist</code></li>
+        <li>Variables de entorno configuradas en Netlify</li>
+        <li>Dominio autorizado en Firebase Auth</li>
+      </ul>
+    </div>
+
+    <footer>
+      <div><strong>Versión:</strong> 2.0 · <strong>Autor:</strong> Equipo BandSocial</div>
+      <div><strong>Issues:</strong> <a href="https://github.com/Negromatico/BandSocial/issues">github.com/Negromatico/BandSocial/issues</a></div>
+      <div style="color:#94a3b8;font-size:.78rem;">🔧 Manual de Instalación · Marzo 2026</div>
+    </footer>
+
+  </main>
+</div>
+</body>
+</html>

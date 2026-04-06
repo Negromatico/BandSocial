@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📘 Manual Técnico — BandSocial</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:#2563eb;--primary-lt:#dbeafe;--dark:#0f172a;--dark2:#1e293b;
+      --text:#1e293b;--muted:#64748b;--border:#e2e8f0;--bg:#f8fafc;--card:#ffffff;
+      --code-bg:#0f172a;--code-text:#e2e8f0;--radius:12px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:15px;}
+    .wrapper{display:grid;grid-template-columns:270px 1fr;min-height:100vh;}
+    aside{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--dark);padding:1.75rem 1.25rem;display:flex;flex-direction:column;gap:.2rem;}
+    .sidebar-brand{display:flex;align-items:center;gap:.6rem;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,.08);}
+    .sidebar-brand .logo{width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+    .sidebar-brand span{color:#fff;font-weight:700;font-size:.95rem;}
+    .sidebar-brand small{display:block;color:rgba(255,255,255,.4);font-size:.7rem;}
+    .nav-label{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);margin:.9rem 0 .3rem;}
+    aside a{display:block;padding:.38rem .7rem;border-radius:6px;color:rgba(255,255,255,.6);text-decoration:none;font-size:.83rem;transition:background .15s,color .15s;}
+    aside a:hover{background:rgba(37,99,235,.35);color:#fff;}
+    main{padding:2.5rem 3rem;max-width:920px;}
+    .doc-header{background:linear-gradient(135deg,#1d4ed8 0%,#0891b2 100%);border-radius:var(--radius);padding:2.25rem 2.5rem;margin-bottom:2rem;color:#fff;}
+    .doc-header .badge{display:inline-flex;align-items:center;gap:.3rem;background:rgba(255,255,255,.18);border-radius:999px;padding:.2rem .8rem;font-size:.72rem;font-weight:600;letter-spacing:.05em;margin-bottom:.9rem;}
+    .doc-header h1{font-size:1.9rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.7rem;}
+    .doc-header .meta{display:flex;gap:1.5rem;flex-wrap:wrap;font-size:.85rem;opacity:.85;}
+    .doc-header .meta a{color:#fff;}
+    .toc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.4rem 1.75rem;margin-bottom:1.75rem;}
+    .toc-title{font-size:.9rem;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.9rem;}
+    .toc-card ol{list-style:none;counter-reset:toc;display:grid;grid-template-columns:1fr 1fr;gap:.3rem 2rem;}
+    .toc-card li{counter-increment:toc;display:flex;align-items:center;gap:.45rem;}
+    .toc-card li::before{content:"0"counter(toc);font-size:.68rem;font-weight:700;color:var(--primary);background:var(--primary-lt);border-radius:999px;width:1.5rem;height:1.5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .toc-card li a{color:var(--text);text-decoration:none;font-size:.85rem;font-weight:500;}
+    .toc-card li a:hover{color:var(--primary);}
+    .section-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem 2rem;margin-bottom:1.5rem;}
+    h2{font-size:1.25rem;font-weight:700;letter-spacing:-.02em;color:var(--dark);margin:2rem 0 .9rem;display:flex;align-items:center;gap:.45rem;padding-bottom:.55rem;border-bottom:2px solid var(--primary-lt);}
+    h2::before{content:'';display:inline-block;width:4px;height:1em;background:var(--primary);border-radius:2px;}
+    .section-card>h2:first-child{margin-top:0;}
+    h3{font-size:1rem;font-weight:600;color:var(--dark);margin:1.5rem 0 .5rem;}
+    h4{font-size:.9rem;font-weight:600;color:var(--muted);margin:1.25rem 0 .4rem;}
+    .code-block{background:var(--code-bg);color:var(--code-text);border-radius:var(--radius);padding:1.1rem 1.25rem;font-family:'JetBrains Mono',monospace;font-size:.82rem;line-height:1.65;overflow-x:auto;margin:.85rem 0;position:relative;white-space:pre;}
+    .code-block .lang-tag{position:absolute;top:.6rem;right:.75rem;font-size:.65rem;color:rgba(255,255,255,.35);font-weight:500;letter-spacing:.05em;text-transform:uppercase;}
+    .code-block .c{color:#64748b;}
+    code{background:#f1f5f9;color:#2563eb;padding:.12rem .38rem;border-radius:4px;font-size:.84em;font-family:'JetBrains Mono',monospace;}
+    .table-wrap{overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);margin:.85rem 0;}
+    table{border-collapse:collapse;width:100%;}
+    thead{background:var(--primary);}
+    th{color:#fff;padding:.65rem 1rem;text-align:left;font-size:.78rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+    td{padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.86rem;}
+    tbody tr:last-child td{border-bottom:none;}
+    tbody tr:nth-child(even){background:#f8fafc;}
+    .img-callout{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;border-left:4px solid var(--primary);border-radius:var(--radius);padding:.9rem 1.1rem;margin:1.1rem 0;}
+    .img-callout .callout-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);margin-bottom:.3rem;}
+    .img-callout p{font-size:.875rem;color:#374151;margin-bottom:.6rem;}
+    .img-callout img{width:100%;max-width:680px;border-radius:8px;border:1px solid #93c5fd;box-shadow:0 4px 14px rgba(37,99,235,.12);display:block;margin:.4rem 0;}
+    .how-to{font-size:.78rem;color:var(--muted);margin-top:.45rem;padding-top:.45rem;border-top:1px dashed #93c5fd;}
+    .how-to strong{color:var(--text);}
+    .alert-warn{background:#fefce8;border-left:4px solid #f59e0b;border-radius:0 var(--radius) var(--radius) 0;padding:.8rem 1rem;margin:.85rem 0;font-size:.875rem;color:#713f12;}
+    .alert-info{background:#eff6ff;border-left:4px solid var(--primary);border-radius:0 var(--radius) var(--radius) 0;padding:.8rem 1rem;margin:.85rem 0;font-size:.875rem;color:#1e40af;}
+    ol,ul{padding-left:1.5rem;margin:.5rem 0;}
+    li{margin-bottom:.3rem;}
+    hr{border:none;border-top:1px solid var(--border);margin:1.75rem 0;}
+    footer{margin-top:2.5rem;padding:1.25rem 1.75rem;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;font-size:.85rem;color:var(--muted);}
+    footer a{color:var(--primary);text-decoration:none;}
+    @media(max-width:768px){.wrapper{grid-template-columns:1fr;}aside{display:none;}main{padding:1.5rem;}.toc-card ol{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div class="wrapper">
+  <aside>
+    <div class="sidebar-brand">
+      <div class="logo">⚙️</div>
+      <div><span>BandSocial</span><small>Manual Técnico v2.0</small></div>
+    </div>
+    <span class="nav-label">Arquitectura</span>
+    <a href="#arquitectura">1. Visión General</a>
+    <a href="#stack">2. Stack Tecnológico</a>
+    <a href="#estructura">3. Estructura del Proyecto</a>
+    <span class="nav-label">Configuración</span>
+    <a href="#entorno">4.1 Variables de Entorno</a>
+    <a href="#firebase-init">4.2 Inicialización Firebase</a>
+    <span class="nav-label">Flujos de Datos</span>
+    <a href="#flujo-auth">5.1 Autenticación</a>
+    <a href="#flujo-pub">5.2 Publicación con Imagen</a>
+    <a href="#flujo-chat">5.3 Chat en Tiempo Real</a>
+    <span class="nav-label">Base de Datos</span>
+    <a href="#firestore">6. Firestore</a>
+    <a href="#seguridad">7. Reglas de Seguridad</a>
+    <span class="nav-label">Estado &amp; Build</span>
+    <a href="#estado">8. Gestión de Estado</a>
+    <a href="#build">9. Build y Despliegue</a>
+    <a href="#testing">10. Testing</a>
+    <a href="#contribucion">11. Contribución</a>
+  </aside>
+
+  <main>
+    <div class="doc-header">
+      <div class="badge">📘 Documentación Técnica</div>
+      <h1>Manual Técnico — BandSocial</h1>
+      <div class="meta">
+        <span>📌 Versión 2.0</span>
+        <span>📅 Marzo 2026</span>
+        <span>🔗 <a href="https://github.com/Negromatico/BandSocial">github.com/Negromatico/BandSocial</a></span>
+      </div>
+    </div>
+
+    <div class="toc-card">
+      <div class="toc-title">📋 Tabla de Contenidos</div>
+      <ol>
+        <li><a href="#arquitectura">Visión General de la Arquitectura</a></li>
+        <li><a href="#stack">Stack Tecnológico</a></li>
+        <li><a href="#estructura">Estructura del Proyecto</a></li>
+        <li><a href="#entorno">Configuración del Entorno</a></li>
+        <li><a href="#flujos">Flujos de Datos Principales</a></li>
+        <li><a href="#firestore">Base de Datos — Firestore</a></li>
+        <li><a href="#seguridad">Reglas de Seguridad</a></li>
+        <li><a href="#estado">Gestión de Estado</a></li>
+        <li><a href="#build">Build y Despliegue</a></li>
+        <li><a href="#testing">Testing</a></li>
+        <li><a href="#contribucion">Guía de Contribución</a></li>
+      </ol>
+    </div>
+
+    <!-- 1 -->
+    <div class="section-card" id="arquitectura">
+      <h2>1. Visión General de la Arquitectura</h2>
+      <p>BandSocial es una <strong>Single Page Application (SPA)</strong> construida en React. No tiene backend propio: utiliza <strong>Firebase</strong> como Backend-as-a-Service, <strong>Cloudinary</strong> para gestión de imágenes y <strong>EmailJS</strong> para el envío de correos.</p>
+      <div class="code-block"><span class="lang-tag">diagrama</span>┌──────────────────────────────────────────────┐
+│              FRONTEND (React + Vite)          │
+│  Components │ Pages │ Contexts │ Hooks        │
+└──────────────────────┬───────────────────────┘
+                       │ SDK / REST API
+       ┌───────────────┼───────────────┐
+       ▼               ▼               ▼
+ ┌──────────┐   ┌───────────┐   ┌──────────┐
+ │ Firebase │   │Cloudinary │   │ EmailJS  │
+ │Auth+DB+  │   │  (Media   │   │ (Emails) │
+ │ Storage  │   │   CDN)    │   │          │
+ └──────────┘   └───────────┘   └──────────┘</div>
+      <h3>Características Técnicas Clave</h3>
+      <ul>
+        <li><strong>Lazy loading</strong> de todas las páginas con <code>React.lazy()</code> + <code>Suspense</code></li>
+        <li><strong>Code splitting</strong> automático por vendors (React, Firebase, UI)</li>
+        <li><strong>Modo oscuro/claro</strong> por CSS variables + <code>data-theme</code> en el HTML root</li>
+        <li><strong>Modo invitado</strong> vía <code>localStorage</code> + <code>GuestContext</code></li>
+        <li><strong>Realtime</strong> en chat y notificaciones vía <code>onSnapshot</code> de Firestore</li>
+        <li><strong>PWA</strong> — <code>manifest.json</code> + Service Worker incluido</li>
+      </ul>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Diagrama de arquitectura — documento <code>ARQUITECTURA_PROYECTO.md</code> abierto en el editor</p>
+        <img src="imagenes/arquitectura-diagrama.png" alt="Diagrama de arquitectura">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Abre <code>documentacion/manuales/arquitectura/ARQUITECTURA_PROYECTO.md</code> y captura el diagrama ASCII de la sección 1.</div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="section-card" id="stack">
+      <h2>2. Stack Tecnológico</h2>
+      <h3>Frontend</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Tecnología</th><th>Versión</th><th>Rol</th></tr></thead>
+        <tbody>
+          <tr><td><strong>React</strong></td><td>19.1.0</td><td>Librería UI principal</td></tr>
+          <tr><td><strong>Vite</strong></td><td>7.0.0</td><td>Build tool y dev server</td></tr>
+          <tr><td><strong>React Router DOM</strong></td><td>7.6.3</td><td>Navegación SPA</td></tr>
+          <tr><td><strong>Bootstrap</strong></td><td>5.3.7</td><td>Framework CSS base</td></tr>
+          <tr><td><strong>React Bootstrap</strong></td><td>2.10.10</td><td>Componentes Bootstrap para React</td></tr>
+          <tr><td><strong>Material UI</strong></td><td>7.1.2</td><td>Componentes adicionales</td></tr>
+          <tr><td><strong>React Icons</strong></td><td>5.5.0</td><td>Íconos</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Backend y Servicios Externos</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Servicio</th><th>Versión</th><th>Rol</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Firebase Auth</strong></td><td>11.9.1</td><td>Autenticación de usuarios</td></tr>
+          <tr><td><strong>Firestore</strong></td><td>11.9.1</td><td>Base de datos NoSQL en tiempo real</td></tr>
+          <tr><td><strong>Firebase Storage</strong></td><td>11.9.1</td><td>Almacenamiento de archivos</td></tr>
+          <tr><td><strong>Cloudinary</strong></td><td>CDN</td><td>Procesamiento y entrega de imágenes</td></tr>
+          <tr><td><strong>EmailJS</strong></td><td>4.4.1</td><td>Envío de emails</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Formularios, Validación y Testing</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Librería</th><th>Versión</th><th>Rol</th></tr></thead>
+        <tbody>
+          <tr><td><strong>React Hook Form</strong></td><td>7.59.0</td><td>Gestión de formularios</td></tr>
+          <tr><td><strong>Yup</strong></td><td>1.6.1</td><td>Validación de esquemas</td></tr>
+          <tr><td><strong>Vitest</strong></td><td>4.0.18</td><td>Tests unitarios</td></tr>
+          <tr><td><strong>@testing-library/react</strong></td><td>14.1.2</td><td>Tests de componentes</td></tr>
+          <tr><td><strong>Cypress</strong></td><td>13.6.2</td><td>Tests E2E</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- 3 -->
+    <div class="section-card" id="estructura">
+      <h2>3. Estructura del Proyecto</h2>
+      <div class="code-block"><span class="lang-tag">árbol</span>BandSocial/
+├── src/
+│   ├── App.jsx                  <span class="c"># Raíz: Router + Providers</span>
+│   ├── main.jsx                 <span class="c"># Punto de entrada React</span>
+│   ├── components/              <span class="c"># 35 componentes reutilizables</span>
+│   │   ├── Navbar.jsx/css       <span class="c"># Navegación principal + móvil</span>
+│   │   ├── ChatDock.jsx         <span class="c"># Panel multi-chat flotante</span>
+│   │   ├── NotificationCenter.jsx
+│   │   ├── ProfileForm.jsx
+│   │   ├── AnalyticsDashboard.jsx
+│   │   └── ErrorBoundary.jsx
+│   ├── pages/                   <span class="c"># 47 archivos — vistas principales</span>
+│   │   ├── Profile.jsx          <span class="c"># Perfil propio (89KB)</span>
+│   │   ├── MusicmarketNuevo.jsx <span class="c"># Marketplace (49KB)</span>
+│   │   ├── EventosNuevo.jsx     <span class="c"># Gestión de eventos (40KB)</span>
+│   │   └── AdminDashboard.jsx
+│   ├── services/
+│   │   ├── firebase.js          <span class="c"># Inicialización de Firebase</span>
+│   │   ├── cloudinary.js
+│   │   ├── emailService.js
+│   │   └── colombiaAPI.js       <span class="c"># API pública de ciudades</span>
+│   ├── contexts/
+│   │   ├── ThemeContext.jsx     <span class="c"># Tema global (light/dark)</span>
+│   │   └── ChatDockContext.jsx
+│   ├── hooks/
+│   │   ├── useColombia.js
+│   │   ├── useNotifications.js
+│   │   └── useUnreadChats.js
+│   └── styles/
+│       ├── theme.css
+│       ├── mobile.css
+│       └── ModernModal.css
+├── firestore.rules
+├── vite.config.js
+├── netlify.toml
+└── package.json</div>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Árbol de carpetas del proyecto abierto en VS Code (panel Explorer)</p>
+        <img src="imagenes/estructura-proyecto-vscode.png" alt="Árbol de carpetas en VS Code">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Abre VS Code con el proyecto y expande la carpeta <code>src/</code> completa en el panel lateral.</div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="section-card" id="entorno">
+      <h2>4. Configuración del Entorno</h2>
+      <h3>4.1 Variables de Entorno</h3>
+      <p>Copia <code>.env.example</code> a <code>.env</code> y completa los valores:</p>
+      <div class="code-block"><span class="lang-tag">env</span><span class="c"># === FIREBASE ===</span>
+VITE_FIREBASE_API_KEY=AIzaXXXXXX
+VITE_FIREBASE_AUTH_DOMAIN=tu-proyecto.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=tu-proyecto
+VITE_FIREBASE_STORAGE_BUCKET=tu-proyecto.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
+VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
+
+<span class="c"># === CLOUDINARY ===</span>
+VITE_CLOUDINARY_CLOUD_NAME=tu-cloud-name
+VITE_CLOUDINARY_UPLOAD_PRESET=bandsocial_preset
+
+<span class="c"># === EMAILJS ===</span>
+VITE_EMAILJS_PUBLIC_KEY=tu-public-key
+VITE_EMAILJS_SERVICE_ID=service_xxxxxxx
+VITE_EMAILJS_TEMPLATE_CONTACTO=template_contacto
+
+<span class="c"># === ADMIN ===</span>
+VITE_ADMIN_UIDS=uid1,uid2</div>
+      <div class="alert-warn">⚠️ <strong>Nunca subir <code>.env</code> al repositorio.</strong> Ya está incluido en <code>.gitignore</code>.</div>
+      <h3 id="firebase-init">4.2 Inicialización de Firebase (<code>src/services/firebase.js</code>)</h3>
+      <div class="code-block"><span class="lang-tag">javascript</span>const firebaseConfig = {
+  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+};
+const app = initializeApp(firebaseConfig);
+export const auth    = getAuth(app);
+export const db      = getFirestore(app);
+export const storage = getStorage(app);</div>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Archivo <code>.env</code> abierto en el editor con los valores configurados</p>
+        <img src="imagenes/env-configurado.png" alt="Archivo .env configurado">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Abre <code>.env</code> en VS Code y captura con los campos rellenos, tapando los valores reales.</div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="section-card" id="flujos">
+      <h2>5. Flujos de Datos Principales</h2>
+      <h3 id="flujo-auth">5.1 Flujo de Autenticación</h3>
+      <div class="code-block"><span class="lang-tag">flujo</span>1. Usuario → /login → Login.jsx
+2. signInWithEmailAndPassword(auth, email, pass)
+3. Firebase Authentication valida → retorna UserCredential
+4. auth.onAuthStateChanged listener → setUser(currentUser)
+5. Si email no verificado → muestra EmailVerificationPrompt
+6. Redirige → /publicaciones (feed principal)
+7. Carga perfil → getDoc(db, 'perfiles', uid)</div>
+      <h3 id="flujo-pub">5.2 Flujo de Publicación con Imagen</h3>
+      <div class="code-block"><span class="lang-tag">flujo</span>1. PublicacionesNuevo.jsx → usuario escribe + selecciona imagen
+2. uploadToCloudinary(file) → POST a Cloudinary CDN
+3. Cloudinary retorna { secure_url }
+4. addDoc(collection(db, 'publicaciones'), { ...datos, imagenUrl })
+5. Firestore guarda el documento
+6. notificationService.notify() → seguidores reciben notificación
+7. onSnapshot listener → feed se actualiza en tiempo real</div>
+      <h3 id="flujo-chat">5.3 Chat en Tiempo Real</h3>
+      <div class="code-block"><span class="lang-tag">flujo</span>1. Usuario A abre chat → ChatDock → ChatWindow
+2. handleSend() → addDoc(collection(db,'chats',chatId,'messages'), msg)
+3. Firestore almacena el mensaje
+4. onSnapshot listener en ChatWindow → Usuario B ve el mensaje al instante
+5. updateDoc(userChats) → actualiza lastMsg + lastAt
+6. useUnreadChats hook → actualiza indicador de mensajes no leídos</div>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Firebase Console mostrando la colección <code>chats</code> con mensajes en tiempo real</p>
+        <img src="imagenes/firestore-chats-consola.png" alt="Colección chats en Firebase Console">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Firebase Console → proyecto <code>bandas-f9c77</code> → Firestore → colección <code>chats</code> → captura los documentos.</div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="section-card" id="firestore">
+      <h2>6. Base de Datos — Firestore</h2>
+      <h3>Colecciones Principales</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Colección</th><th>Descripción</th><th>Lectura</th><th>Escritura</th></tr></thead>
+        <tbody>
+          <tr><td><code>perfiles</code></td><td>Datos de usuario</td><td>Pública</td><td>Solo el dueño</td></tr>
+          <tr><td><code>publicaciones</code></td><td>Feed social</td><td>Pública</td><td>Solo el autor</td></tr>
+          <tr><td><code>eventos</code></td><td>Eventos musicales</td><td>Pública</td><td>Solo el creador</td></tr>
+          <tr><td><code>productos</code></td><td>MusicMarket</td><td>Pública</td><td>Solo el vendedor</td></tr>
+          <tr><td><code>conversaciones</code></td><td>Chat 1 a 1</td><td>Solo participantes</td><td>Solo participantes</td></tr>
+          <tr><td><code>notificaciones</code></td><td>Notificaciones</td><td>Solo destinatario</td><td>Cualquier autenticado</td></tr>
+          <tr><td><code>sesiones</code></td><td>Tracking login/logout</td><td>Solo admin</td><td>El propio usuario</td></tr>
+          <tr><td><code>pagos</code></td><td>Transacciones premium</td><td>Usuario o admin</td><td>Solo el usuario</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Esquema <code>perfiles/{uid}</code></h3>
+      <div class="code-block"><span class="lang-tag">json</span>{
+  "uid": "string",  "nombre": "string",  "email": "string",
+  "type": "musico | banda",
+  "fotoPerfil": "url",  "fotoPortada": "url",  "bio": "string",
+  "ciudad": "string",  "departamento": "string",
+  "instrumentos": ["guitarra", "bajo"],
+  "generos": ["rock", "jazz"],
+  "premium": false,
+  "seguidores": ["uid1"],  "siguiendo": ["uid3"],
+  "tiempoUsoTotal": 3600,  "createdAt": "timestamp"
+}</div>
+      <h3>Índices Compuestos</h3>
+      <ul>
+        <li>Publicaciones por <code>autorUid</code> + <code>createdAt DESC</code></li>
+        <li>Eventos por <code>fecha ASC</code> + <code>ciudad</code></li>
+        <li>Productos por <code>categoria</code> + <code>precio ASC</code></li>
+        <li>Notificaciones por <code>usuarioId</code> + <code>leida</code> + <code>createdAt DESC</code></li>
+      </ul>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Firebase Console → Firestore → pestaña "Índices" con los índices compuestos listados</p>
+        <img src="imagenes/firestore-indices.png" alt="Índices compuestos en Firestore">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Firebase Console → Firestore Database → pestaña "Índices" → captura la lista completa.</div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="section-card" id="seguridad">
+      <h2>7. Reglas de Seguridad</h2>
+      <p>Las reglas de Firestore están en <code>firestore.rules</code>. Funciones auxiliares reutilizables:</p>
+      <div class="code-block"><span class="lang-tag">javascript</span><span class="c">// Verifica que hay sesión activa</span>
+function isAuthenticated() { return request.auth != null; }
+
+<span class="c">// Verifica que el usuario es el propietario del documento</span>
+function isOwner(userId) {
+  return isAuthenticated() &amp;&amp; request.auth.uid == userId;
+}
+
+<span class="c">// Verifica que el usuario es administrador</span>
+function isAdmin() {
+  return isAuthenticated() &amp;&amp;
+    request.auth.token.email == 'estebanber24@gmail.com';
+}</div>
+      <h3>Resumen de Reglas por Colección</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Colección</th><th>Leer</th><th>Crear</th><th>Actualizar</th><th>Eliminar</th></tr></thead>
+        <tbody>
+          <tr><td><code>perfiles</code></td><td>✅ Pública</td><td>Solo el uid</td><td>Dueño o campo <code>seguidores</code></td><td>Dueño o admin</td></tr>
+          <tr><td><code>publicaciones</code></td><td>✅ Pública</td><td>Auth + <code>autorUid==uid</code></td><td>Solo si autor</td><td>Autor o admin</td></tr>
+          <tr><td><code>productos</code></td><td>✅ Pública</td><td>Auth + precio &gt; 0</td><td>Vendedor o <code>rating</code></td><td>Vendedor o admin</td></tr>
+          <tr><td><code>conversaciones</code></td><td>Solo participantes</td><td>Participante</td><td>Solo participantes</td><td>❌</td></tr>
+          <tr><td><code>notificaciones</code></td><td>Solo destinatario</td><td>Cualquier auth</td><td>Solo campo <code>leida</code></td><td>Solo destinatario</td></tr>
+          <tr><td><code>sesiones</code></td><td>Solo admin</td><td>El propio usuario</td><td>❌ Inmutable</td><td>Solo admin</td></tr>
+        </tbody>
+      </table></div>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Editor de reglas de Firestore en Firebase Console mostrando las reglas activas</p>
+        <img src="imagenes/firestore-reglas-consola.png" alt="Reglas de Firestore en Firebase Console">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Firebase Console → Firestore → pestaña "Reglas" → captura el editor con las reglas publicadas.</div>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="section-card" id="estado">
+      <h2>8. Gestión de Estado</h2>
+      <h3>Estado Local (<code>useState</code>)</h3>
+      <p>Usado para UI de componente: modales, tabs, forms, loadings.</p>
+      <div class="code-block"><span class="lang-tag">javascript</span>const [showModal, setShowModal] = useState(false);
+const [loading,   setLoading]   = useState(true);</div>
+      <h3>Estado Global (<code>Context API</code>)</h3>
+      <p><strong><code>ThemeContext</code></strong> persiste en <code>localStorage</code>, aplica <code>data-theme</code> al <code>&lt;html&gt;</code>:</p>
+      <div class="code-block"><span class="lang-tag">javascript</span>document.documentElement.setAttribute('data-theme', theme); <span class="c">// 'light' | 'dark'</span></div>
+      <p><strong><code>ChatDockContext</code></strong> controla las ventanas de chat abiertas:</p>
+      <div class="code-block"><span class="lang-tag">javascript</span>const { openChat, closeChat, openChats } = useChatDock();</div>
+      <p><strong><code>GuestContext</code></strong> gestiona el modo visitante sin cuenta:</p>
+      <div class="code-block"><span class="lang-tag">javascript</span>const { isGuest, activateGuest, deactivateGuest } = useContext(GuestContext);</div>
+      <h3>Estado del Servidor (<code>onSnapshot</code>)</h3>
+      <div class="code-block"><span class="lang-tag">javascript</span>useEffect(() =&gt; {
+  const unsub = onSnapshot(
+    query(collection(db, 'notificaciones'),
+      where('usuarioId', '==', uid),
+      orderBy('createdAt', 'desc')
+    ),
+    (snap) =&gt; setNotificaciones(snap.docs.map(d =&gt; ({ id: d.id, ...d.data() })))
+  );
+  return unsub; <span class="c">// Limpia el listener al desmontar</span>
+}, [uid]);</div>
+      <div class="alert-warn">⚠️ <strong>Importante:</strong> Todos los <code>onSnapshot</code> deben retornar <code>unsubscribe</code> en el cleanup del <code>useEffect</code> para evitar memory leaks.</div>
+    </div>
+
+    <!-- 9 -->
+    <div class="section-card" id="build">
+      <h2>9. Build y Despliegue</h2>
+      <h3>Configuración de Vite (<code>vite.config.js</code>)</h3>
+      <div class="code-block"><span class="lang-tag">javascript</span>build: {
+  outDir: 'dist',
+  minify: 'terser',
+  terserOptions: { compress: { drop_console: true, drop_debugger: true } },
+  rollupOptions: { output: { manualChunks: {
+    'react-vendor':    ['react', 'react-dom', 'react-router-dom'],
+    'firebase-vendor': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+    'ui-vendor':       ['react-bootstrap', 'bootstrap', 'react-icons'],
+  }}}
+}</div>
+      <h3>Scripts Disponibles</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Comando</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td><code>npm run dev</code></td><td>Servidor de desarrollo en <code>localhost:5173</code></td></tr>
+          <tr><td><code>npm run build</code></td><td>Build de producción en <code>/dist</code></td></tr>
+          <tr><td><code>npm run preview</code></td><td>Preview del build de producción</td></tr>
+          <tr><td><code>npm run lint</code></td><td>Verificar errores de ESLint</td></tr>
+          <tr><td><code>npm run test</code></td><td>Ejecutar tests unitarios (Vitest)</td></tr>
+          <tr><td><code>npm run test:coverage</code></td><td>Cobertura de tests</td></tr>
+          <tr><td><code>npm run test:e2e</code></td><td>Tests E2E con Cypress</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Pipeline de Despliegue (Netlify)</h3>
+      <div class="code-block"><span class="lang-tag">pipeline</span>Git push → GitHub → Netlify detecta cambio
+  → npm install → npm run build → Publica /dist
+  → URL: https://bandsociall.netlify.app</div>
+      <p>Configuración en <code>netlify.toml</code>:</p>
+      <div class="code-block"><span class="lang-tag">toml</span>[build]
+  command = "npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/*"  to = "/index.html"  status = 200</div>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Log de build exitoso en el dashboard de Netlify</p>
+        <img src="imagenes/netlify-build-log.png" alt="Log de build en Netlify">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Netlify → tu sitio → pestaña "Deploys" → abre el último deploy exitoso → captura el log.</div>
+      </div>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Variables de entorno configuradas en Netlify (Site settings → Environment variables)</p>
+        <img src="imagenes/netlify-env-vars.png" alt="Variables de entorno en Netlify">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Netlify → Site configuration → Environment variables → captura la lista.</div>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="section-card" id="testing">
+      <h2>10. Testing</h2>
+      <h3>Tests Unitarios (Vitest)</h3>
+      <p>Ubicados en <code>src/__tests__/</code> y <code>src/test/</code>.</p>
+      <div class="code-block"><span class="lang-tag">bash</span>npm run test           <span class="c"># Modo watch</span>
+npm run test:coverage  <span class="c"># Reporte de cobertura</span></div>
+      <div class="code-block"><span class="lang-tag">javascript</span><span class="c">// ProfileForm.test.jsx</span>
+import { render, screen } from '@testing-library/react';
+import ProfileForm from '../components/ProfileForm';
+
+test('renderiza el formulario de perfil', () =&gt; {
+  render(&lt;ProfileForm /&gt;);
+  expect(screen.getByLabelText('Nombre')).toBeInTheDocument();
+});</div>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Terminal mostrando el resultado de <code>npm run test</code> con tests pasando</p>
+        <img src="imagenes/vitest-resultado.png" alt="Resultado de Vitest en terminal">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Ejecuta <code>npm run test</code> y captura el output con los tests en verde.</div>
+      </div>
+      <h3>Tests E2E (Cypress)</h3>
+      <div class="code-block"><span class="lang-tag">bash</span>npm run test:e2e           <span class="c"># Abre Cypress UI</span>
+npm run test:e2e:headless  <span class="c"># Ejecuta sin interfaz</span></div>
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Interfaz de Cypress abierta con los specs disponibles</p>
+        <img src="imagenes/cypress-ui.png" alt="Interfaz de Cypress">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Ejecuta <code>npm run test:e2e</code> y captura la ventana de Cypress antes de ejecutar algún test.</div>
+      </div>
+    </div>
+
+    <!-- 11 -->
+    <div class="section-card" id="contribucion">
+      <h2>11. Guía de Contribución</h2>
+      <h3>Flujo de Trabajo Git</h3>
+      <div class="code-block"><span class="lang-tag">bash</span><span class="c"># 1. Crea una rama desde main</span>
+git checkout -b feature/nombre-de-la-feature
+
+<span class="c"># 2. Commits semánticos</span>
+git commit -m "Feature: Descripción corta"
+git commit -m "Fix: Descripción del bug corregido"
+git commit -m "Refactor: Descripción del refactor"
+
+<span class="c"># 3. Sube la rama y abre un Pull Request</span>
+git push origin feature/nombre-de-la-feature</div>
+      <h3>Convención de Commits</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Prefijo</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td><code>Feature:</code></td><td>Nueva funcionalidad</td></tr>
+          <tr><td><code>Fix:</code></td><td>Corrección de bug</td></tr>
+          <tr><td><code>Refactor:</code></td><td>Refactorización sin cambio funcional</td></tr>
+          <tr><td><code>Docs:</code></td><td>Cambios en documentación</td></tr>
+          <tr><td><code>Style:</code></td><td>Cambios de estilos CSS</td></tr>
+          <tr><td><code>Test:</code></td><td>Agregar o modificar tests</td></tr>
+          <tr><td><code>Revert:</code></td><td>Revertir un commit anterior</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Convenciones de Código</h3>
+      <ul>
+        <li>Componentes en <strong>PascalCase</strong>: <code>ProfileCard.jsx</code></li>
+        <li>Hooks en <strong>camelCase</strong> con prefijo <code>use</code>: <code>useNotifications.js</code></li>
+        <li>Servicios en <strong>camelCase</strong>: <code>notificationService.js</code></li>
+        <li>Usar <strong>Vanilla CSS</strong> para estilos — no inline styles ni Tailwind</li>
+        <li>Exportar contextos con su <code>Provider</code> y hook <code>use*</code> en el mismo archivo</li>
+        <li>Limpiar siempre los listeners de Firestore (<code>onSnapshot</code>) en el <code>useEffect</code> cleanup</li>
+      </ul>
+    </div>
+
+    <!-- Imágenes -->
+    <div class="section-card">
+      <h2>📁 Carpeta de Imágenes</h2>
+      <p>Guarda todas las capturas en:</p>
+      <div class="code-block">documentacion/manuales/manual-tecnico/imagenes/</div>
+      <div class="table-wrap" style="margin-top:1rem;"><table>
+        <thead><tr><th>Archivo</th><th>Sección</th><th>Descripción</th></tr></thead>
+        <tbody>
+          <tr><td><code>arquitectura-diagrama.png</code></td><td>1</td><td>Diagrama de arquitectura</td></tr>
+          <tr><td><code>estructura-proyecto-vscode.png</code></td><td>3</td><td>Árbol de carpetas en VS Code</td></tr>
+          <tr><td><code>env-configurado.png</code></td><td>4</td><td>Archivo .env con variables</td></tr>
+          <tr><td><code>firestore-chats-consola.png</code></td><td>5.3</td><td>Colección chats en Firebase</td></tr>
+          <tr><td><code>firestore-indices.png</code></td><td>6</td><td>Índices compuestos en Firebase</td></tr>
+          <tr><td><code>firestore-reglas-consola.png</code></td><td>7</td><td>Editor de reglas de Firestore</td></tr>
+          <tr><td><code>netlify-build-log.png</code></td><td>9</td><td>Log de build en Netlify</td></tr>
+          <tr><td><code>netlify-env-vars.png</code></td><td>9</td><td>Variables de entorno en Netlify</td></tr>
+          <tr><td><code>vitest-resultado.png</code></td><td>10</td><td>Resultado de Vitest en terminal</td></tr>
+          <tr><td><code>cypress-ui.png</code></td><td>10</td><td>Interfaz de Cypress abierta</td></tr>
+        </tbody>
+      </table></div>
+      <div class="alert-info" style="margin-top:1rem;">📝 Capturas de Firebase en el proyecto <code>bandas-f9c77</code> de <a href="https://console.firebase.google.com/">Firebase Console</a>. Capturas de Netlify en <code>bandsociall.netlify.app</code>.</div>
+    </div>
+
+    <footer>
+      <div><strong>Repositorio:</strong> <a href="https://github.com/Negromatico/BandSocial">github.com/Negromatico/BandSocial</a></div>
+      <div><strong>Deploy:</strong> <a href="https://bandsociall.netlify.app">bandsociall.netlify.app</a></div>
+      <div style="color:#94a3b8;font-size:.78rem;">📘 Manual Técnico v2.0 · Marzo 2026</div>
+    </footer>
+  </main>
+</div>
+</body>
+</html>

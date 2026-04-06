@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📗 Manual de Usuario — BandSocial</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary:     #6c47ff;
+      --primary-lt:  #ede9ff;
+      --accent:      #ff6b6b;
+      --dark:        #1a1a2e;
+      --text:        #2d2d3a;
+      --muted:       #6b7280;
+      --border:      #e5e7eb;
+      --bg:          #f9fafb;
+      --card:        #ffffff;
+      --code-bg:     #f3f4f6;
+      --green:       #10b981;
+      --radius:      12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 15px;
+    }
+
+    /* ── Layout ── */
+    .wrapper {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--dark);
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-brand .logo {
+      width: 38px; height: 38px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+    }
+    .sidebar-brand span {
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .sidebar-brand small {
+      display: block;
+      color: rgba(255,255,255,0.45);
+      font-size: 0.72rem;
+      font-weight: 400;
+    }
+
+    .nav-label {
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin: 1rem 0 0.4rem;
+    }
+
+    aside a {
+      display: block;
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      color: rgba(255,255,255,0.65);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 400;
+      transition: background 0.15s, color 0.15s;
+    }
+    aside a:hover {
+      background: rgba(108,71,255,0.3);
+      color: #fff;
+    }
+
+    /* ── Main ── */
+    main {
+      padding: 3rem 3.5rem;
+      max-width: 900px;
+    }
+
+    /* ── Header ── */
+    .doc-header {
+      background: linear-gradient(135deg, var(--primary) 0%, #9b59b6 100%);
+      border-radius: var(--radius);
+      padding: 2.5rem 2.5rem;
+      margin-bottom: 2.5rem;
+      color: #fff;
+    }
+    .doc-header .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: rgba(255,255,255,0.2);
+      border-radius: 999px;
+      padding: 0.25rem 0.85rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .doc-header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+    .doc-header .meta {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      font-size: 0.875rem;
+      opacity: 0.85;
+    }
+    .doc-header .meta a { color: #fff; }
+
+    /* ── Section titles ── */
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--dark);
+      margin: 2.5rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 2px solid var(--primary-lt);
+    }
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px; height: 1.1em;
+      background: var(--primary);
+      border-radius: 2px;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--dark);
+      margin: 1.75rem 0 0.6rem;
+    }
+
+    /* ── TOC ── */
+    .toc-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 2rem;
+      margin-bottom: 2rem;
+    }
+    .toc-card h2 { margin: 0 0 1rem; font-size: 1rem; border: none; padding: 0; }
+    .toc-card ol {
+      counter-reset: toc;
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem 2rem;
+    }
+    .toc-card ol li {
+      counter-increment: toc;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .toc-card ol li::before {
+      content: counter(toc, decimal-leading-zero);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-lt);
+      border-radius: 999px;
+      width: 1.6rem; height: 1.6rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .toc-card ol li a {
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .toc-card ol li a:hover { color: var(--primary); }
+
+    /* ── Content card ── */
+    .section-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+      margin-bottom: 1.5rem;
+    }
+    .section-card > h2:first-child { margin-top: 0; }
+
+    /* ── Lists ── */
+    ol, ul {
+      padding-left: 1.5rem;
+      margin: 0.6rem 0;
+    }
+    li { margin-bottom: 0.3rem; }
+    li ul, li ol { margin-top: 0.25rem; }
+
+    /* ── Image callout ── */
+    .img-callout {
+      background: linear-gradient(135deg, #f5f3ff 0%, #ede9ff 100%);
+      border: 1px solid #c4b5fd;
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin: 1.25rem 0;
+    }
+    .img-callout .callout-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--primary);
+      margin-bottom: 0.35rem;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .img-callout p {
+      font-size: 0.875rem;
+      color: #4b5563;
+      margin-bottom: 0.75rem;
+    }
+    .img-callout img {
+      width: 100%;
+      max-width: 680px;
+      border-radius: 8px;
+      border: 1px solid #c4b5fd;
+      box-shadow: 0 4px 16px rgba(108,71,255,0.12);
+      display: block;
+      margin: 0.5rem 0;
+    }
+    .how-to {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px dashed #c4b5fd;
+    }
+    .how-to strong { color: var(--text); }
+
+    /* ── Inline code ── */
+    code {
+      background: var(--code-bg);
+      color: #7c3aed;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-family: 'Courier New', monospace;
+    }
+
+    pre {
+      background: var(--dark);
+      color: #e2e8f0;
+      padding: 1.25rem;
+      border-radius: var(--radius);
+      overflow-x: auto;
+      font-size: 0.875rem;
+      margin: 1rem 0;
+    }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; margin: 1rem 0; border-radius: var(--radius); border: 1px solid var(--border); }
+    table { border-collapse: collapse; width: 100%; }
+    thead { background: var(--primary); }
+    th {
+      color: #fff;
+      padding: 0.7rem 1rem;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:nth-child(even) { background: #fafafa; }
+
+    /* ── Note blockquote ── */
+    .note {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 0.9rem 1.1rem;
+      margin: 1rem 0;
+      font-size: 0.875rem;
+      color: #78350f;
+    }
+
+    /* ── FAQ ── */
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .faq-item strong { display: block; color: var(--primary); margin-bottom: 0.3rem; }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 3rem;
+      padding: 1.5rem 2rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .wrapper { grid-template-columns: 1fr; }
+      aside { display: none; }
+      main { padding: 1.5rem; }
+      .toc-card ol { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- ══════════ SIDEBAR ══════════ -->
+  <aside>
+    <div class="sidebar-brand">
+      <div class="logo">🎸</div>
+      <div>
+        <span>BandSocial</span>
+        <small>Manual de Usuario v2.0</small>
+      </div>
+    </div>
+
+    <span class="nav-label">Primeros Pasos</span>
+    <a href="#primeros-pasos">1.1 Crear una Cuenta</a>
+    <a href="#iniciar-sesion">1.2 Iniciar Sesión</a>
+    <a href="#modo-invitado">1.3 Modo Invitado</a>
+
+    <span class="nav-label">Perfil</span>
+    <a href="#editar-perfil">2.1 Editar tu Perfil</a>
+    <a href="#ver-perfil">2.2 Ver Perfil de Otros</a>
+    <a href="#seguir">2.3 Seguir / Dejar de Seguir</a>
+
+    <span class="nav-label">Contenido</span>
+    <a href="#ver-feed">3.1 Ver el Feed</a>
+    <a href="#crear-publicacion">3.2 Crear Publicación</a>
+    <a href="#reaccionar">3.3 Reaccionar y Comentar</a>
+
+    <span class="nav-label">Eventos</span>
+    <a href="#explorar-eventos">4.1 Explorar Eventos</a>
+    <a href="#crear-evento">4.2 Crear un Evento</a>
+    <a href="#asistir-evento">4.3 Asistir a un Evento</a>
+
+    <span class="nav-label">MusicMarket</span>
+    <a href="#explorar-mercado">5.1 Explorar el Mercado</a>
+    <a href="#publicar-instrumento">5.2 Publicar Instrumento</a>
+    <a href="#contactar-vendedor">5.3 Contactar Vendedor</a>
+
+    <span class="nav-label">Más</span>
+    <a href="#chat">6. Chat y Mensajería</a>
+    <a href="#notificaciones">7. Notificaciones</a>
+    <a href="#membresia">8. Membresía Premium</a>
+    <a href="#faq">9. Preguntas Frecuentes</a>
+  </aside>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <main>
+
+    <!-- Header -->
+    <div class="doc-header">
+      <div class="badge">📗 Documentación oficial</div>
+      <h1>Manual de Usuario — BandSocial</h1>
+      <div class="meta">
+        <span>📌 Versión 2.0</span>
+        <span>📅 Marzo 2026</span>
+        <span>🌐 <a href="https://bandsociall.netlify.app">bandsociall.netlify.app</a></span>
+      </div>
+    </div>
+
+    <!-- Tabla de contenidos -->
+    <div class="toc-card">
+      <h2>📋 Tabla de Contenidos</h2>
+      <ol>
+        <li><a href="#primeros-pasos">Primeros Pasos</a></li>
+        <li><a href="#tu-perfil">Tu Perfil</a></li>
+        <li><a href="#feed">Feed de Publicaciones</a></li>
+        <li><a href="#eventos">Eventos Musicales</a></li>
+        <li><a href="#musicmarket">MusicMarket</a></li>
+        <li><a href="#chat">Chat y Mensajería</a></li>
+        <li><a href="#notificaciones">Notificaciones</a></li>
+        <li><a href="#membresia">Membresía Premium</a></li>
+        <li><a href="#faq">Preguntas Frecuentes</a></li>
+      </ol>
+    </div>
+
+    <!-- ── 1. Primeros Pasos ── -->
+    <div class="section-card" id="primeros-pasos">
+      <h2>1. Primeros Pasos</h2>
+
+      <h3 id="crear-cuenta">1.1 Crear una Cuenta</h3>
+      <ol>
+        <li>Ve a la aplicación y haz clic en <strong>"Registrarse"</strong></li>
+        <li>Completa el formulario:
+          <ul>
+            <li>Nombre completo</li>
+            <li>Correo electrónico</li>
+            <li>Contraseña (mínimo 6 caracteres)</li>
+            <li>Tipo de perfil: <strong>Músico</strong> o <strong>Banda</strong></li>
+          </ul>
+        </li>
+        <li>Acepta los términos y condiciones</li>
+        <li>Haz clic en <strong>"Crear cuenta"</strong></li>
+        <li>Verifica tu correo electrónico con el enlace que recibirás</li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Pantalla de registro con el formulario completo</p>
+        <img src="imagenes/registro-formulario.png" alt="Pantalla de registro con formulario completo">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Abre <a href="https://bandsociall.netlify.app/register">bandsociall.netlify.app/register</a> y captura la página completa antes de rellenar datos.</div>
+      </div>
+
+      <hr>
+
+      <h3 id="iniciar-sesion">1.2 Iniciar Sesión</h3>
+      <ol>
+        <li>Haz clic en <strong>"Iniciar sesión"</strong></li>
+        <li>Ingresa tu correo y contraseña</li>
+        <li>Haz clic en <strong>"Entrar"</strong></li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Pantalla de login de BandSocial</p>
+        <img src="imagenes/login-pantalla.png" alt="Pantalla de login de BandSocial">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Captura la pantalla /login antes de ingresar datos.</div>
+      </div>
+
+      <p><strong>¿Olvidaste tu contraseña?</strong><br>
+      Haz clic en <strong>"¿Olvidaste tu contraseña?"</strong> → ingresa tu correo → recibirás un enlace para restablecerla.</p>
+
+      <hr>
+
+      <h3 id="modo-invitado">1.3 Modo Invitado</h3>
+      <p>Si quieres explorar la plataforma sin registrarte, puedes entrar como <strong>invitado</strong> desde la pantalla de inicio. Tendrás acceso limitado de solo lectura.</p>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Botón "Entrar como invitado" en la pantalla principal</p>
+        <img src="imagenes/modo-invitado.png" alt="Botón Entrar como invitado">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Captura la pantalla de inicio (/) donde aparece la opción de invitado.</div>
+      </div>
+    </div>
+
+    <!-- ── 2. Tu Perfil ── -->
+    <div class="section-card" id="tu-perfil">
+      <h2>2. Tu Perfil</h2>
+
+      <h3 id="editar-perfil">2.1 Editar tu Perfil</h3>
+      <ol>
+        <li>Haz clic en tu foto de perfil o en el menú → <strong>"Mi Perfil"</strong></li>
+        <li>Haz clic en <strong>"Editar perfil"</strong></li>
+        <li>Puedes actualizar:
+          <ul>
+            <li>Foto de perfil y foto de portada</li>
+            <li>Nombre artístico / nombre de la banda</li>
+            <li>Descripción biográfica</li>
+            <li>Ciudad y departamento</li>
+            <li>Géneros musicales</li>
+            <li>Instrumentos que tocas</li>
+            <li>Redes sociales</li>
+          </ul>
+        </li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Modal de edición de perfil con todos los campos</p>
+        <img src="imagenes/editar-perfil-modal.png" alt="Modal de edición de perfil">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Inicia sesión → ve a /profile → haz clic en "Editar perfil" → captura el modal abierto.</div>
+      </div>
+
+      <hr>
+
+      <h3 id="ver-perfil">2.2 Ver el Perfil de Otros Usuarios</h3>
+      <p>Desde el feed o buscador, haz clic en el nombre o foto de cualquier usuario para ver su perfil completo: publicaciones, eventos, instrumentos disponibles y más.</p>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Vista del perfil de otro usuario con su información y publicaciones</p>
+        <img src="imagenes/perfil-otro-usuario.png" alt="Vista perfil de otro usuario">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Haz clic en el perfil de cualquier usuario y captura la página /profile/:uid completa.</div>
+      </div>
+
+      <hr>
+
+      <h3 id="seguir">2.3 Seguir / Dejar de Seguir</h3>
+      <p>En el perfil de cualquier usuario encontrarás el botón <strong>"Seguir"</strong>. Al seguirlo, sus publicaciones aparecerán en tu feed. Puedes ver tus seguidores y seguidos en la sección <strong>"Conexiones"</strong>.</p>
+    </div>
+
+    <!-- ── 3. Feed ── -->
+    <div class="section-card" id="feed">
+      <h2>3. Feed de Publicaciones</h2>
+
+      <h3 id="ver-feed">3.1 Ver el Feed</h3>
+      <p>La pantalla principal (<code>/</code>) muestra las publicaciones de músicos y bandas. Puedes filtrar por:</p>
+      <ul>
+        <li><strong>Tipo de publicación</strong> (demo, concierto, búsqueda, etc.)</li>
+        <li><strong>Ciudad</strong></li>
+      </ul>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Feed principal con publicaciones y filtros visibles</p>
+        <img src="imagenes/feed-principal.png" alt="Feed principal con publicaciones">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Abre la página principal estando autenticado. Captura el feed con publicaciones cargadas y los filtros visibles en la parte superior.</div>
+      </div>
+
+      <hr>
+
+      <h3 id="crear-publicacion">3.2 Crear una Publicación</h3>
+      <ol>
+        <li>Haz clic en el botón <strong>"Nueva publicación"</strong> o <strong>"+"</strong></li>
+        <li>Escribe tu contenido</li>
+        <li>Opcionalmente agrega una imagen</li>
+        <li>Selecciona el tipo de publicación</li>
+        <li>Haz clic en <strong>"Publicar"</strong></li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Formulario de nueva publicación abierto</p>
+        <img src="imagenes/nueva-publicacion.png" alt="Formulario nueva publicación">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Haz clic en el botón de crear publicación y captura el modal/formulario antes de escribir.</div>
+      </div>
+
+      <hr>
+
+      <h3 id="reaccionar">3.3 Reaccionar y Comentar</h3>
+      <ul>
+        <li><strong>Reacciones:</strong> Haz clic en el ícono de reacción debajo de una publicación para dar like, 🔥, 🎸 u otras.</li>
+        <li><strong>Comentarios:</strong> Haz clic en el ícono de comentario, escribe tu mensaje y presiona <strong>Enter</strong> o el botón de enviar.</li>
+        <li><strong>Likes en comentarios:</strong> Puedes dar like a comentarios individuales.</li>
+      </ul>
+    </div>
+
+    <!-- ── 4. Eventos ── -->
+    <div class="section-card" id="eventos">
+      <h2>4. Eventos Musicales</h2>
+
+      <h3 id="explorar-eventos">4.1 Explorar Eventos</h3>
+      <p>Ve a la sección <strong>"Eventos"</strong> en el menú. Puedes filtrar por:</p>
+      <ul>
+        <li>Ciudad / municipio</li>
+        <li>Tipo de evento (concierto, jam session, audición, etc.)</li>
+        <li>Fecha</li>
+      </ul>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Sección de eventos con tarjetas y filtros</p>
+        <img src="imagenes/eventos-lista.png" alt="Sección de eventos con filtros">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Navega a /eventos estando autenticado y captura la vista con eventos visibles.</div>
+      </div>
+
+      <hr>
+
+      <h3 id="crear-evento">4.2 Crear un Evento</h3>
+      <ol>
+        <li>Haz clic en <strong>"Crear evento"</strong></li>
+        <li>Completa los campos:
+          <ul>
+            <li>Nombre del evento</li>
+            <li>Descripción</li>
+            <li>Fecha y hora</li>
+            <li>Ubicación (departamento y ciudad)</li>
+            <li>Tipo de evento</li>
+            <li>Imagen del evento (opcional)</li>
+          </ul>
+        </li>
+        <li>Haz clic en <strong>"Publicar evento"</strong></li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Formulario de creación de evento con campos completos</p>
+        <img src="imagenes/crear-evento-formulario.png" alt="Formulario de creación de evento">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Haz clic en "Crear evento" y captura el formulario con al menos los campos principales visibles.</div>
+      </div>
+
+      <hr>
+
+      <h3 id="asistir-evento">4.3 Asistir a un Evento</h3>
+      <p>En la tarjeta de cualquier evento, haz clic en <strong>"Asistiré"</strong> para confirmar tu asistencia. El organizador podrá ver quiénes asistirán.</p>
+    </div>
+
+    <!-- ── 5. MusicMarket ── -->
+    <div class="section-card" id="musicmarket">
+      <h2>5. MusicMarket</h2>
+
+      <h3 id="explorar-mercado">5.1 Explorar el Mercado</h3>
+      <p>En <strong>"MusicMarket"</strong> encontrarás instrumentos, equipos y accesorios musicales en venta. Filtra por:</p>
+      <ul>
+        <li>Categoría (guitarra, bajo, teclado, etc.)</li>
+        <li>Precio</li>
+        <li>Estado (nuevo / usado)</li>
+        <li>Ciudad</li>
+      </ul>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Vista del MusicMarket con tarjetas de productos y filtros</p>
+        <img src="imagenes/musicmarket-lista.png" alt="Vista del MusicMarket">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Navega a /musicmarket y captura la vista con productos cargados.</div>
+      </div>
+
+      <hr>
+
+      <h3 id="publicar-instrumento">5.2 Publicar un Instrumento o Equipo</h3>
+      <ol>
+        <li>Haz clic en <strong>"Publicar artículo"</strong></li>
+        <li>Agrega:
+          <ul>
+            <li>Título del artículo</li>
+            <li>Descripción detallada</li>
+            <li>Precio en COP</li>
+            <li>Categoría y estado</li>
+            <li>Imágenes del producto</li>
+          </ul>
+        </li>
+        <li>Confirma con <strong>"Publicar"</strong></li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Formulario de publicación de artículo en MusicMarket</p>
+        <img src="imagenes/musicmarket-publicar.png" alt="Formulario publicar artículo MusicMarket">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Abre el formulario de publicar artículo y captura el modal completo.</div>
+      </div>
+
+      <hr>
+
+      <h3 id="contactar-vendedor">5.3 Contactar a un Vendedor</h3>
+      <p>En el detalle de un artículo verás el botón <strong>"Contactar"</strong> o un enlace directo al chat del vendedor. También puedes ver las <strong>reseñas</strong> de otros compradores sobre el vendedor.</p>
+    </div>
+
+    <!-- ── 6. Chat ── -->
+    <div class="section-card" id="chat">
+      <h2>6. Chat y Mensajería</h2>
+
+      <h3>6.1 Iniciar una Conversación</h3>
+      <ol>
+        <li>Desde el perfil de un usuario, haz clic en <strong>"Enviar mensaje"</strong></li>
+        <li>O desde el ícono de chat 💬 en la barra de navegación</li>
+        <li>Escribe tu mensaje y presiona <strong>Enter</strong></li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Ventana de chat abierta con una conversación</p>
+        <img src="imagenes/chat-ventana.png" alt="Ventana de chat abierta">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Abre una conversación de chat y captura la ventana del chat flotante o la vista de mensajes.</div>
+      </div>
+
+      <hr>
+
+      <h3>6.2 Chat en Móvil</h3>
+      <p>En dispositivos móviles, el chat se accede desde el ícono de mensajes en la <strong>barra de navegación inferior</strong>. El chat flotante se oculta automáticamente en pantallas pequeñas para mejorar el espacio.</p>
+    </div>
+
+    <!-- ── 7. Notificaciones ── -->
+    <div class="section-card" id="notificaciones">
+      <h2>7. Notificaciones</h2>
+
+      <h3>7.1 Ver Notificaciones</h3>
+      <p>Haz clic en el ícono de campana 🔔 en la barra superior para ver tus notificaciones. Están organizadas en pestañas:</p>
+      <ul>
+        <li><strong>Todas</strong> — todo tipo de actividad</li>
+        <li><strong>Menciones</strong> — cuando te mencionan</li>
+        <li><strong>Seguidores</strong> — nuevos seguidores</li>
+      </ul>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Centro de notificaciones abierto con pestañas</p>
+        <img src="imagenes/notificaciones-centro.png" alt="Centro de notificaciones">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Haz clic en el ícono de campana y captura el panel desplegado con notificaciones.</div>
+      </div>
+
+      <hr>
+
+      <h3>7.2 Tipos de Notificaciones</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Tipo</th><th>Descripción</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>👍 Reacción</td><td>Alguien reaccionó a tu publicación</td></tr>
+            <tr><td>💬 Comentario</td><td>Alguien comentó tu publicación</td></tr>
+            <tr><td>👤 Seguidor</td><td>Alguien comenzó a seguirte</td></tr>
+            <tr><td>📅 Evento</td><td>Actualización de un evento al que vas a asistir</td></tr>
+            <tr><td>💬 Mensaje</td><td>Nuevo mensaje en el chat</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── 8. Membresía ── -->
+    <div class="section-card" id="membresia">
+      <h2>8. Membresía Premium</h2>
+
+      <h3>8.1 ¿Qué incluye el plan Premium?</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Característica</th><th>Gratuito</th><th>Premium</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Publicaciones</td><td>Limitadas</td><td>Ilimitadas</td></tr>
+            <tr><td>Visibilidad en búsquedas</td><td>Normal</td><td>Prioridad</td></tr>
+            <tr><td>Estadísticas avanzadas</td><td>❌</td><td>✅</td></tr>
+            <tr><td>Insignia verificado</td><td>❌</td><td>✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr>
+
+      <h3>8.2 Cómo Suscribirse</h3>
+      <ol>
+        <li>Ve a <strong>"Membresía"</strong> en el menú</li>
+        <li>Selecciona el plan <strong>Premium</strong></li>
+        <li>Haz clic en <strong>"Suscribirme"</strong></li>
+        <li>Completa el proceso de pago</li>
+      </ol>
+
+      <div class="img-callout">
+        <div class="callout-label">📸 Captura de pantalla</div>
+        <p>Página de membresía con los planes comparados</p>
+        <img src="imagenes/membresia-planes.png" alt="Planes de membresía comparados">
+        <div class="how-to"><strong>¿Cómo tomarla?</strong> Navega a /membership y captura la página con los dos planes visibles lado a lado.</div>
+      </div>
+    </div>
+
+    <!-- ── 9. FAQ ── -->
+    <div class="section-card" id="faq">
+      <h2>9. Preguntas Frecuentes</h2>
+
+      <div class="faq-item">
+        <strong>¿Por qué no puedo publicar?</strong>
+        Verifica que tu correo electrónico esté verificado. Revisa tu bandeja de entrada y busca el email de BandSocial.
+      </div>
+      <div class="faq-item">
+        <strong>¿Cómo cambio mi contraseña?</strong>
+        Ve a tu perfil → Configuración → "Cambiar contraseña", o usa la opción "¿Olvidaste tu contraseña?" en el login.
+      </div>
+      <div class="faq-item">
+        <strong>¿Mis imágenes no se suben correctamente?</strong>
+        Verifica que el archivo sea JPG, PNG o GIF y que no supere 10 MB.
+      </div>
+      <div class="faq-item">
+        <strong>¿Cómo elimino una publicación?</strong>
+        En tu publicación, haz clic en el menú (⋯) y selecciona <strong>"Eliminar"</strong>.
+      </div>
+      <div class="faq-item">
+        <strong>¿Cómo reporto un usuario?</strong>
+        Desde el perfil del usuario, haz clic en el menú (⋯) y selecciona <strong>"Reportar"</strong>.
+      </div>
+    </div>
+
+    <!-- ── Carpeta de Imágenes ── -->
+    <div class="section-card">
+      <h2>📁 Carpeta de Imágenes</h2>
+      <p>Todas las capturas de este manual deben guardarse en:</p>
+      <pre>documentacion/manuales/manual-usuario/imagenes/</pre>
+      <p style="margin-top:1rem;"><strong>Lista de imágenes necesarias:</strong></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Archivo</th><th>Sección</th><th>Descripción</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>registro-formulario.png</code></td><td>1.1</td><td>Pantalla de registro</td></tr>
+            <tr><td><code>login-pantalla.png</code></td><td>1.2</td><td>Pantalla de login</td></tr>
+            <tr><td><code>modo-invitado.png</code></td><td>1.3</td><td>Botón modo invitado</td></tr>
+            <tr><td><code>editar-perfil-modal.png</code></td><td>2.1</td><td>Modal edición de perfil</td></tr>
+            <tr><td><code>perfil-otro-usuario.png</code></td><td>2.2</td><td>Vista perfil ajeno</td></tr>
+            <tr><td><code>feed-principal.png</code></td><td>3.1</td><td>Feed con publicaciones</td></tr>
+            <tr><td><code>nueva-publicacion.png</code></td><td>3.2</td><td>Formulario nueva publicación</td></tr>
+            <tr><td><code>eventos-lista.png</code></td><td>4.1</td><td>Lista de eventos</td></tr>
+            <tr><td><code>crear-evento-formulario.png</code></td><td>4.2</td><td>Formulario crear evento</td></tr>
+            <tr><td><code>musicmarket-lista.png</code></td><td>5.1</td><td>Vista MusicMarket</td></tr>
+            <tr><td><code>musicmarket-publicar.png</code></td><td>5.2</td><td>Formulario publicar artículo</td></tr>
+            <tr><td><code>chat-ventana.png</code></td><td>6.1</td><td>Ventana de chat</td></tr>
+            <tr><td><code>notificaciones-centro.png</code></td><td>7.1</td><td>Panel de notificaciones</td></tr>
+            <tr><td><code>membresia-planes.png</code></td><td>8.2</td><td>Comparación de planes</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note" style="margin-top:1rem;">
+        <strong>📝 Nota:</strong> Todas las capturas deben tomarse en la URL de producción
+        <a href="https://bandsociall.netlify.app">https://bandsociall.netlify.app</a>
+        con una cuenta de prueba activa. Usar resolución de escritorio (1280×800 px mínimo)
+        salvo las que correspondan a vista móvil.
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div>
+        <strong>Soporte:</strong>
+        <a href="mailto:soporte@bandsocial.com">soporte@bandsocial.com</a>
+      </div>
+      <div>
+        <strong>Repositorio:</strong>
+        <a href="https://github.com/Negromatico/BandSocial">github.com/Negromatico/BandSocial</a>
+      </div>
+      <div style="color:#9ca3af;font-size:0.8rem;">📗 Manual de Usuario v2.0 · Marzo 2026</div>
+    </footer>
+
+  </main>
+</div>
+</body>
+</html>
